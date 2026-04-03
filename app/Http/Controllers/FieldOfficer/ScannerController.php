@@ -1,0 +1,116 @@
+<?php
+
+namespace App\Http\Controllers\FieldOfficer;
+
+use App\Http\Controllers\Controller;
+use App\Models\DistributionEvent;
+use App\Services\AuditLogService;
+use App\Services\QrCodeService;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
+use Inertia\Inertia;
+use Inertia\Response;
+
+class ScannerController extends Controller
+{
+    public function __construct(private QrCodeService $qrService) {}
+
+    public function index(): Response
+    {
+        $activeEvent = DistributionEvent::ongoing()->with('office')->first();
+
+        return Inertia::render('FieldOfficer/Scanner', [
+            'activeEvent' => $activeEvent,
+        ]);
+    }
+
+    /**
+     * Process a QR scan and return the beneficiary data with compliance and documents.
+     * This is a JSON endpoint called by the Vue scanner component.
+     */
+    public function scan(Request $request): JsonResponse
+    {
+        $request->validate([
+            'payload'   => 'required|string',
+            'event_id'  => 'nullable|exists:distribution_events,id',
+        ]);
+
+        $result = $this->qrService->decode($request->payload);
+
+        if (!$result['valid']) {
+            AuditLogService::log('qr_scan_failed', null, [], [
+                'reason' => $result['error'],
+            ], 'QR Scan failed: '.$result['error'], 'distribution,security');
+
+            return response()->json([
+                'success' => false,
+                'message' => $result['error'],
+            ], 422);
+        }
+
+        $beneficiary = $result['beneficiary'];
+
+        // Load all required relationships for verification panel
+        $beneficiary->load([
+            'familyMembers',
+            'proxies' => fn($q) => $q->where('is_approved', true)->where('is_active', true),
+            'documents',
+            'complianceRecords' => fn($q) => $q->latest()->limit(1),
+            'grantCalculations' => fn($q) => $q->when(
+                $request->event_id,
+                fn($q2) => $q2->where('distribution_event_id', $request->event_id)
+            )->latest()->limit(1),
+        ]);
+
+        // Check if already claimed in this event
+        $alreadyClaimed = false;
+        if ($request->event_id) {
+            $alreadyClaimed = $beneficiary->distributions()
+                ->where('distribution_event_id', $request->event_id)
+                ->where('status', 'claimed')
+                ->exists();
+
+            if ($alreadyClaimed) {
+                AuditLogService::doubleClaim($beneficiary->id, $request->event_id);
+            }
+        }
+
+        AuditLogService::qrScanned($beneficiary->id, auth()->user()->name);
+
+        return response()->json([
+            'success'        => true,
+            'beneficiary'    => [
+                'id'          => $beneficiary->id,
+                'unique_id'   => $beneficiary->unique_id,
+                'full_name'   => $beneficiary->full_name,
+                'birthdate'   => $beneficiary->birthdate->format('F d, Y'),
+                'age'         => $beneficiary->age,
+                'sex'         => $beneficiary->sex,
+                'barangay'    => $beneficiary->barangay,
+                'full_address'=> $beneficiary->full_address,
+                'photo_url'   => $beneficiary->photo_path
+                    ? asset('storage/'.$beneficiary->photo_path) : null,
+                'status'      => $beneficiary->status,
+                'is_compliant'=> $beneficiary->is_compliant,
+                'family_members_count' => $beneficiary->familyMembers->count(),
+            ],
+            'compliance'     => $beneficiary->complianceRecords->first(),
+            'grant'          => $beneficiary->grantCalculations->first(),
+            'proxies'        => $beneficiary->proxies->map(fn($p) => [
+                'id'           => $p->id,
+                'full_name'    => $p->full_name,
+                'relationship' => $p->relationship,
+                'valid_id_url' => $p->valid_id_path ? asset('storage/'.$p->valid_id_path) : null,
+                'has_docs'     => $p->hasRequiredDocuments(),
+            ]),
+            'documents'      => $beneficiary->documents->map(fn($d) => [
+                'id'           => $d->id,
+                'type_label'   => $d->document_type_label,
+                'document_name'=> $d->document_name,
+                'file_url'     => asset('storage/'.$d->file_path),
+                'is_verified'  => $d->is_verified,
+            ]),
+            'already_claimed' => $alreadyClaimed,
+        ]);
+    }
+}
