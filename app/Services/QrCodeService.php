@@ -44,7 +44,7 @@ class QrCodeService
         try {
             $decoded = json_decode(base64_decode($rawPayload), true);
 
-            if (!$decoded || !isset($decoded['uid'], $decoded['sys'])) {
+            if (!$decoded || !isset($decoded['uid'], $decoded['sys'], $decoded['city'], $decoded['token'])) {
                 return ['valid' => false, 'beneficiary' => null, 'error' => 'Invalid QR code format.'];
             }
 
@@ -69,9 +69,18 @@ class QrCodeService
                 return ['valid' => false, 'beneficiary' => $beneficiary, 'error' => "Beneficiary account is {$beneficiary->status}."];
             }
 
-            // Validate the card QR data matches
+            // Validate the card QR data matches by comparing tokens
             $activeCard = $beneficiary->cards()->where('is_active', true)->first();
-            if (!$activeCard || $activeCard->qr_code_data !== $rawPayload) {
+            if (!$activeCard) {
+                return ['valid' => false, 'beneficiary' => $beneficiary, 'error' => 'No active card found for this beneficiary.'];
+            }
+
+            // Decode the stored payload to extract its token for comparison
+            $storedDecoded = json_decode(base64_decode($activeCard->qr_code_data), true);
+            $scannedToken  = $decoded['token'] ?? null;
+            $storedToken   = $storedDecoded['token'] ?? null;
+
+            if (!$scannedToken || !$storedToken || $scannedToken !== $storedToken) {
                 return ['valid' => false, 'beneficiary' => $beneficiary, 'error' => 'QR code does not match the active card on record.'];
             }
 

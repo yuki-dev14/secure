@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\Beneficiary;
 use App\Models\BeneficiaryCard;
+use App\Notifications\CardIssuedNotification;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
@@ -67,6 +68,15 @@ class BeneficiaryCardService
             $beneficiary->update(['card_path' => $pdfPath]);
         } catch (\Throwable $e) {
             Log::warning("Card PDF generation failed for beneficiary {$beneficiary->unique_id}: " . $e->getMessage());
+        }
+
+        // Notify beneficiary via in-app + email (queued)
+        try {
+            if ($beneficiary->user) {
+                $beneficiary->user->notify(new CardIssuedNotification($card));
+            }
+        } catch (\Throwable $e) {
+            Log::warning("Card notification failed for {$beneficiary->unique_id}: " . $e->getMessage());
         }
 
         return $card;

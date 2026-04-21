@@ -463,8 +463,12 @@ const updateMemberFlags = (member) => {
   member._age = age
   member._isSchoolAge = age >= 3 && age <= 18
   member._isUnderFive = age <= 5
-  if (member._isSchoolAge && !member.education_level) {
-    member.education_level = age <= 5 ? 'daycare' : age <= 12 ? 'elementary' : 'junior_high'
+  if (member._isSchoolAge) {
+    if (!member.education_level || member.education_level === 'not_applicable') {
+      member.education_level = age <= 5 ? 'daycare' : age <= 12 ? 'elementary' : 'junior_high'
+    }
+  } else {
+    member.education_level = 'not_applicable'
   }
 }
 
@@ -473,7 +477,7 @@ const addMember = () => {
   form.family_members.push({
     first_name: '', last_name: '', middle_name: '',
     birthdate: '', sex: 'female', relationship: 'child',
-    education_level: '', school_name: '', grade_level: '',
+    education_level: 'not_applicable', school_name: '', grade_level: '',
     _age: null, _isSchoolAge: false, _isUnderFive: false,
   })
 }

@@ -46,6 +46,15 @@ class BeneficiaryController extends Controller
             $query->where('status', $request->status);
         }
 
+        // Filter by card status: 'none' = no active card, 'issued' = has active card
+        if ($request->filled('card')) {
+            if ($request->card === 'none') {
+                $query->whereDoesntHave('cards', fn($q) => $q->where('is_active', true));
+            } elseif ($request->card === 'issued') {
+                $query->whereHas('cards', fn($q) => $q->where('is_active', true));
+            }
+        }
+
         $beneficiaries = $query->paginate(20)->withQueryString();
         $offices       = Office::active()->orderBy('name')->get(['id', 'name', 'barangay']);
         $barangays     = Beneficiary::distinct()->orderBy('barangay')->pluck('barangay');
@@ -117,11 +126,16 @@ class BeneficiaryController extends Controller
             // Create family members
             foreach ($validated['family_members'] ?? [] as $member) {
                 $age = now()->diffInYears($member['birthdate']);
+                $isSchoolAge = $age >= 3 && $age <= 18;
                 $beneficiary->allFamilyMembers()->create([
                     ...$member,
-                    'is_school_age' => $age >= 3 && $age <= 18,
-                    'is_under_five' => $age <= 5,
-                    'is_active'     => true,
+                    'is_school_age'   => $isSchoolAge,
+                    'is_under_five'   => $age <= 5,
+                    'is_active'       => true,
+                    // Ensure education_level always has a valid enum value
+                    'education_level' => !empty($member['education_level'])
+                        ? $member['education_level']
+                        : 'not_applicable',
                 ]);
             }
 
@@ -210,7 +224,57 @@ class BeneficiaryController extends Controller
         return back()->with('success', "New card issued: {$card->card_number}. Download the PDF to print.");
     }
 
-    public function downloadCard(int $id): \Symfony\Component\HttpFoundation\BinaryFileResponse|\Illuminate\Http\Response
+    /**
+     * Batch issue cards for multiple beneficiaries at once.
+     * Skips those who already have an active card.
+     */
+    public function batchIssueCards(Request $request): RedirectResponse
+    {
+        $request->validate([
+            'ids'   => 'required|array|min:1|max:200',
+            'ids.*' => 'integer|exists:beneficiaries,id',
+        ]);
+
+        $issued  = 0;
+        $skipped = 0;
+        $errors  = 0;
+
+        $beneficiaries = Beneficiary::with(['user', 'cards'])
+            ->whereIn('id', $request->ids)
+            ->where('status', 'active')
+            ->get();
+
+        foreach ($beneficiaries as $beneficiary) {
+            // Skip if already has an active card
+            if ($beneficiary->cards->where('is_active', true)->count() > 0) {
+                $skipped++;
+                continue;
+            }
+
+            try {
+                $card = $this->cardService->issueCard($beneficiary, auth()->id());
+                AuditLogService::log(
+                    'card_issued',
+                    $beneficiary,
+                    [],
+                    ['card_number' => $card->card_number],
+                    'Card issued via batch issuance'
+                );
+                $issued++;
+            } catch (\Throwable $e) {
+                $errors++;
+                \Illuminate\Support\Facades\Log::error("Batch card issue failed for {$beneficiary->unique_id}: " . $e->getMessage());
+            }
+        }
+
+        $msg = "Batch complete: {$issued} card(s) issued.";
+        if ($skipped) $msg .= " {$skipped} skipped (already had a card).";
+        if ($errors)  $msg .= " {$errors} failed — check logs.";
+
+        return back()->with('success', $msg);
+    }
+
+    public function downloadCard(int $id): \Symfony\Component\HttpFoundation\BinaryFileResponse|\Illuminate\Http\Response|\Illuminate\Http\RedirectResponse
     {
         $beneficiary = Beneficiary::with('card')->findOrFail($id);
 

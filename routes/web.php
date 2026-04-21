@@ -5,7 +5,9 @@ use App\Http\Controllers\Superadmin\BeneficiaryController as SuperAdminBeneficia
 use App\Http\Controllers\Superadmin\DashboardController as SuperAdminDashboardController;
 use App\Http\Controllers\Superadmin\AuditLogController;
 use App\Http\Controllers\Superadmin\ReportController;
+use App\Http\Controllers\Superadmin\ProxyController;
 use App\Http\Controllers\Admin\DashboardController as AdminDashboardController;
+use App\Http\Controllers\Admin\BeneficiaryController as AdminBeneficiaryController;
 use App\Http\Controllers\Admin\UserManagementController;
 use App\Http\Controllers\Admin\DistributionEventController;
 use App\Http\Controllers\ComplianceVerifier\DashboardController as VerifierDashboardController;
@@ -31,6 +33,7 @@ Route::middleware('guest')->group(function () {
     // Beneficiary Portal Login
     Route::get('/portal',               [AuthController::class, 'showBeneficiaryLogin'])->name('beneficiary.login');
     Route::post('/portal/login',        [AuthController::class, 'beneficiaryLogin'])->name('beneficiary.login.post');
+    Route::post('/portal/qr-login',     [AuthController::class, 'beneficiaryQrLogin'])->name('beneficiary.qr-login.post');
 });
 
 Route::post('/logout',                  [AuthController::class, 'logout'])->name('logout')->middleware('auth');
@@ -55,6 +58,10 @@ Route::middleware(['auth', 'role:beneficiary', 'enforce.password.change'])
         Route::get('/family',       [BeneficiaryDashboardController::class, 'family'])->name('family');
         Route::get('/notifications',[BeneficiaryDashboardController::class, 'notifications'])->name('notifications');
         Route::post('/notifications/{id}/read', [BeneficiaryDashboardController::class, 'markNotificationRead'])->name('notifications.read');
+
+        // Document self-upload
+        Route::post('/documents',                [BeneficiaryDashboardController::class, 'uploadDocument'])->name('documents.upload');
+        Route::delete('/documents/{docId}',      [BeneficiaryDashboardController::class, 'deleteDocument'])->name('documents.delete');
     });
 
 // ─── Superadmin ───────────────────────────────────────────────────────────────
@@ -70,6 +77,13 @@ Route::middleware(['auth', 'role:superadmin'])
         Route::post('beneficiaries/{id}/card',  [SuperAdminBeneficiaryController::class, 'issueCard'])->name('beneficiaries.card.issue');
         Route::get('beneficiaries/{id}/card/download', [SuperAdminBeneficiaryController::class, 'downloadCard'])->name('beneficiaries.card.download');
         Route::get('beneficiaries/{id}/card/preview',  [SuperAdminBeneficiaryController::class, 'cardPreview'])->name('beneficiaries.card.preview');
+        Route::post('beneficiaries/batch-cards',       [SuperAdminBeneficiaryController::class, 'batchIssueCards'])->name('beneficiaries.cards.batch');
+
+        // Proxy Management
+        Route::post('beneficiaries/{beneficiary}/proxies',                 [ProxyController::class, 'store'])->name('beneficiaries.proxies.store');
+        Route::put('beneficiaries/{beneficiary}/proxies/{proxy}',          [ProxyController::class, 'update'])->name('beneficiaries.proxies.update');
+        Route::delete('beneficiaries/{beneficiary}/proxies/{proxy}',       [ProxyController::class, 'destroy'])->name('beneficiaries.proxies.destroy');
+        Route::patch('beneficiaries/{beneficiary}/proxies/{proxy}/toggle', [ProxyController::class, 'toggleApproval'])->name('beneficiaries.proxies.toggle');
 
         // Audit Trail (Superadmin exclusive)
         Route::get('/audit-logs',               [AuditLogController::class, 'index'])->name('audit-logs.index');
@@ -104,9 +118,11 @@ Route::middleware(['auth', 'role:admin,superadmin'])
         Route::patch('users/{user}/toggle',     [UserManagementController::class, 'toggleActive'])->name('users.toggle');
 
         // Beneficiary records
-        Route::get('beneficiaries',             [SuperAdminBeneficiaryController::class, 'index'])->name('beneficiaries.index');
-        Route::get('beneficiaries/{id}',        [SuperAdminBeneficiaryController::class, 'show'])->name('beneficiaries.show');
-        Route::put('beneficiaries/{id}',        [SuperAdminBeneficiaryController::class, 'update'])->name('beneficiaries.update');
+        Route::get('beneficiaries',                                  [AdminBeneficiaryController::class, 'index'])->name('beneficiaries.index');
+        Route::get('beneficiaries/{id}',                             [AdminBeneficiaryController::class, 'show'])->name('beneficiaries.show');
+        Route::put('beneficiaries/{id}',                             [AdminBeneficiaryController::class, 'update'])->name('beneficiaries.update');
+        Route::post('beneficiaries/{id}/documents',                  [AdminBeneficiaryController::class, 'uploadDocument'])->name('beneficiaries.documents.upload');
+        Route::delete('beneficiaries/{id}/documents/{docId}',        [AdminBeneficiaryController::class, 'deleteDocument'])->name('beneficiaries.documents.delete');
 
         // Distribution Events
         Route::resource('distribution-events',  DistributionEventController::class)->names('events');

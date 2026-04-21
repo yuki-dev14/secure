@@ -42,6 +42,13 @@
     <!-- Right panel — login form -->
     <div class="flex-1 flex items-center justify-center p-6 lg:p-12">
       <div class="w-full max-w-md">
+        <!-- Back to home -->
+        <div class="mb-5">
+          <Link :href="route('home')" class="inline-flex items-center gap-1.5 text-white/70 hover:text-white text-sm font-medium transition-colors group">
+            <ArrowLeftIcon class="w-4 h-4 transition-transform group-hover:-translate-x-0.5" />
+            Back to Home
+          </Link>
+        </div>
         <div class="bg-white rounded-3xl shadow-2xl overflow-hidden">
           <!-- Card header -->
           <div class="px-8 pt-8 pb-6 border-b border-slate-100">
@@ -138,7 +145,7 @@ import { ref } from 'vue'
 import { useForm, Link } from '@inertiajs/vue3'
 import {
   LockClosedIcon, ExclamationCircleIcon,
-  EyeIcon, EyeSlashIcon,
+  EyeIcon, EyeSlashIcon, ArrowLeftIcon,
 } from '@heroicons/vue/24/outline'
 
 const showPassword = ref(false)

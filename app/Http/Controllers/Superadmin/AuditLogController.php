@@ -45,33 +45,57 @@ class AuditLogController extends Controller
 
     public function export(Request $request): \Symfony\Component\HttpFoundation\StreamedResponse
     {
-        $rows = AuditLog::with('user')
-            ->when($request->date_from, fn($q) => $q->whereDate('created_at', '>=', $request->date_from))
-            ->when($request->date_to,   fn($q) => $q->whereDate('created_at', '<=', $request->date_to))
-            ->latest('created_at')
-            ->get();
+        $query = AuditLog::with('user')->latest('created_at');
+
+        // Apply same filters as the index view
+        if ($request->filled('event'))     $query->where('event', $request->event);
+        if ($request->filled('date_from')) $query->whereDate('created_at', '>=', $request->date_from);
+        if ($request->filled('date_to'))   $query->whereDate('created_at', '<=', $request->date_to);
+        if ($request->filled('search')) {
+            $s = $request->search;
+            $query->where(function ($q) use ($s) {
+                $q->where('description', 'ilike', "%{$s}%")
+                  ->orWhere('ip_address',  'ilike', "%{$s}%");
+            });
+        }
+
+        $rows     = $query->get();
+        $filename = 'SECURE_AuditLog_' . now()->format('Ymd_His') . '.csv';
 
         $headers = [
-            'Content-Type'        => 'text/csv',
-            'Content-Disposition' => 'attachment; filename="audit_log_'.now()->format('Ymd_His').'.csv"',
+            'Content-Type'        => 'text/csv; charset=UTF-8',
+            'Content-Disposition' => "attachment; filename=\"{$filename}\"",
+            'Pragma'              => 'no-cache',
+            'Cache-Control'       => 'must-revalidate, post-check=0, pre-check=0',
+            'Expires'             => '0',
         ];
 
         return response()->streamDownload(function () use ($rows) {
             $handle = fopen('php://output', 'w');
-            fputcsv($handle, ['ID','Event','User','Role','Description','IP','Model','Date']);
+
+            // UTF-8 BOM for correct Excel display
+            fwrite($handle, "\xEF\xBB\xBF");
+
+            fputcsv($handle, [
+                'ID', 'Event', 'User', 'Role', 'Description',
+                'Model', 'Record ID', 'IP Address', 'Date & Time',
+            ]);
+
             foreach ($rows as $row) {
                 fputcsv($handle, [
                     $row->id,
                     $row->event,
-                    $row->user?->name ?? 'Guest',
-                    $row->user_type,
-                    $row->description,
-                    $row->ip_address,
-                    $row->auditable_type ? class_basename($row->auditable_type).'#'.$row->auditable_id : '',
-                    $row->created_at?->format('Y-m-d H:i:s'),
+                    $row->user?->name ?? 'System/Guest',
+                    $row->user_type ?? '—',
+                    $row->description ?? '—',
+                    $row->auditable_type ? class_basename($row->auditable_type) : '—',
+                    $row->auditable_id ?? '—',
+                    $row->ip_address ?? '—',
+                    $row->created_at?->format('Y-m-d H:i:s') ?? '—',
                 ]);
             }
+
             fclose($handle);
-        }, 'audit_log.csv', $headers);
+        }, $filename, $headers);
     }
 }

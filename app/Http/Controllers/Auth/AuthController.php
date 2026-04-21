@@ -82,30 +82,19 @@ class AuthController extends Controller
     }
 
     /**
-     * Beneficiary logs in via:
-     * (a) Unique ID + Password, or
-     * (b) QR Code Payload + Password
+     * Beneficiary logs in via Unique ID + Password.
      */
     public function beneficiaryLogin(Request $request): RedirectResponse
     {
         $request->validate([
-            'identifier' => ['required', 'string'],  // unique_id or qr payload
+            'identifier' => ['required', 'string'],
             'password'   => ['required', 'string'],
         ]);
 
-        $identifier = trim($request->identifier);
+        $identifier = strtoupper(trim($request->identifier));
 
-        // Resolve unique_id from QR payload if needed
-        if (!str_starts_with(strtoupper($identifier), '4PS-')) {
-            $uid = $this->qrService->decodeForLogin($identifier);
-            if (!$uid) {
-                throw ValidationException::withMessages(['identifier' => 'Invalid QR code or Unique ID.']);
-            }
-            $identifier = $uid;
-        }
-
-        // Find beneficiary
-        $beneficiary = Beneficiary::where('unique_id', strtoupper($identifier))
+        // Find beneficiary by unique_id
+        $beneficiary = Beneficiary::where('unique_id', $identifier)
             ->with(['user', 'card'])
             ->first();
 
@@ -118,30 +107,64 @@ class AuthController extends Controller
             throw ValidationException::withMessages(['identifier' => "Account is {$beneficiary->status}. Contact your DSWD office."]);
         }
 
-        // Validate against the active card's hashed password OR user account
         $user = $beneficiary->user;
         if (!Hash::check($request->password, $user->password)) {
             AuditLogService::loginFailed($identifier);
             throw ValidationException::withMessages(['password' => 'Incorrect password.']);
         }
 
-        Auth::login($user, $request->boolean('remember'));
+        return $this->completeLogin($request, $user, $beneficiary);
+    }
+
+    /**
+     * Beneficiary logs in by scanning their QR card — no password required.
+     * The QR token is validated against the active card on record.
+     */
+    public function beneficiaryQrLogin(Request $request): RedirectResponse
+    {
+        $request->validate([
+            'payload' => ['required', 'string'],
+        ]);
+
+        $result = $this->qrService->decode($request->payload);
+
+        if (!$result['valid']) {
+            AuditLogService::loginFailed('qr_scan');
+            throw ValidationException::withMessages(['payload' => $result['error'] ?? 'Invalid QR code.']);
+        }
+
+        /** @var Beneficiary $beneficiary */
+        $beneficiary = $result['beneficiary'];
+
+        if (!$beneficiary->user) {
+            AuditLogService::loginFailed($beneficiary->unique_id);
+            throw ValidationException::withMessages(['payload' => 'No user account linked to this beneficiary.']);
+        }
+
+        return $this->completeLogin($request, $beneficiary->user, $beneficiary);
+    }
+
+    /**
+     * Shared post-authentication logic.
+     */
+    private function completeLogin(Request $request, \App\Models\User $user, Beneficiary $beneficiary): RedirectResponse
+    {
+        Auth::login($user, false);
 
         $user->update([
             'last_login_at' => now(),
             'last_login_ip' => $request->ip(),
         ]);
 
-        // Track first login on the card
+        // Track first login timestamp on the active card
         $activeCard = $beneficiary->cards()->where('is_active', true)->first();
-        if ($activeCard && $activeCard->is_first_login) {
+        if ($activeCard instanceof BeneficiaryCard && $activeCard->is_first_login) {
             $activeCard->update(['first_login_at' => now()]);
         }
 
         AuditLogService::loginSuccess('beneficiary');
         $request->session()->regenerate();
 
-        // Force password change on first login
         if ($user->must_change_password) {
             return redirect()->route('beneficiary.password.change');
         }

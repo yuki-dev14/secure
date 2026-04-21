@@ -20,13 +20,21 @@
         </div>
 
         <div class="flex items-center gap-2">
-          <Link :href="route('beneficiary.login')" class="btn btn-secondary btn-sm gap-1.5">
-            <QrCodeIcon class="w-4 h-4" />
-            Beneficiary Portal
-          </Link>
-          <Link :href="route('staff.login')" class="btn btn-primary btn-sm">
-            Staff Login
-          </Link>
+          <template v-if="authUser">
+            <Link :href="dashboardRoute" class="btn btn-primary btn-sm gap-1.5">
+              <ShieldCheckIcon class="w-4 h-4" />
+              Go to Dashboard
+            </Link>
+          </template>
+          <template v-else>
+            <Link :href="route('beneficiary.login')" class="btn btn-secondary btn-sm gap-1.5">
+              <QrCodeIcon class="w-4 h-4" />
+              Beneficiary Portal
+            </Link>
+            <Link :href="route('staff.login')" class="btn btn-primary btn-sm">
+              Staff Login
+            </Link>
+          </template>
         </div>
       </div>
     </header>
@@ -67,13 +75,24 @@
           </p>
 
           <div class="flex flex-wrap gap-3">
-            <Link :href="route('beneficiary.login')"
-              class="inline-flex items-center gap-2 px-6 py-3 rounded-xl font-semibold text-slate-900 hover:opacity-90 transition-opacity"
-              style="background: linear-gradient(135deg, #a5f3fc, #6ee7f7)"
-            >
-              <QrCodeIcon class="w-5 h-5" />
-              Access Beneficiary Portal
-            </Link>
+            <template v-if="authUser">
+              <Link :href="dashboardRoute"
+                class="inline-flex items-center gap-2 px-6 py-3 rounded-xl font-semibold text-slate-900 hover:opacity-90 transition-opacity"
+                style="background: linear-gradient(135deg, #a5f3fc, #6ee7f7)"
+              >
+                <ShieldCheckIcon class="w-5 h-5" />
+                Go to Your Dashboard
+              </Link>
+            </template>
+            <template v-else>
+              <Link :href="route('beneficiary.login')"
+                class="inline-flex items-center gap-2 px-6 py-3 rounded-xl font-semibold text-slate-900 hover:opacity-90 transition-opacity"
+                style="background: linear-gradient(135deg, #a5f3fc, #6ee7f7)"
+              >
+                <QrCodeIcon class="w-5 h-5" />
+                Access Beneficiary Portal
+              </Link>
+            </template>
             <a href="#how-it-works"
               class="inline-flex items-center gap-2 px-6 py-3 rounded-xl font-semibold text-white border border-white/30 hover:bg-white/10 transition-colors"
             >
@@ -145,10 +164,18 @@
             <p class="text-sm text-slate-500 leading-relaxed mb-6">
               Access your 4Ps account, check compliance status, view your cash grants, and manage your household members.
             </p>
-            <Link :href="route('beneficiary.login')" class="btn btn-primary w-full gap-2">
-              <QrCodeIcon class="w-4 h-4" />
-              Enter with your 4Ps ID
-            </Link>
+            <template v-if="authUser && authUser.role === 'beneficiary'">
+              <Link :href="dashboardRoute" class="btn btn-primary w-full gap-2">
+                <QrCodeIcon class="w-4 h-4" />
+                Go to My Dashboard
+              </Link>
+            </template>
+            <template v-else-if="!authUser">
+              <Link :href="route('beneficiary.login')" class="btn btn-primary w-full gap-2">
+                <QrCodeIcon class="w-4 h-4" />
+                Enter with your 4Ps ID
+              </Link>
+            </template>
           </div>
 
           <!-- Staff Login -->
@@ -161,10 +188,18 @@
             <p class="text-sm text-slate-500 leading-relaxed mb-6">
               For DSWD personnel — administrators, compliance verifiers, and field officers assigned to Lipa City.
             </p>
-            <Link :href="route('staff.login')" class="btn btn-secondary w-full gap-2">
-              <ShieldCheckIcon class="w-4 h-4" />
-              Staff Sign In
-            </Link>
+            <template v-if="authUser && authUser.role !== 'beneficiary'">
+              <Link :href="dashboardRoute" class="btn btn-secondary w-full gap-2">
+                <ShieldCheckIcon class="w-4 h-4" />
+                Go to My Dashboard
+              </Link>
+            </template>
+            <template v-else-if="!authUser">
+              <Link :href="route('staff.login')" class="btn btn-secondary w-full gap-2">
+                <ShieldCheckIcon class="w-4 h-4" />
+                Staff Sign In
+              </Link>
+            </template>
           </div>
         </div>
       </div>
@@ -192,12 +227,28 @@
 </template>
 
 <script setup>
-import { Head, Link } from '@inertiajs/vue3'
+import { computed } from 'vue'
+import { Head, Link, usePage } from '@inertiajs/vue3'
 import {
   QrCodeIcon, ShieldCheckIcon, ArrowDownIcon,
   DocumentCheckIcon, UserGroupIcon, BanknotesIcon,
   ClipboardDocumentCheckIcon, IdentificationIcon,
 } from '@heroicons/vue/24/outline'
+
+const page    = usePage()
+const authUser = computed(() => page.props.auth?.user ?? null)
+
+const dashboardRoute = computed(() => {
+  const role = authUser.value?.role
+  if (!role) return route('home')
+  return {
+    superadmin:          route('superadmin.dashboard'),
+    admin:               route('admin.dashboard'),
+    compliance_verifier: route('verifier.dashboard'),
+    field_officer:       route('officer.dashboard'),
+    beneficiary:         route('beneficiary.dashboard'),
+  }[role] ?? route('home')
+})
 
 const features = [
   {

@@ -74,12 +74,13 @@
             Reset
           </button>
           <a
-            :href="route('superadmin.audit-logs.export') + '?' + exportParams"
+            :href="route('superadmin.audit-logs.export') + (exportParams ? '?' + exportParams : '')"
             class="btn btn-secondary btn-sm gap-1.5 ml-auto"
             download
+            :title="exportLabel"
           >
             <ArrowDownTrayIcon class="w-4 h-4" />
-            Export CSV
+            {{ exportLabel }}
           </a>
         </div>
       </div>
@@ -276,11 +277,21 @@ const resetFilters = () => {
 
 const exportParams = computed(() =>
   new URLSearchParams({
+    ...(filters.search    && { search:    filters.search    }),
+    ...(filters.event     && { event:     filters.event     }),
     ...(filters.date_from && { date_from: filters.date_from }),
     ...(filters.date_to   && { date_to:   filters.date_to   }),
-    ...(filters.event     && { event:     filters.event     }),
   }).toString()
 )
+
+const exportLabel = computed(() => {
+  const parts = []
+  if (filters.event)     parts.push(formatEvent(filters.event))
+  if (filters.date_from) parts.push(`from ${filters.date_from}`)
+  if (filters.date_to)   parts.push(`to ${filters.date_to}`)
+  if (filters.search)    parts.push(`"${filters.search}"`)
+  return parts.length ? `Export CSV (${parts.join(', ')})` : 'Export CSV (All)'
+})
 
 // ─── Event helpers ─────────────────────────────────────────────────────────────
 const FRAUD_EVENTS  = ['double_claim_attempt', 'qr_scan_failed', 'login_failed']

@@ -5,6 +5,7 @@ namespace App\Http\Controllers\ComplianceVerifier;
 use App\Http\Controllers\Controller;
 use App\Models\Beneficiary;
 use App\Models\ComplianceRecord;
+use App\Notifications\ComplianceResultNotification;
 use App\Services\AuditLogService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -114,6 +115,11 @@ class ComplianceController extends Controller
 
         AuditLogService::log('compliance_recorded', $record, [], $record->toArray(),
             "Compliance recorded for {$beneficiary->unique_id} — Period: {$validated['period']}");
+
+        // Notify beneficiary via in-app + email
+        if ($beneficiary->user) {
+            $beneficiary->user->notify(new ComplianceResultNotification($record->fresh()));
+        }
 
         return back()->with('success', 'Compliance record saved successfully.');
     }
