@@ -27,6 +27,17 @@
             <option value="cancelled">🔴 Cancelled</option>
           </select>
 
+          <!-- Generate Report — only for completed events -->
+          <a
+            v-if="event.status === 'completed'"
+            :href="route('admin.events.report', event.id)"
+            target="_blank"
+            class="btn btn-success btn-sm gap-1.5"
+          >
+            <DocumentArrowDownIcon class="w-4 h-4" />
+            Generate Report
+          </a>
+
           <!-- Notify beneficiaries -->
           <button
             @click="notify"
@@ -394,7 +405,7 @@ import {
   ArrowLeftIcon, CalendarDaysIcon, MapPinIcon, ClockIcon,
   BuildingOfficeIcon, BellIcon, BanknotesIcon,
   TrashIcon, PencilSquareIcon, CheckIcon,
-  ExclamationTriangleIcon,
+  ExclamationTriangleIcon, DocumentArrowDownIcon,
 } from '@heroicons/vue/24/outline'
 import { CalculatorIcon } from '@heroicons/vue/24/solid'
 import StaffLayout from '@/Layouts/StaffLayout.vue'

@@ -8,15 +8,18 @@ use App\Http\Controllers\Superadmin\ReportController;
 use App\Http\Controllers\Superadmin\ProxyController;
 use App\Http\Controllers\Superadmin\SettingsController;
 use App\Http\Controllers\Superadmin\BeneficiaryImportController;
+use App\Http\Controllers\Superadmin\UserManagementController as SuperadminUserController;
 use App\Http\Controllers\Admin\DashboardController as AdminDashboardController;
 use App\Http\Controllers\Admin\BeneficiaryController as AdminBeneficiaryController;
 use App\Http\Controllers\Admin\UserManagementController;
 use App\Http\Controllers\Admin\DistributionEventController;
+use App\Http\Controllers\Admin\AdminReportController;
 use App\Http\Controllers\ComplianceVerifier\DashboardController as VerifierDashboardController;
 use App\Http\Controllers\ComplianceVerifier\ComplianceController;
 use App\Http\Controllers\FieldOfficer\DashboardController as OfficerDashboardController;
 use App\Http\Controllers\FieldOfficer\ScannerController;
 use App\Http\Controllers\FieldOfficer\DistributionController;
+use App\Http\Controllers\FieldOfficer\ClaimHistoryController;
 use App\Http\Controllers\Beneficiary\DashboardController as BeneficiaryDashboardController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -108,8 +111,13 @@ Route::middleware(['auth', 'role:superadmin'])
         Route::put('/settings',                [SettingsController::class, 'update'])->name('settings.update');
         Route::post('/settings/test-email',    [SettingsController::class, 'sendTestEmail'])->name('settings.test-email');
 
-        // User management (with broader scope)
-        Route::resource('users',               UserManagementController::class);
+        // User management (with broader scope — all roles including beneficiaries)
+        Route::get('/users',                    [SuperadminUserController::class, 'index'])->name('users.index');
+        Route::patch('/users/{user}/toggle',    [SuperadminUserController::class, 'toggleActive'])->name('users.toggle');
+        Route::patch('/beneficiaries/{beneficiary}/toggle-active', [SuperadminUserController::class, 'toggleBeneficiaryActive'])->name('beneficiaries.toggle-active');
+
+        // Legacy superadmin.users routes kept for compatibility
+        Route::resource('staff',               UserManagementController::class)->names('staff');
 
         // Reports & Exports
         Route::get('/reports',                          [ReportController::class, 'index'])->name('reports.index');
@@ -130,6 +138,8 @@ Route::middleware(['auth', 'role:admin,superadmin'])
     ->name('admin.')
     ->group(function () {
         Route::get('/dashboard',                [AdminDashboardController::class, 'index'])->name('dashboard');
+        Route::get('/reports/dashboard-pdf',    [AdminReportController::class, 'dashboardPdf'])->name('reports.dashboard-pdf');
+        Route::get('/distribution-events/{distributionEvent}/report', [AdminReportController::class, 'eventReport'])->name('events.report');
 
         // User / Staff Management
         Route::resource('users',                UserManagementController::class);
@@ -180,4 +190,7 @@ Route::middleware(['auth', 'role:field_officer,admin,superadmin'])
         Route::get('/distribution',             [DistributionController::class, 'index'])->name('distribution');
         Route::post('/distribution/release',    [DistributionController::class, 'release'])->name('distribution.release');
         Route::get('/distribution/{txn}',       [DistributionController::class, 'show'])->name('distribution.show');
+
+        // Claim History
+        Route::get('/claim-history',            [ClaimHistoryController::class, 'index'])->name('claim-history');
     });

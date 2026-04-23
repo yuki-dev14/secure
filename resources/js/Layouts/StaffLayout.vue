@@ -112,7 +112,7 @@
 import { ref, computed } from 'vue'
 import { Link, usePage } from '@inertiajs/vue3'
 import {
-  HomeIcon, UsersIcon, ClipboardDocumentCheckIcon,
+  HomeIcon, UsersIcon, UserGroupIcon, ClipboardDocumentCheckIcon,
   QrCodeIcon, DocumentChartBarIcon, ShieldCheckIcon,
   ChevronLeftIcon, ChevronRightIcon, ArrowRightOnRectangleIcon,
   BellIcon, CogIcon, CalendarDaysIcon,
@@ -144,19 +144,19 @@ const navItems = computed(() => {
 
   if (role.value === 'superadmin') {
     base.push(
-      { route: 'superadmin.beneficiaries.index', label: 'Beneficiaries',  icon: UsersIcon,               routePrefix: '/superadmin/beneficiaries' },
-      { route: 'superadmin.audit-logs.index',    label: 'Audit Trail',    icon: ShieldCheckIcon,          routePrefix: '/superadmin/audit' },
-      { route: 'superadmin.reports.index',       label: 'Reports',        icon: DocumentChartBarIcon,     routePrefix: '/superadmin/reports' },
-      { route: 'admin.users.index',              label: 'Users',          icon: CogIcon,                  routePrefix: '/admin/users' },
-      { route: 'superadmin.settings.index',      label: 'Settings',       icon: CogIcon,                  routePrefix: '/superadmin/settings' },
+      { route: 'superadmin.beneficiaries.index', label: 'Beneficiaries',    icon: UsersIcon,               routePrefix: '/superadmin/beneficiaries' },
+      { route: 'superadmin.users.index',         label: 'User Management',  icon: UserGroupIcon,           routePrefix: '/superadmin/users' },
+      { route: 'superadmin.audit-logs.index',    label: 'Audit Trail',      icon: ShieldCheckIcon,          routePrefix: '/superadmin/audit' },
+      { route: 'superadmin.reports.index',       label: 'Reports',          icon: DocumentChartBarIcon,     routePrefix: '/superadmin/reports' },
+      { route: 'superadmin.settings.index',      label: 'Settings',         icon: CogIcon,                  routePrefix: '/superadmin/settings' },
     )
   }
 
-  if (role.value === 'admin' || role.value === 'superadmin') {
+  if (role.value === 'admin') {
     base.push(
-      { route: 'admin.users.index',   label: 'Staff Management', icon: UsersIcon, routePrefix: '/admin/users' },
+      { route: 'admin.users.index',   label: 'Staff Management',    icon: UsersIcon,       routePrefix: '/admin/users' },
       { route: 'admin.events.index',  label: 'Distribution Events', icon: CalendarDaysIcon, routePrefix: '/admin/distribution' },
-      { route: 'admin.beneficiaries.index', label: 'Beneficiaries', icon: UsersIcon, routePrefix: '/admin/beneficiaries' },
+      { route: 'admin.beneficiaries.index', label: 'Beneficiaries', icon: UsersIcon,       routePrefix: '/admin/beneficiaries' },
     )
   }
 
@@ -168,8 +168,9 @@ const navItems = computed(() => {
 
   if (role.value === 'field_officer') {
     base.push(
-      { route: 'officer.scanner',      label: 'QR Scanner',   icon: QrCodeIcon, routePrefix: '/officer/scanner' },
-      { route: 'officer.distribution', label: 'Distribution', icon: DocumentChartBarIcon, routePrefix: '/officer/distribution' },
+      { route: 'officer.scanner',       label: 'QR Scanner',    icon: QrCodeIcon,               routePrefix: '/officer/scanner' },
+      { route: 'officer.distribution',  label: 'Distribution',  icon: DocumentChartBarIcon,     routePrefix: '/officer/distribution' },
+      { route: 'officer.claim-history', label: 'Claim History', icon: ClipboardDocumentCheckIcon, routePrefix: '/officer/claim-history' },
     )
   }
 

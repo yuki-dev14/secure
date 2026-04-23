@@ -92,6 +92,12 @@ class DistributionEventController extends Controller
         ]);
     }
 
+    public function edit(DistributionEvent $distributionEvent): \Illuminate\Http\RedirectResponse
+    {
+        // Editing is handled inline on the show page.
+        return redirect()->route('admin.events.show', $distributionEvent);
+    }
+
     public function update(Request $request, DistributionEvent $distributionEvent): RedirectResponse
     {
         $validated = $request->validate([
