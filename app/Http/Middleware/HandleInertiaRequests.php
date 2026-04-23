@@ -31,13 +31,17 @@ class HandleInertiaRequests extends Middleware
                     'role'                => $user->role,
                     'role_display'        => $user->role_display,
                     'must_change_password'=> $user->must_change_password,
-                    'beneficiary'         => $user->isBeneficiary() ? [
-                        'id'        => $user->beneficiary?->id,
-                        'unique_id' => $user->beneficiary?->unique_id,
-                        'full_name' => $user->beneficiary?->full_name,
-                        'status'    => $user->beneficiary?->status,
-                        'barangay'  => $user->beneficiary?->barangay,
-                    ] : null,
+            'beneficiary' => $user->isBeneficiary() ? (function () use ($user) {
+                    // Eager-load to avoid lazy-load race conditions per request
+                    $b = $user->beneficiary()->first();
+                    return $b ? [
+                        'id'        => $b->id,
+                        'unique_id' => $b->unique_id,
+                        'full_name' => $b->full_name,
+                        'status'    => $b->status,
+                        'barangay'  => $b->barangay,
+                    ] : null;
+                })() : null,
                 ] : null,
             ],
             'flash' => [

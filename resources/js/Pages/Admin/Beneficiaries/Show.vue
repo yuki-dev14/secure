@@ -3,25 +3,48 @@
   <StaffLayout :page-title="beneficiary.unique_id" :page-subtitle="beneficiary.full_name">
     <div class="space-y-5">
 
-      <!-- Top bar: status + back -->
+      <!-- Flash messages -->
+      <div v-if="$page.props.flash?.success"
+        class="flex items-center gap-3 p-4 bg-success-50 border border-success-200 rounded-xl text-success-800 text-sm">
+        <CheckCircleIcon class="w-5 h-5 flex-shrink-0 text-success-500" />
+        {{ $page.props.flash.success }}
+      </div>
+      <div v-if="$page.props.flash?.error"
+        class="flex items-center gap-3 p-4 bg-danger-50 border border-danger-200 rounded-xl text-danger-800 text-sm">
+        <ExclamationCircleIcon class="w-5 h-5 flex-shrink-0 text-danger-500" />
+        {{ $page.props.flash.error }}
+      </div>
+
+      <!-- Top bar: status + back + activate -->
       <div class="flex flex-wrap items-center gap-3">
         <Link :href="route('admin.beneficiaries.index')" class="btn btn-ghost btn-sm">
           <ChevronLeftIcon class="w-4 h-4" /> Back
         </Link>
         <span :class="['badge', statusBadge(beneficiary.status)]">{{ beneficiary.status }}</span>
-        <span :class="['badge', beneficiary.is_compliant ? 'badge-success' : 'badge-danger']">
-          {{ beneficiary.is_compliant ? '✓ Compliant' : '✗ Non-Compliant' }}
+        <span :class="['badge', beneficiary.is_compliant ? 'badge-success' : 'badge-warning']">
+          {{ beneficiary.is_compliant ? '✓ Compliant' : '○ Pending Compliance' }}
         </span>
-        <!-- Activate button: shown for inactive beneficiaries -->
-        <button
-          v-if="beneficiary.status === 'inactive'"
-          @click="activateBeneficiary"
-          :disabled="activating"
-          class="btn btn-success btn-sm ml-auto"
-        >
-          <CheckCircleIcon class="w-4 h-4" />
-          {{ activating ? 'Activating…' : 'Activate & Issue Card' }}
-        </button>
+
+        <!-- Activate button -->
+        <div class="ml-auto relative group">
+          <button
+            v-if="beneficiary.status === 'inactive'"
+            @click="activateBeneficiary"
+            :disabled="activating || !allRequiredPresent"
+            :class="[
+              'btn btn-sm',
+              allRequiredPresent ? 'btn-success' : 'btn-ghost opacity-60 cursor-not-allowed'
+            ]"
+          >
+            <CheckCircleIcon class="w-4 h-4" />
+            {{ activating ? 'Activating…' : 'Activate & Issue Card' }}
+          </button>
+          <!-- Tooltip when docs incomplete -->
+          <div v-if="beneficiary.status === 'inactive' && !allRequiredPresent"
+            class="hidden group-hover:block absolute right-0 top-full mt-1 z-10 w-56 p-2 bg-slate-800 text-white text-xs rounded-lg shadow-lg">
+            Upload all 3 required documents before activating.
+          </div>
+        </div>
       </div>
 
       <div class="grid grid-cols-1 lg:grid-cols-3 gap-5">
@@ -137,115 +160,145 @@
             </div>
           </div>
 
-          <!-- ── Document Upload Panel ── -->
+          <!-- ── Physical Documents Submitted to Office ── -->
           <div class="card">
             <div class="card-header">
-              <h3 class="font-semibold text-slate-800">Submitted Requirements</h3>
-              <span class="badge badge-neutral">{{ beneficiary.documents?.length ?? 0 }} files</span>
+              <div>
+                <h3 class="font-semibold text-slate-800">Physical Documents</h3>
+                <p class="text-xs text-slate-400 mt-0.5">Documents physically submitted by beneficiary at the DSWD office</p>
+              </div>
+              <!-- Progress pill -->
+              <span :class="[
+                'badge badge-sm',
+                allRequiredPresent ? 'badge-success' : 'badge-warning'
+              ]">
+                {{ docChecklist.filter(d => d.submitted).length }}/{{ docChecklist.length }} Submitted
+              </span>
             </div>
-            <div class="card-body space-y-5">
+            <div class="card-body space-y-4">
 
-              <!-- Upload form -->
-              <div class="p-4 bg-slate-50 rounded-xl border border-dashed border-slate-300 space-y-3">
-                <p class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Upload New Document</p>
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  <div>
-                    <label class="form-label">Document Type <span class="text-danger-500">*</span></label>
-                    <select v-model="docForm.document_type" class="form-select">
-                      <option value="">— Select type —</option>
-                      <option value="birth_certificate">Birth Certificate</option>
-                      <option value="valid_id">Valid ID</option>
-                      <option value="school_id">School ID</option>
-                      <option value="report_card">Report Card</option>
-                      <option value="health_record">Health Record</option>
-                      <option value="vaccination_booklet">Vaccination Booklet</option>
-                      <option value="medical_certificate">Medical Certificate</option>
-                      <option value="barangay_certificate">Barangay Certificate</option>
-                      <option value="photo_1x1">1x1 Photo</option>
-                      <option value="certificate_of_indigency">Certificate of Indigency</option>
-                      <option value="prenatal_record">Prenatal Record</option>
-                      <option value="other">Other</option>
-                    </select>
-                    <p v-if="docForm.errors.document_type" class="text-danger-600 text-xs mt-1">{{ docForm.errors.document_type }}</p>
-                  </div>
-                  <div>
-                    <label class="form-label">Document Name (optional)</label>
-                    <input v-model="docForm.document_name" type="text" class="form-input" placeholder="e.g. Juan's Birth Certificate" />
-                  </div>
-                  <div>
-                    <label class="form-label">Validity Date (optional)</label>
-                    <input v-model="docForm.validity_date" type="date" class="form-input" />
-                  </div>
-                  <div>
-                    <label class="form-label">Description (optional)</label>
-                    <input v-model="docForm.description" type="text" class="form-input" placeholder="Short note…" />
-                  </div>
-                  <div class="sm:col-span-2">
-                    <label class="form-label">File <span class="text-danger-500">*</span></label>
-                    <input
-                      type="file"
-                      class="form-input"
-                      accept=".pdf,.jpg,.jpeg,.png"
-                      @change="e => docForm.file = e.target.files[0]"
-                    />
-                    <p class="text-xs text-slate-400 mt-1">Accepted: PDF, JPG, PNG — max 10 MB</p>
-                    <p v-if="docForm.errors.file" class="text-danger-600 text-xs mt-1">{{ docForm.errors.file }}</p>
-                  </div>
-                </div>
-                <button
-                  @click="uploadDoc"
-                  :disabled="docForm.processing || !docForm.document_type || !docForm.file"
-                  class="btn btn-primary btn-sm"
-                >
-                  <ArrowUpTrayIcon class="w-4 h-4" />
-                  {{ docForm.processing ? 'Uploading…' : 'Upload Document' }}
-                </button>
-              </div>
-
-              <!-- Existing documents list -->
-              <div v-if="!beneficiary.documents?.length" class="text-center text-slate-400 text-sm py-6">
-                <DocumentIcon class="w-10 h-10 mx-auto mb-2 opacity-30" />
-                No documents uploaded yet.
-              </div>
-              <div v-else class="divide-y divide-slate-100">
+              <!-- Document Slots -->
+              <div class="space-y-3">
                 <div
-                  v-for="doc in beneficiary.documents"
-                  :key="doc.id"
-                  class="flex items-center justify-between py-3"
+                  v-for="slot in docChecklist"
+                  :key="slot.type"
+                  :class="[
+                    'rounded-xl border p-4 transition-all',
+                    slot.submitted
+                      ? (slot.doc.is_verified ? 'bg-success-50 border-success-200' : 'bg-amber-50 border-amber-200')
+                      : 'bg-slate-50 border-dashed border-slate-300'
+                  ]"
                 >
-                  <div class="flex items-center gap-3">
-                    <div class="w-9 h-9 bg-brand-50 rounded-lg flex items-center justify-center flex-shrink-0">
-                      <DocumentIcon class="w-5 h-5 text-brand-500" />
+                  <div class="flex items-start gap-4">
+                    <!-- Status icon -->
+                    <div :class="[
+                      'flex-shrink-0 w-10 h-10 rounded-lg flex items-center justify-center',
+                      slot.submitted
+                        ? (slot.doc.is_verified ? 'bg-success-100' : 'bg-amber-100')
+                        : 'bg-slate-200'
+                    ]">
+                      <CheckCircleIcon v-if="slot.submitted && slot.doc.is_verified" class="w-5 h-5 text-success-600" />
+                      <ClockIcon v-else-if="slot.submitted && !slot.doc.is_verified" class="w-5 h-5 text-amber-600" />
+                      <DocumentPlusIcon v-else class="w-5 h-5 text-slate-400" />
                     </div>
-                    <div>
-                      <p class="text-sm font-medium text-slate-700">{{ doc.document_name }}</p>
-                      <p class="text-xs text-slate-400 capitalize">
-                        {{ doc.document_type_label ?? doc.document_type }}
-                        <span v-if="doc.validity_date"> · Valid until {{ doc.validity_date }}</span>
-                        <span class="ml-2">{{ doc.file_size_kb }} KB</span>
-                      </p>
+
+                    <!-- Content -->
+                    <div class="flex-1 min-w-0">
+                      <div class="flex items-center gap-2 flex-wrap">
+                        <p class="text-sm font-semibold text-slate-800">{{ slot.label }}</p>
+                        <span v-if="slot.submitted && slot.doc.is_verified" class="badge badge-success badge-sm">✓ Verified</span>
+                        <span v-else-if="slot.submitted" class="badge badge-warning badge-sm">Pending Verification</span>
+                        <span v-else class="badge badge-neutral badge-sm">Not Submitted</span>
+                      </div>
+
+                      <!-- Uploaded file info -->
+                      <div v-if="slot.submitted" class="mt-1 flex items-center gap-3 flex-wrap">
+                        <p class="text-xs text-slate-500">
+                          Uploaded {{ slot.doc.uploaded_at }}
+                          <span v-if="slot.doc.uploaded_by"> by <span class="font-medium">{{ slot.doc.uploaded_by }}</span></span>
+                        </p>
+                      </div>
+
+                      <!-- Upload form (for this slot) -->
+                      <div v-if="uploadingSlot === slot.type" class="mt-3 space-y-2">
+                        <input
+                          type="file"
+                          class="form-input text-sm"
+                          accept=".pdf,.jpg,.jpeg,.png"
+                          @change="e => slotFile = e.target.files[0]"
+                        />
+                        <p class="text-xs text-slate-400">Accepted: PDF, JPG, PNG — max 10 MB</p>
+                        <div class="flex gap-2">
+                          <button
+                            @click="uploadSlot(slot.type)"
+                            :disabled="!slotFile || uploadingDoc"
+                            class="btn btn-primary btn-sm"
+                          >
+                            <ArrowUpTrayIcon class="w-3.5 h-3.5" />
+                            {{ uploadingDoc ? 'Uploading…' : (slot.submitted ? 'Replace File' : 'Upload') }}
+                          </button>
+                          <button @click="cancelUpload" class="btn btn-ghost btn-sm">Cancel</button>
+                        </div>
+                      </div>
                     </div>
-                  </div>
-                  <div class="flex items-center gap-2">
-                    <span v-if="doc.is_verified" class="badge badge-success badge-sm">Verified</span>
-                    <span v-else class="badge badge-warning badge-sm">Pending</span>
-                    <a
-                      :href="`/storage/${doc.file_path}`"
-                      target="_blank"
-                      class="btn btn-ghost btn-sm text-brand-600"
-                      title="View file"
-                    >
-                      <EyeIcon class="w-4 h-4" />
-                    </a>
-                    <button
-                      @click="removeDoc(doc.id)"
-                      class="btn btn-ghost btn-sm text-danger-600"
-                      title="Remove"
-                    >
-                      <TrashIcon class="w-4 h-4" />
-                    </button>
+
+                    <!-- Action buttons -->
+                    <div v-if="uploadingSlot !== slot.type" class="flex items-center gap-1 flex-shrink-0">
+                      <!-- View -->
+                      <a v-if="slot.submitted"
+                        :href="`/storage/${slot.doc.file_path}`"
+                        target="_blank"
+                        class="btn btn-ghost btn-sm text-brand-600"
+                        title="View file"
+                      >
+                        <EyeIcon class="w-4 h-4" />
+                      </a>
+                      <!-- Verify toggle -->
+                      <button
+                        v-if="slot.submitted"
+                        @click="toggleVerify(slot.doc.id)"
+                        :class="['btn btn-ghost btn-sm', slot.doc.is_verified ? 'text-amber-600' : 'text-success-600']"
+                        :title="slot.doc.is_verified ? 'Mark as unverified' : 'Mark as verified'"
+                      >
+                        <ShieldCheckIcon class="w-4 h-4" />
+                      </button>
+                      <!-- Upload / Replace -->
+                      <button
+                        @click="startUpload(slot.type)"
+                        class="btn btn-ghost btn-sm text-slate-600"
+                        :title="slot.submitted ? 'Replace document' : 'Upload document'"
+                      >
+                        <ArrowUpTrayIcon class="w-4 h-4" />
+                      </button>
+                      <!-- Delete -->
+                      <button
+                        v-if="slot.submitted"
+                        @click="removeDoc(slot.doc.id)"
+                        class="btn btn-ghost btn-sm text-danger-600"
+                        title="Remove"
+                      >
+                        <TrashIcon class="w-4 h-4" />
+                      </button>
+                    </div>
                   </div>
                 </div>
+              </div>
+
+              <!-- Activation readiness summary -->
+              <div :class="[
+                'flex items-center gap-3 p-3 rounded-lg text-sm',
+                allRequiredPresent ? 'bg-success-50 text-success-800' : 'bg-amber-50 text-amber-800'
+              ]">
+                <component
+                  :is="allRequiredPresent ? CheckCircleIcon : ExclamationCircleIcon"
+                  class="w-4 h-4 flex-shrink-0"
+                />
+                <span v-if="allRequiredPresent">
+                  All required documents submitted. You may now activate this beneficiary.
+                </span>
+                <span v-else>
+                  {{ docChecklist.filter(d => !d.submitted).length }} document(s) still required before activation.
+                </span>
               </div>
             </div>
           </div>
@@ -278,7 +331,7 @@
                     <td><ComplianceDot :value="cr.fds_compliant" /></td>
                     <td>
                       <span :class="['badge badge-sm', cr.is_fully_compliant ? 'badge-success' : 'badge-danger']">
-                        {{ cr.is_fully_compliant ? 'Compliant' : 'Non-Compliant' }}
+                        {{ cr.is_fully_compliant ? 'Complete' : 'Incomplete' }}
                       </span>
                     </td>
                     <td class="text-sm text-slate-500">{{ cr.verifier?.name ?? '—' }}</td>
@@ -344,19 +397,25 @@ import { ref } from 'vue'
 import { Head, Link, useForm, router } from '@inertiajs/vue3'
 import {
   UserIcon, PencilIcon, EyeIcon, TrashIcon,
-  ChevronLeftIcon, ArrowUpTrayIcon, DocumentIcon,
-  CheckCircleIcon,
+  ChevronLeftIcon, ArrowUpTrayIcon, DocumentPlusIcon,
+  CheckCircleIcon, ExclamationCircleIcon, ClockIcon, ShieldCheckIcon,
 } from '@heroicons/vue/24/outline'
 import StaffLayout from '@/Layouts/StaffLayout.vue'
 
-const props = defineProps({ beneficiary: Object })
+const props = defineProps({
+  beneficiary:       Object,
+  docChecklist:      Array,
+  requiredDocTypes:  Array,
+  allRequiredPresent: Boolean,
+})
 
-const editing   = ref(false)
+const editing    = ref(false)
 const activating = ref(false)
 
+// ── Activate ─────────────────────────────────────────────────────────────────
 const activateBeneficiary = () => {
   if (!confirm(
-    'Activate this beneficiary? This confirms that their documentary requirements have been verified.\n\nA QR card will be automatically issued.'
+    'Activate this beneficiary?\n\nThis confirms that all required documents have been physically received and verified at the DSWD office.\n\nA QR card will be automatically issued.'
   )) return
   activating.value = true
   router.post(route('admin.beneficiaries.activate', props.beneficiary.id), {}, {
@@ -364,7 +423,7 @@ const activateBeneficiary = () => {
   })
 }
 
-// ── Edit form ──────────────────────────────────────────────────────────
+// ── Edit form ─────────────────────────────────────────────────────────────────
 const editForm = useForm({
   first_name:     props.beneficiary.first_name,
   last_name:      props.beneficiary.last_name,
@@ -382,36 +441,57 @@ const saveEdit = () => {
   })
 }
 
-// ── Document upload form ───────────────────────────────────────────────
-const docForm = useForm({
-  document_type: '',
-  document_name: '',
-  validity_date: '',
-  description:   '',
-  file:          null,
-})
+// ── Per-slot document upload ───────────────────────────────────────────────────
+const uploadingSlot = ref(null)   // which doc type slot is open
+const slotFile      = ref(null)
+const uploadingDoc  = ref(false)
 
-const uploadDoc = () => {
-  docForm.post(route('admin.beneficiaries.documents.upload', props.beneficiary.id), {
+const startUpload = (type) => {
+  uploadingSlot.value = type
+  slotFile.value = null
+}
+
+const cancelUpload = () => {
+  uploadingSlot.value = null
+  slotFile.value = null
+}
+
+const uploadSlot = (type) => {
+  if (!slotFile.value) return
+  uploadingDoc.value = true
+
+  const form = new FormData()
+  form.append('document_type', type)
+  form.append('file', slotFile.value)
+
+  router.post(route('admin.beneficiaries.documents.upload', props.beneficiary.id), form, {
     forceFormData: true,
     onSuccess: () => {
-      docForm.reset()
-      // Reset the file input manually
-      const fi = document.querySelector('input[type="file"]')
-      if (fi) fi.value = ''
+      uploadingSlot.value = null
+      slotFile.value = null
     },
+    onFinish: () => { uploadingDoc.value = false },
   })
 }
 
+// ── Verify toggle ─────────────────────────────────────────────────────────────
+const toggleVerify = (docId) => {
+  router.patch(route('admin.beneficiaries.documents.verify', {
+    id: props.beneficiary.id,
+    docId,
+  }))
+}
+
+// ── Delete document ───────────────────────────────────────────────────────────
 const removeDoc = (docId) => {
-  if (!confirm('Remove this document?')) return
+  if (!confirm('Remove this document? You will need to upload it again.')) return
   router.delete(route('admin.beneficiaries.documents.delete', {
     id: props.beneficiary.id,
     docId,
   }))
 }
 
-// ── Helpers ────────────────────────────────────────────────────────────
+// ── Helpers ───────────────────────────────────────────────────────────────────
 const statusBadge = (s) => ({
   active: 'badge-success', inactive: 'badge-neutral',
   suspended: 'badge-danger', graduated: 'badge-info', delisted: 'badge-danger',

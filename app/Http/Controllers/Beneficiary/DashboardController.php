@@ -56,15 +56,25 @@ class DashboardController extends Controller
     public function profile(): Response
     {
         $beneficiary = $this->getBeneficiary();
-        return Inertia::render('Beneficiary/Profile', compact('beneficiary'));
+        $unreadCount = auth()->user()->unreadNotifications()->count();
+
+        return Inertia::render('Beneficiary/Profile', [
+            'beneficiary'  => $beneficiary,
+            'unread_count' => $unreadCount,
+        ]);
     }
 
     public function documents(): Response
     {
         $beneficiary = $this->getBeneficiary();
-        $docGroups   = $beneficiary->documents->groupBy('document_type');
+
+        // Documents physically submitted to the DSWD office (uploaded by admin)
+        $adminDocs = $beneficiary->documents
+            ->where('source', 'admin')
+            ->values();
+
         $unreadCount = auth()->user()->unreadNotifications()->count();
-        return Inertia::render('Beneficiary/Documents', compact('beneficiary', 'docGroups', 'unreadCount'));
+        return Inertia::render('Beneficiary/Documents', compact('beneficiary', 'adminDocs', 'unreadCount'));
     }
 
     public function uploadDocument(Request $request): RedirectResponse
@@ -93,6 +103,8 @@ class DashboardController extends Controller
             'description'    => $request->description,
             'validity_date'  => $request->validity_date,
             'is_verified'    => false,
+            'source'         => 'beneficiary',
+            'uploaded_by'    => auth()->id(),
         ]);
 
         AuditLogService::log(
@@ -109,8 +121,10 @@ class DashboardController extends Controller
     public function deleteDocument(int $docId): RedirectResponse
     {
         $beneficiary = Beneficiary::where('user_id', auth()->id())->firstOrFail();
-        $doc         = BeneficiaryDocument::where('beneficiary_id', $beneficiary->id)
-            ->where('is_verified', false)      // Only allow deleting un-verified docs
+        // Beneficiaries may only delete their own self-uploaded, un-verified docs
+        $doc = BeneficiaryDocument::where('beneficiary_id', $beneficiary->id)
+            ->where('source', 'beneficiary')
+            ->where('is_verified', false)
             ->findOrFail($docId);
 
         if (Storage::disk('public')->exists($doc->file_path)) {
@@ -153,9 +167,14 @@ class DashboardController extends Controller
 
     public function notifications(): Response
     {
+        $unreadCount   = auth()->user()->unreadNotifications()->count();
         $notifications = auth()->user()->notifications()->paginate(20);
         auth()->user()->unreadNotifications->markAsRead();
-        return Inertia::render('Beneficiary/Notifications', compact('notifications'));
+
+        return Inertia::render('Beneficiary/Notifications', [
+            'notifications' => $notifications,
+            'unread_count'  => $unreadCount,
+        ]);
     }
 
     public function markNotificationRead(Request $request, string $id): RedirectResponse

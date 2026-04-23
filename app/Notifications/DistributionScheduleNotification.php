@@ -32,25 +32,30 @@ class DistributionScheduleNotification extends Notification
         $name        = $beneficiary?->full_name ?? $notifiable->name ?? 'Beneficiary';
 
         return (new MailMessage)
-            ->subject("📅 Cash Grant Available — {$this->event->period} | SECURE 4Ps")
+            ->subject("✅ Quarter {$this->event->period} Is Now Open | SECURE 4Ps")
             ->view('emails.distribution-schedule', [
-                'subject'      => "Cash Grant Available — {$this->event->period}",
+                'subject'      => "Quarter {$this->event->period} Is Now Open",
                 'greeting'     => "Hello, {$name}!",
-                'introLine'    => 'Your 4Ps cash grant is now available for claiming. Please proceed to the distribution venue on the scheduled date with your SECURE 4Ps ID card.',
-                'alertType'    => 'info',
-                'detailsTitle' => '📅 Distribution Schedule',
+                'introLine'    => "The {$this->event->period} quarter is now open! "
+                    . "Submit your requirements to the local DSWD office to be verified by the Compliance Verifier. "
+                    . "Once you are verified as compliant this quarter, your cash grant will be available for claiming — anytime before the quarter ends.",
+                'alertType'    => 'success',
+                'detailsTitle' => '✅ What To Do This Quarter',
                 'details'      => [
-                    'Period'           => $this->event->period,
-                    'Event Name'       => $this->event->title,
-                    'Venue'            => $this->event->venue ?? 'To be announced',
-                    'Date Start'       => $this->event->distribution_date_start?->format('F d, Y') ?? '—',
-                    'Date End'         => $this->event->distribution_date_end?->format('F d, Y') ?? '—',
-                    'Time'             => $this->event->distribution_time_start ?? 'As scheduled',
+                    'Quarter'        => $this->event->period,
+                    'Quarter Ends'   => optional($this->event->period_end)->format('F d, Y') ?? '—',
+                    'Venue'          => $this->event->venue ?? 'DSWD Office',
+                    'Office Hours'   => $this->event->distribution_time_start
+                        ? "{$this->event->distribution_time_start} – " . ($this->event->distribution_time_end ?? '—')
+                        : 'During regular office hours',
                 ],
-                'noteLines'    => [
-                    '⚠ Important: Bring your SECURE 4Ps ID card and one (1) valid government-issued ID.',
+                'noteLines' => [
+                    '📝 Step 1: Complete all required activities — health, education attendance, and FDS.',
+                    '🏢 Step 2: Submit your requirements to the local DSWD office to be verified by the Compliance Verifier.',
+                    '💰 Step 3: Once verified as compliant, your cash grant will be computed and you may claim it at the office.',
+                    '⚠ Important: Bring your SECURE 4Ps ID card and one (1) valid government-issued ID when claiming.',
                     'If you cannot claim personally, your registered authorized proxy may claim on your behalf.',
-                    'Unclaimed grants within the distribution period may require a separate request for re-scheduling.',
+                    "Claims must be completed before " . (optional($this->event->period_end)->format('F d, Y') ?? 'the quarter ends') . ".",
                 ],
                 'actionUrl'    => config('app.url') . '/portal/dashboard',
                 'actionText'   => 'View My Portal',
@@ -60,16 +65,18 @@ class DistributionScheduleNotification extends Notification
     public function toDatabase(object $notifiable): array
     {
         return [
-            'type'    => 'distribution_schedule',
-            'title'   => '📅 Cash Grant Distribution Scheduled',
-            'message' => "Your cash grant is now available for claiming. {$this->event->title}",
+            'type'    => 'distribution_ongoing',
+            'title'   => "✅ Quarter {$this->event->period} Is Now Open",
+            'message' => "The {$this->event->period} quarter is now open! Submit your requirements to the DSWD office to be verified. "
+                . "Once verified as compliant, your cash grant will be available for claiming before "
+                . (optional($this->event->period_end)->format('F d, Y') ?? 'the quarter ends') . ".",
             'details' => [
-                'event_id'    => $this->event->id,
-                'period'      => $this->event->period,
-                'venue'       => $this->event->venue,
-                'date_start'  => $this->event->distribution_date_start?->format('F d, Y'),
-                'date_end'    => $this->event->distribution_date_end?->format('F d, Y'),
-                'time_start'  => $this->event->distribution_time_start,
+                'event_id'      => $this->event->id,
+                'period'        => $this->event->period,
+                'venue'         => $this->event->venue,
+                'quarter_start' => optional($this->event->period_start)->format('F d, Y'),
+                'quarter_end'   => optional($this->event->period_end)->format('F d, Y'),
+                'time_start'    => $this->event->distribution_time_start,
             ],
         ];
     }

@@ -3,8 +3,10 @@
 namespace App\Http\Controllers\FieldOfficer;
 
 use App\Http\Controllers\Controller;
+use App\Models\Beneficiary;
 use App\Models\CashGrantDistribution;
 use App\Models\DistributionEvent;
+use App\Notifications\CashGrantClaimedNotification;
 use App\Services\AuditLogService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -83,6 +85,24 @@ class DistributionController extends Controller
                 $txnRef,
             );
         });
+
+        // ── Notify the beneficiary of their successful claim ──────────────────
+        $beneficiary = Beneficiary::with('user')
+            ->find($validated['beneficiary_id']);
+
+        if ($beneficiary?->user) {
+            $distribution = CashGrantDistribution::with([
+                'distributionEvent', 'proxy',
+            ])->where([
+                'beneficiary_id'        => $validated['beneficiary_id'],
+                'distribution_event_id' => $validated['distribution_event_id'],
+                'status'                => 'claimed',
+            ])->latest()->first();
+
+            if ($distribution) {
+                $beneficiary->user->notify(new CashGrantClaimedNotification($distribution));
+            }
+        }
 
         return back()->with('success', 'Cash grant recorded successfully. Transaction logged.');
     }

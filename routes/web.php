@@ -142,6 +142,7 @@ Route::middleware(['auth', 'role:admin,superadmin'])
         Route::post('beneficiaries/{id}/activate',                   [AdminBeneficiaryController::class, 'activate'])->name('beneficiaries.activate');
         Route::post('beneficiaries/{id}/documents',                  [AdminBeneficiaryController::class, 'uploadDocument'])->name('beneficiaries.documents.upload');
         Route::delete('beneficiaries/{id}/documents/{docId}',        [AdminBeneficiaryController::class, 'deleteDocument'])->name('beneficiaries.documents.delete');
+        Route::patch('beneficiaries/{id}/documents/{docId}/verify',  [AdminBeneficiaryController::class, 'verifyDocument'])->name('beneficiaries.documents.verify');
 
         // Distribution Events
         Route::resource('distribution-events',  DistributionEventController::class)->names('events');

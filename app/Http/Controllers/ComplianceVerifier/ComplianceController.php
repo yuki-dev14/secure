@@ -7,6 +7,7 @@ use App\Models\Beneficiary;
 use App\Models\ComplianceRecord;
 use App\Notifications\ComplianceResultNotification;
 use App\Services\AuditLogService;
+use App\Services\CashGrantCalculatorService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -14,6 +15,7 @@ use Inertia\Response;
 
 class ComplianceController extends Controller
 {
+    public function __construct(private CashGrantCalculatorService $calculator) {}
     public function index(Request $request): Response
     {
         $query = Beneficiary::with(['office', 'familyMembers', 'complianceRecords'])
@@ -140,7 +142,17 @@ class ComplianceController extends Controller
             $beneficiary->user->notify(new ComplianceResultNotification($record->fresh()));
         }
 
-        return back()->with('success', 'Compliance record saved successfully.');
+        // Auto-compute grant for this beneficiary's quarter if an active event exists
+        $grantMsg = '';
+        if ($record->is_fully_compliant) {
+            $calc = $this->calculator->calculateForPeriod($beneficiary, $validated['period']);
+            if ($calc) {
+                $amount = number_format($calc->total_grant_amount, 2);
+                $grantMsg = " Grant auto-computed: ₱{$amount}.";
+            }
+        }
+
+        return back()->with('success', "Completion record saved successfully.{$grantMsg}");
     }
 
     public function update(Request $request, ComplianceRecord $complianceRecord): RedirectResponse
@@ -157,7 +169,18 @@ class ComplianceController extends Controller
         $this->recomputeHouseholdCompliance($complianceRecord->beneficiary);
         AuditLogService::updated($complianceRecord, $old, $complianceRecord->fresh()->toArray());
 
-        return back()->with('success', 'Compliance record updated.');
+        // Re-compute grant whenever compliance status changes
+        $grantMsg = '';
+        $calc = $this->calculator->calculateForPeriod(
+            $complianceRecord->beneficiary,
+            $complianceRecord->period
+        );
+        if ($calc) {
+            $status   = $calc->is_eligible ? '✓ Eligible — ₱' . number_format($calc->total_grant_amount, 2) : '✕ Ineligible';
+            $grantMsg = " Grant updated: {$status}.";
+        }
+
+        return back()->with('success', "Completion record updated.{$grantMsg}");
     }
 
     public function periods(): \Illuminate\Http\JsonResponse

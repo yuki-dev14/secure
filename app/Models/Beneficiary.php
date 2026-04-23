@@ -24,6 +24,8 @@ class Beneficiary extends Model
         'is_compliant', 'last_compliance_check', 'created_by',
     ];
 
+    protected $appends = ['full_name', 'full_address', 'age', 'status_color'];
+
     protected function casts(): array
     {
         return [
@@ -140,9 +142,9 @@ class Beneficiary extends Model
         return implode(', ', $parts);
     }
 
-    public function getAgeAttribute(): int
+    public function getAgeAttribute(): ?int
     {
-        return $this->birthdate->age;
+        return $this->birthdate?->age;
     }
 
     public function getStatusColorAttribute(): string

@@ -126,7 +126,14 @@ class ScannerController extends Controller
                 'is_compliant'         => $beneficiary->is_compliant,
                 'family_members_count' => $beneficiary->familyMembers->count(),
             ],
-            'compliance'      => $beneficiary->complianceRecords->first(),
+            'compliance'      => $beneficiary->complianceRecords->first() ? [
+                'id'                => $beneficiary->complianceRecords->first()->id,
+                'period'            => $beneficiary->complianceRecords->first()->period,
+                'is_fully_compliant'=> $beneficiary->complianceRecords->first()->is_fully_compliant,
+                'verified_by_name'  => $beneficiary->complianceRecords->first()->verifier?->name,
+                'notes'             => $beneficiary->complianceRecords->first()->notes,
+                'verified_at'       => $beneficiary->complianceRecords->first()->updated_at?->format('M d, Y'),
+            ] : null,
             'grant'           => $beneficiary->grantCalculations->first(),
             'proxies'         => $beneficiary->proxies->map(fn($p) => [
                 'id'           => $p->id,
@@ -141,6 +148,9 @@ class ScannerController extends Controller
                 'document_name' => $d->document_name,
                 'file_url'      => asset('storage/' . $d->file_path),
                 'is_verified'   => $d->is_verified,
+                'verified_at'   => $d->verified_at?->format('M d, Y'),
+                'source'        => $d->source,       // 'admin' = submitted physically
+                'validity_date' => $d->validity_date?->format('M d, Y'),
             ]),
             'already_claimed' => $alreadyClaimed,
         ]);

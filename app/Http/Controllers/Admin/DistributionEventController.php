@@ -6,11 +6,12 @@ use App\Http\Controllers\Controller;
 use App\Models\Beneficiary;
 use App\Models\DistributionEvent;
 use App\Models\Office;
+use App\Notifications\DistributionEventCreatedNotification;
+use App\Notifications\DistributionScheduleNotification;
 use App\Services\AuditLogService;
 use App\Services\CashGrantCalculatorService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Notification;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -38,12 +39,11 @@ class DistributionEventController extends Controller
     {
         $validated = $request->validate([
             'title'                   => 'required|string|max:200',
-            'period'                  => 'required|string|max:50',   // e.g. "2026-Q2"
+            'period'                  => 'required|string|max:50',
             'period_start'            => 'required|date',
             'period_end'              => 'required|date|after:period_start',
-            'months_covered'          => 'required|integer|min:1|max:3', // One quarter = 3 months
-            'distribution_date_start' => 'required|date',
-            'distribution_date_end'   => 'required|date|after_or_equal:distribution_date_start',
+            'months_covered'          => 'required|integer|min:1|max:3',
+            // Distribution window spans the entire quarter — no specific sub-dates needed
             'distribution_time_start' => 'nullable|date_format:H:i',
             'distribution_time_end'   => 'nullable|date_format:H:i',
             'office_id'               => 'nullable|exists:offices,id',
@@ -54,14 +54,20 @@ class DistributionEventController extends Controller
 
         $event = DistributionEvent::create([
             ...$validated,
-            'status'     => 'upcoming',
-            'created_by' => auth()->id(),
+            // Distribution is open for the whole quarter
+            'distribution_date_start' => $validated['period_start'],
+            'distribution_date_end'   => $validated['period_end'],
+            'status'                  => 'upcoming',
+            'created_by'              => auth()->id(),
         ]);
 
         AuditLogService::created($event);
 
+        // Auto-notify all active beneficiaries about the new upcoming event
+        $notified = $this->notifyAllBeneficiaries($event, 'upcoming');
+
         return redirect()->route('admin.events.show', $event)
-            ->with('success', 'Distribution event created. Remember to notify beneficiaries.');
+            ->with('success', "Distribution event created. {$notified} beneficiaries notified of the upcoming quarter.");
     }
 
     public function show(DistributionEvent $distributionEvent): Response
@@ -95,11 +101,36 @@ class DistributionEventController extends Controller
             'notes'   => 'nullable|string',
         ]);
 
+        $oldStatus = $distributionEvent->status;
+        $newStatus = $validated['status'];
+
         $old = $distributionEvent->toArray();
         $distributionEvent->update($validated);
         AuditLogService::updated($distributionEvent, $old, $distributionEvent->fresh()->toArray());
 
-        return back()->with('success', 'Distribution event updated.');
+        $message = 'Distribution event updated.';
+
+        // Auto-compute grants when event goes ONGOING
+        if ($oldStatus !== 'ongoing' && $newStatus === 'ongoing') {
+            // Batch compute (safety net for those not yet computed individually)
+            $results = $this->calculator->batchCalculate($distributionEvent);
+            AuditLogService::log(
+                'grants_auto_computed_on_ongoing',
+                $distributionEvent,
+                [],
+                $results,
+                "Auto-computation on status change to ongoing: {$results['computed']} processed, {$results['eligible']} eligible"
+            );
+
+            // Notify all active beneficiaries that claims are now open
+            $notified = $this->notifyAllBeneficiaries($distributionEvent, 'ongoing');
+
+            $message = "Event set to Ongoing. "
+                . "Grants computed: {$results['eligible']} eligible ✓ · {$results['ineligible']} ineligible. "
+                . "{$notified} beneficiaries notified that claims are now open.";
+        }
+
+        return back()->with('success', $message);
     }
 
     public function destroy(DistributionEvent $distributionEvent): RedirectResponse
@@ -117,23 +148,39 @@ class DistributionEventController extends Controller
 
     /**
      * Send in-system notification to all active beneficiaries about the event.
+     * Still available as a manual re-send option from the UI.
      */
     public function notifyBeneficiaries(DistributionEvent $event): RedirectResponse
+    {
+        $count = $this->notifyAllBeneficiaries($event, 'ongoing');
+        AuditLogService::log('beneficiaries_notified', $event, [], ['count' => $count],
+            "{$count} beneficiaries manually re-notified about {$event->title}");
+        return back()->with('success', "{$count} beneficiaries have been notified.");
+    }
+
+    /**
+     * Notify all active beneficiaries. Sends the appropriate notification class
+     * based on the trigger context ('upcoming' = event created, 'ongoing' = claims open).
+     *
+     * @return int  Number of users notified.
+     */
+    private function notifyAllBeneficiaries(DistributionEvent $event, string $trigger): int
     {
         $beneficiaries = Beneficiary::active()->with('user')->get();
         $count = 0;
 
+        $notificationClass = $trigger === 'upcoming'
+            ? DistributionEventCreatedNotification::class
+            : DistributionScheduleNotification::class;
+
         foreach ($beneficiaries as $beneficiary) {
             if ($beneficiary->user) {
-                $beneficiary->user->notify(new \App\Notifications\DistributionScheduleNotification($event));
+                $beneficiary->user->notify(new $notificationClass($event));
                 $count++;
             }
         }
 
-        AuditLogService::log('beneficiaries_notified', $event, [], ['count' => $count],
-            "{$count} beneficiaries notified about {$event->title}");
-
-        return back()->with('success', "{$count} beneficiaries have been notified.");
+        return $count;
     }
 
     /**

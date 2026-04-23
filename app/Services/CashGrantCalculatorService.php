@@ -223,6 +223,30 @@ class CashGrantCalculatorService
     }
 
     /**
+     * Auto-compute grant for a single beneficiary when their compliance record changes.
+     *
+     * Finds the DistributionEvent that covers the given quarter period and
+     * runs calculate() for this beneficiary only. If no matching active event
+     * exists yet, silently does nothing (the batch compute on "Ongoing" will catch it).
+     *
+     * @return CashGrantCalculation|null  The calculation result, or null if no event found.
+     */
+    public function calculateForPeriod(Beneficiary $beneficiary, string $period): ?CashGrantCalculation
+    {
+        // Find the distribution event that covers this quarter
+        $event = DistributionEvent::where('period', $period)
+            ->whereIn('status', ['upcoming', 'ongoing'])   // only active events
+            ->first();
+
+        if (!$event) {
+            // No active event for this quarter yet — grant will be computed when event goes Ongoing
+            return null;
+        }
+
+        return $this->calculate($beneficiary, $event);
+    }
+
+    /**
      * Get children eligible for education grant:
      * - 3–18 years old (is_school_age = true)
      * - Enrolled in daycare/preschool/elementary/junior_high/senior_high

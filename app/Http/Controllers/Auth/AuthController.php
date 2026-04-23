@@ -76,9 +76,13 @@ class AuthController extends Controller
 
     // ─── Beneficiary Login ────────────────────────────────────────────────────────
 
-    public function showBeneficiaryLogin(): Response
+    public function showBeneficiaryLogin(Request $request): Response
     {
-        return Inertia::render('Auth/BeneficiaryLogin');
+        return Inertia::render('Auth/BeneficiaryLogin', [
+            // Set when QR scan validates but personal password is required.
+            // Passed via query string (?qr_id=4PS-LPA-XXXXXX) from beneficiaryQrLogin().
+            'qr_id' => $request->query('qr_id'),
+        ]);
     }
 
     /**
@@ -117,8 +121,14 @@ class AuthController extends Controller
     }
 
     /**
-     * Beneficiary logs in by scanning their QR card — no password required.
-     * The QR token is validated against the active card on record.
+     * Beneficiary logs in by scanning their QR card.
+     *
+     * FIRST LOGIN (default password still active):
+     *   QR validates → auto-login → redirect to change-password page.
+     *
+     * SUBSEQUENT LOGINS (personal password already set):
+     *   QR validates → NOT auto-logged in → redirect to login page with
+     *   Unique ID pre-filled, asking them to enter their personal password.
      */
     public function beneficiaryQrLogin(Request $request): RedirectResponse
     {
@@ -141,6 +151,21 @@ class AuthController extends Controller
             throw ValidationException::withMessages(['payload' => 'No user account linked to this beneficiary.']);
         }
 
+        // Check if the beneficiary has already changed their password from the default.
+        // If so, QR scan alone is not enough — they must enter their personal password.
+        $activeCard = $beneficiary->cards()->where('is_active', true)->first();
+        if ($activeCard && $activeCard->password_changed_at) {
+            // QR is valid, but password was already personalised — require password entry.
+            // Pass the unique_id via query string so Inertia can pick it up client-side.
+            AuditLogService::log('qr_password_gate', $beneficiary, [], [],
+                "QR verified for {$beneficiary->unique_id} but personal password required.");
+
+            return redirect()->route('beneficiary.login', [
+                'qr_id' => $beneficiary->unique_id,
+            ]);
+        }
+
+        // First-time login — default password still active → auto-login and force change
         return $this->completeLogin($request, $beneficiary->user, $beneficiary);
     }
 

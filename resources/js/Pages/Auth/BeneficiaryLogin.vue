@@ -51,7 +51,9 @@
             <template v-if="!qrScanning && !qrLoginError">
               <div class="text-center text-sm text-slate-500 mb-4">
                 Point your camera at the QR code on your 4Ps ID card
-                <span class="block text-xs text-success-600 font-medium mt-0.5">No password required — just scan to sign in</span>
+                <span class="block text-xs text-brand-600 font-medium mt-0.5">
+                  First time? Scan to sign in and set your password
+                </span>
               </div>
               <div class="relative bg-slate-900 rounded-2xl overflow-hidden aspect-square max-w-xs mx-auto">
                 <div id="qr-reader" class="w-full h-full"></div>
@@ -106,54 +108,70 @@
             </p>
           </div>
 
-          <!-- Manual ID Tab -->
-          <form v-else @submit.prevent="submit" class="space-y-5">
-            <div>
-              <label class="form-label" for="identifier">4Ps Unique ID</label>
-              <input
-                id="identifier"
-                v-model="form.identifier"
-                type="text"
-                placeholder="e.g. 4PS-LPA-000001"
-                class="form-input uppercase tracking-widest font-mono"
-                :class="{ 'border-danger-500': form.errors.identifier }"
-                required
-              />
-              <p v-if="form.errors.identifier" class="form-error">
-                <ExclamationCircleIcon class="w-3.5 h-3.5" />
-                {{ form.errors.identifier }}
-              </p>
-              <p class="form-hint">Found on your DSWD-issued ID card</p>
+          <!-- Manual ID + Password Tab -->
+          <div v-else class="space-y-5">
+            <!-- QR-verified banner: shown when redirected after QR gate -->
+            <div v-if="qrVerifiedBanner"
+              class="flex items-start gap-3 bg-success-50 border border-success-200 rounded-xl px-4 py-3">
+              <span class="text-success-600 text-lg leading-none mt-0.5">✓</span>
+              <div>
+                <p class="text-sm font-semibold text-success-700">QR Code Verified!</p>
+                <p class="text-xs text-success-600 mt-0.5">
+                  Your identity was confirmed via QR. Please enter your personal password to complete sign-in.
+                </p>
+              </div>
             </div>
 
-            <div>
-              <label class="form-label" for="password">Password</label>
-              <div class="relative">
+            <form @submit.prevent="submit" class="space-y-5">
+              <!-- Hidden when QR-verified — ID already pre-filled, no need to show it -->
+              <div v-if="!qrVerifiedBanner">
+                <label class="form-label" for="identifier">4Ps Unique ID</label>
                 <input
-                  id="password"
-                  v-model="form.password"
-                  :type="showPassword ? 'text' : 'password'"
-                  placeholder="••••••••"
-                  class="form-input pr-10"
+                  id="identifier"
+                  v-model="form.identifier"
+                  type="text"
+                  placeholder="e.g. 4PS-LPA-000001"
+                  class="form-input uppercase tracking-widest font-mono"
+                  :class="{ 'border-danger-500': form.errors.identifier }"
                   required
                 />
-                <button type="button" @click="showPassword = !showPassword"
-                  class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600">
-                  <EyeIcon v-if="!showPassword" class="w-4 h-4" />
-                  <EyeSlashIcon v-else class="w-4 h-4" />
-                </button>
+                <p v-if="form.errors.identifier" class="form-error">
+                  <ExclamationCircleIcon class="w-3.5 h-3.5" />
+                  {{ form.errors.identifier }}
+                </p>
+                <p class="form-hint">Found on your DSWD-issued ID card</p>
               </div>
-              <p v-if="form.errors.password" class="form-error">
-                <ExclamationCircleIcon class="w-3.5 h-3.5" />
-                {{ form.errors.password }}
-              </p>
-            </div>
 
-            <button type="submit" :disabled="form.processing" class="btn btn-primary w-full btn-lg">
-              <LockClosedIcon class="w-4 h-4" />
-              {{ form.processing ? 'Signing in…' : 'Access My Account' }}
-            </button>
-          </form>
+              <div>
+                <label class="form-label" for="password">Password</label>
+                <div class="relative">
+                  <input
+                    id="password"
+                    v-model="form.password"
+                    :type="showPassword ? 'text' : 'password'"
+                    placeholder="••••••••"
+                    class="form-input pr-10"
+                    required
+                    autofocus
+                  />
+                  <button type="button" @click="showPassword = !showPassword"
+                    class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600">
+                    <EyeIcon v-if="!showPassword" class="w-4 h-4" />
+                    <EyeSlashIcon v-else class="w-4 h-4" />
+                  </button>
+                </div>
+                <p v-if="form.errors.password" class="form-error">
+                  <ExclamationCircleIcon class="w-3.5 h-3.5" />
+                  {{ form.errors.password }}
+                </p>
+              </div>
+
+              <button type="submit" :disabled="form.processing" class="btn btn-primary w-full btn-lg">
+                <LockClosedIcon class="w-4 h-4" />
+                {{ form.processing ? 'Signing in…' : 'Access My Account' }}
+              </button>
+            </form>
+          </div>
 
           <div class="mt-6 pt-4 border-t border-slate-100 text-center">
             <p class="text-xs text-slate-400">
@@ -172,19 +190,24 @@
 </template>
 
 <script setup>
-import { ref, watch, onUnmounted } from 'vue'
+import { ref, watch, onMounted, onUnmounted } from 'vue'
 import { useForm, router, Link } from '@inertiajs/vue3'
 import {
   QrCodeIcon, IdentificationIcon,
   LockClosedIcon, EyeIcon, EyeSlashIcon, ExclamationCircleIcon, ArrowLeftIcon,
 } from '@heroicons/vue/24/outline'
 
-const activeTab     = ref('qr')       // Default to QR scan — primary login method
+const props = defineProps({
+  qr_id: { type: String, default: null },
+})
+
+const activeTab     = ref('qr')
 const showPassword  = ref(false)
-const scanning      = ref(false)       // camera is active
-const qrScanning    = ref(false)       // auto-login request in flight
-const qrError       = ref('')          // camera init error
-const qrLoginError  = ref('')          // server-side QR rejection
+const scanning      = ref(false)
+const qrScanning    = ref(false)
+const qrError       = ref('')
+const qrLoginError  = ref('')
+const qrVerifiedBanner = ref(false)
 let html5QrCode     = null
 
 const tabs = [
@@ -197,6 +220,28 @@ const form = useForm({
   identifier: '',
   password:   '',
   remember:   false,
+})
+
+// FRESH PAGE LOAD: onMounted fires when page loads with ?qr_id= in URL (e.g. after browser refresh)
+onMounted(() => {
+  if (props.qr_id) {
+    form.identifier        = props.qr_id
+    activeTab.value        = 'id'
+    qrVerifiedBanner.value = true
+  } else {
+    initQrScanner()
+  }
+})
+
+// INERTIA CLIENT-SIDE NAVIGATION: when QR scan redirects to same page with new qr_id prop,
+// onMounted doesn't re-fire — this watch catches the prop update instead.
+watch(() => props.qr_id, async (qrId) => {
+  if (qrId) {
+    await stopScanner()              // stop camera if it was running
+    form.identifier        = qrId
+    activeTab.value        = 'id'
+    qrVerifiedBanner.value = true
+  }
 })
 
 const submit = () => {
@@ -271,7 +316,10 @@ watch(activeTab, async (tab) => {
   if (tab === 'qr') {
     qrLoginError.value = ''
     qrScanning.value   = false
-    setTimeout(initQrScanner, 100)
+    // Don't restart scanner if we came from QR gate redirect
+    if (!qrVerifiedBanner.value) {
+      setTimeout(initQrScanner, 100)
+    }
   } else {
     await stopScanner()
     scanning.value = false

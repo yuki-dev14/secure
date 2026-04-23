@@ -4,14 +4,14 @@
 
     <!-- Claiming Alert -->
     <div v-if="nextEvent" class="mb-6 p-4 rounded-2xl border-2 border-brand-300 bg-white/90 backdrop-blur-sm flex items-start gap-4 shadow-lg shadow-brand-500/10">
-      <div class="w-12 h-12 bg-brand-600 rounded-xl flex items-center justify-center flex-shrink-0">
+      <div class="w-12 h-12 bg-brand-600 rounded-xl flex items-center justify-center shrink-0">
         <BellAlertIcon class="w-6 h-6 text-white" />
       </div>
       <div class="flex-1">
-        <p class="font-bold text-brand-800">Cash Grant Now Available for Claiming!</p>
-        <p class="text-sm text-brand-600 mt-0.5">{{ nextEvent.details?.venue }} • {{ nextEvent.details?.date_start }}</p>
+        <p class="font-bold text-brand-800">{{ nextEvent.title }}</p>
+        <p class="text-sm text-brand-600 mt-0.5">{{ nextEvent.details?.venue }} • Quarter {{ nextEvent.details?.period }}</p>
       </div>
-      <span class="badge badge-info animate-pulse">NEW</span>
+      <span class="badge badge-info animate-pulse">OPEN</span>
     </div>
 
     <!-- Profile Card -->
@@ -59,13 +59,13 @@
       <div class="px-6 py-4 border-b border-slate-100 flex items-center justify-between">
         <div>
           <h3 class="font-semibold text-slate-800">Grant Breakdown</h3>
-          <p class="text-xs text-slate-400">Period: {{ breakdown.period }}</p>
+          <p class="text-xs text-slate-400">Period: {{ breakdown?.quarter ?? '—' }}</p>
         </div>
         <div class="text-right">
           <p class="text-2xl font-bold text-brand-700">
-            ₱{{ Number(breakdown.total).toLocaleString('en-PH', { minimumFractionDigits: 2 }) }}
+            ₱{{ fmt(breakdown?.total) }}
           </p>
-          <p class="text-xs text-slate-400">Total for {{ breakdown.months_covered }} months</p>
+          <p class="text-xs text-slate-400">Total for {{ breakdown?.months_covered ?? 3 }} months</p>
         </div>
       </div>
       <div class="divide-y divide-slate-100">
@@ -76,13 +76,13 @@
             </div>
             <div>
               <p class="text-sm font-medium text-slate-700">Health Grant</p>
-              <p class="text-xs text-slate-400">₱750 × {{ breakdown.months_covered }} months</p>
+              <p class="text-xs text-slate-400">₱750 × {{ breakdown?.months_covered ?? 3 }} months</p>
             </div>
           </div>
-          <p class="font-semibold text-slate-700">₱{{ Number(breakdown.health.amount).toLocaleString() }}</p>
+          <p class="font-semibold text-slate-700">₱{{ fmt(breakdown?.health?.amount) }}</p>
         </div>
 
-        <div v-if="breakdown.education.total > 0" class="px-6 py-3 flex items-center justify-between">
+        <div v-if="(breakdown?.education?.total ?? 0) > 0" class="px-6 py-3 flex items-center justify-between">
           <div class="flex items-center gap-3">
             <div class="w-8 h-8 bg-brand-50 rounded-lg flex items-center justify-center">
               <AcademicCapIcon class="w-4 h-4 text-brand-600" />
@@ -90,13 +90,13 @@
             <div>
               <p class="text-sm font-medium text-slate-700">Education Grant</p>
               <p class="text-xs text-slate-400">
-                <span v-if="breakdown.education.elementary.count">{{ breakdown.education.elementary.count }}× Elem</span>
-                <span v-if="breakdown.education.junior_high.count"> {{ breakdown.education.junior_high.count }}× JHS</span>
-                <span v-if="breakdown.education.senior_high.count"> {{ breakdown.education.senior_high.count }}× SHS</span>
+                <span v-if="breakdown?.education?.elementary?.count">{{ breakdown.education.elementary.count }}× Elem</span>
+                <span v-if="breakdown?.education?.junior_high?.count"> {{ breakdown.education.junior_high.count }}× JHS</span>
+                <span v-if="breakdown?.education?.senior_high?.count"> {{ breakdown.education.senior_high.count }}× SHS</span>
               </p>
             </div>
           </div>
-          <p class="font-semibold text-slate-700">₱{{ Number(breakdown.education.total).toLocaleString() }}</p>
+          <p class="font-semibold text-slate-700">₱{{ fmt(breakdown?.education?.total) }}</p>
         </div>
 
         <div class="px-6 py-3 flex items-center justify-between">
@@ -106,10 +106,10 @@
             </div>
             <div>
               <p class="text-sm font-medium text-slate-700">Rice Subsidy</p>
-              <p class="text-xs text-slate-400">₱600 × {{ breakdown.months_covered }} months</p>
+              <p class="text-xs text-slate-400">₱600 × {{ breakdown?.months_covered ?? 3 }} months</p>
             </div>
           </div>
-          <p class="font-semibold text-slate-700">₱{{ Number(breakdown.rice.amount).toLocaleString() }}</p>
+          <p class="font-semibold text-slate-700">₱{{ fmt(breakdown?.rice?.amount) }}</p>
         </div>
       </div>
     </div>
@@ -161,11 +161,29 @@ const props = defineProps({
   unread_count:  Number,
 })
 
-const nextEvent = computed(() =>
-  props.notifications?.find(n => JSON.parse(n.data ?? '{}').type === 'distribution_schedule' && !n.read_at)
-    ? JSON.parse(props.notifications[0]?.data ?? '{}')
-    : null
-)
+// notifications data is already decoded by Laravel/Inertia — it's a plain object, NOT a JSON string.
+// Safe accessor to get data from a notification object
+const getNotifData = (n) => {
+  if (!n?.data) return {}
+  // Laravel serializes the notification data as an object in Inertia props
+  if (typeof n.data === 'object') return n.data
+  // Fallback: if somehow it arrives as a string, parse it
+  try { return JSON.parse(n.data) } catch { return {} }
+}
+
+const nextEvent = computed(() => {
+  if (!props.notifications?.length) return null
+  const found = props.notifications.find(n => {
+    const d = getNotifData(n)
+    return (d.type === 'distribution_ongoing' || d.type === 'distribution_schedule') && !n.read_at
+  })
+  return found ? getNotifData(found) : null
+})
+// Safe number formatter — handles null, string, and number inputs
+const fmt = (val) => {
+  const n = Number(val ?? 0)
+  return isNaN(n) ? '0.00' : n.toLocaleString('en-PH', { minimumFractionDigits: 2 })
+}
 
 const formatDate = (d) =>
   d ? new Date(d).toLocaleString('en-PH', { dateStyle: 'medium', timeStyle: 'short' }) : '—'

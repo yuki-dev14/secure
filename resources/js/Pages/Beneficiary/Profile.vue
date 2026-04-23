@@ -4,15 +4,14 @@
 
     <div class="space-y-5">
       <!-- Profile Header Card -->
-      <div class="bg-white/90 backdrop-blur-sm rounded-2xl shadow-lg overflow-hidden border border-white/50">
-        <div class="h-24 gradient-dswd relative">
+      <div class="bg-white/90 backdrop-blur-sm rounded-2xl shadow-lg border border-white/50 overflow-hidden">
+        <!-- Banner with photo anchored to its bottom edge -->
+        <div class="h-28 gradient-dswd relative px-6 flex items-end">
           <div class="absolute inset-0 opacity-20"
             style="background-image: repeating-linear-gradient(45deg, transparent, transparent 10px, rgba(255,255,255,.05) 10px, rgba(255,255,255,.05) 20px);">
           </div>
-        </div>
-        <div class="px-6 pb-6 -mt-12 flex flex-col sm:flex-row items-start sm:items-end gap-4">
-          <!-- Photo -->
-          <div class="w-24 h-24 rounded-2xl overflow-hidden ring-4 ring-white shadow-xl flex-shrink-0 bg-slate-100">
+          <!-- Photo overlaps banner -->
+          <div class="relative z-10 w-24 h-24 rounded-2xl overflow-hidden ring-4 ring-white shadow-xl shrink-0 bg-slate-100 translate-y-12">
             <img v-if="beneficiary.photo_path"
               :src="`/storage/${beneficiary.photo_path}`" :alt="beneficiary.full_name"
               class="w-full h-full object-cover" />
@@ -20,19 +19,24 @@
               <UserIcon class="w-10 h-10 text-slate-300" />
             </div>
           </div>
-          <div class="flex-1 min-w-0 sm:pb-1">
-            <h1 class="text-xl font-bold text-slate-800 truncate">{{ beneficiary.full_name }}</h1>
-            <p class="text-sm font-mono text-slate-500">{{ beneficiary.unique_id }}</p>
-            <div class="flex flex-wrap gap-2 mt-2">
-              <span :class="['badge', beneficiary.is_compliant ? 'badge-success' : 'badge-danger']">
-                {{ beneficiary.is_compliant ? '✓ Compliant' : '✗ Non-Compliant' }}
-              </span>
-              <span class="badge badge-neutral capitalize">{{ beneficiary.status }}</span>
-              <span class="badge badge-info">{{ beneficiary.enrollment_date ? 'Enrolled ' + formatYear(beneficiary.enrollment_date) : '4Ps Member' }}</span>
-            </div>
+        </div>
+
+        <!-- Name, ID, badges — padded to clear the overlapping photo -->
+        <div class="px-6 pb-6 pt-14 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+          <div>
+            <h1 class="text-xl font-bold text-slate-800">{{ beneficiary.full_name }}</h1>
+            <p class="text-sm font-mono text-slate-500 mt-0.5">{{ beneficiary.unique_id }}</p>
+          </div>
+          <div class="flex flex-wrap gap-2">
+            <span :class="['badge', beneficiary.is_compliant ? 'badge-success' : 'badge-danger']">
+              {{ beneficiary.is_compliant ? '✓ Compliant' : '✗ Non-Compliant' }}
+            </span>
+            <span class="badge badge-neutral capitalize">{{ beneficiary.status }}</span>
+            <span class="badge badge-info">{{ beneficiary.enrollment_date ? 'Enrolled ' + formatYear(beneficiary.enrollment_date) : '4Ps Member' }}</span>
           </div>
         </div>
       </div>
+
 
       <div class="grid grid-cols-1 lg:grid-cols-2 gap-5">
         <!-- Personal Information -->
@@ -42,14 +46,14 @@
             <h2 class="font-semibold text-slate-800">Personal Information</h2>
           </div>
           <div class="p-5 grid grid-cols-2 gap-4">
-            <ProfileField label="First Name"    :value="beneficiary.first_name" />
-            <ProfileField label="Middle Name"   :value="beneficiary.middle_name || '—'" />
-            <ProfileField label="Last Name"     :value="beneficiary.last_name" />
-            <ProfileField label="Suffix"        :value="beneficiary.suffix || 'None'" />
-            <ProfileField label="Birthdate"     :value="formatDate(beneficiary.birthdate)" />
-            <ProfileField label="Age"           :value="`${beneficiary.age} years old`" />
-            <ProfileField label="Sex"           :value="beneficiary.sex" capitalize />
-            <ProfileField label="Civil Status"  :value="beneficiary.civil_status" capitalize />
+            <div><p class="text-xs text-slate-400 mb-0.5 font-medium uppercase tracking-wider">First Name</p><p class="font-medium text-slate-700">{{ beneficiary.first_name ?? '—' }}</p></div>
+            <div><p class="text-xs text-slate-400 mb-0.5 font-medium uppercase tracking-wider">Middle Name</p><p class="font-medium text-slate-700">{{ beneficiary.middle_name || '—' }}</p></div>
+            <div><p class="text-xs text-slate-400 mb-0.5 font-medium uppercase tracking-wider">Last Name</p><p class="font-medium text-slate-700">{{ beneficiary.last_name ?? '—' }}</p></div>
+            <div><p class="text-xs text-slate-400 mb-0.5 font-medium uppercase tracking-wider">Suffix</p><p class="font-medium text-slate-700">{{ beneficiary.suffix || 'None' }}</p></div>
+            <div><p class="text-xs text-slate-400 mb-0.5 font-medium uppercase tracking-wider">Birthdate</p><p class="font-medium text-slate-700">{{ formatDate(beneficiary.birthdate) }}</p></div>
+            <div><p class="text-xs text-slate-400 mb-0.5 font-medium uppercase tracking-wider">Age</p><p class="font-medium text-slate-700">{{ calcAge(beneficiary.birthdate) }}</p></div>
+            <div><p class="text-xs text-slate-400 mb-0.5 font-medium uppercase tracking-wider">Sex</p><p class="font-medium text-slate-700 capitalize">{{ beneficiary.sex ?? '—' }}</p></div>
+            <div><p class="text-xs text-slate-400 mb-0.5 font-medium uppercase tracking-wider">Civil Status</p><p class="font-medium text-slate-700 capitalize">{{ beneficiary.civil_status ?? '—' }}</p></div>
           </div>
         </div>
 
@@ -57,10 +61,9 @@
         <div class="bg-white/90 backdrop-blur-sm rounded-2xl shadow-lg overflow-hidden border border-white/50">
           <div class="px-5 py-4 border-b border-slate-100 flex items-center gap-2">
             <MapPinIcon class="w-5 h-5 text-brand-600" />
-            <h2 class="font-semibold text-slate-800">Address & Contact</h2>
+            <h2 class="font-semibold text-slate-800">Address &amp; Contact</h2>
           </div>
           <div class="p-5 space-y-4">
-            <!-- Full address block -->
             <div>
               <p class="text-xs text-slate-400 mb-0.5 font-medium uppercase tracking-wider">Home Address</p>
               <p class="font-medium text-slate-700">
@@ -71,8 +74,8 @@
               </p>
             </div>
             <div class="grid grid-cols-2 gap-4 pt-2 border-t border-slate-100">
-              <ProfileField label="Contact Number" :value="beneficiary.contact_number || 'Not provided'" />
-              <ProfileField label="Assigned Office" :value="beneficiary.office?.name ?? 'N/A'" small />
+              <div><p class="text-xs text-slate-400 mb-0.5 font-medium uppercase tracking-wider">Contact Number</p><p class="font-medium text-slate-700">{{ beneficiary.contact_number || 'Not provided' }}</p></div>
+              <div><p class="text-xs text-slate-400 mb-0.5 font-medium uppercase tracking-wider">Assigned Office</p><p class="font-medium text-slate-700 text-sm">{{ beneficiary.office?.name ?? 'N/A' }}</p></div>
             </div>
           </div>
         </div>
@@ -84,10 +87,10 @@
             <h2 class="font-semibold text-slate-800">Program Enrollment</h2>
           </div>
           <div class="p-5 grid grid-cols-2 gap-4">
-            <ProfileField label="Listahanan ID"   :value="beneficiary.listahanan_id || 'Not recorded'" />
-            <ProfileField label="Enrollment Date" :value="formatDate(beneficiary.enrollment_date) || 'Not recorded'" />
-            <ProfileField label="4Ps Status"      :value="beneficiary.status" capitalize />
-            <ProfileField label="Family Size"     :value="`${(beneficiary.family_members?.length ?? 0) + 1} members`" />
+            <div><p class="text-xs text-slate-400 mb-0.5 font-medium uppercase tracking-wider">Listahanan ID</p><p class="font-medium text-slate-700">{{ beneficiary.listahanan_id || 'Not recorded' }}</p></div>
+            <div><p class="text-xs text-slate-400 mb-0.5 font-medium uppercase tracking-wider">Enrollment Date</p><p class="font-medium text-slate-700">{{ formatDate(beneficiary.enrollment_date) || 'Not recorded' }}</p></div>
+            <div><p class="text-xs text-slate-400 mb-0.5 font-medium uppercase tracking-wider">4Ps Status</p><p class="font-medium text-slate-700 capitalize">{{ beneficiary.status ?? '—' }}</p></div>
+            <div><p class="text-xs text-slate-400 mb-0.5 font-medium uppercase tracking-wider">Family Size</p><p class="font-medium text-slate-700">{{ (beneficiary.family_members?.length ?? 0) + 1 }} members</p></div>
           </div>
         </div>
 
@@ -95,13 +98,13 @@
         <div class="bg-white/90 backdrop-blur-sm rounded-2xl shadow-lg overflow-hidden border border-white/50">
           <div class="px-5 py-4 border-b border-slate-100 flex items-center gap-2">
             <CreditCardIcon class="w-5 h-5 text-brand-600" />
-            <h2 class="font-semibold text-slate-800">ID Card & Portal Access</h2>
+            <h2 class="font-semibold text-slate-800">ID Card &amp; Portal Access</h2>
           </div>
           <div class="p-5 space-y-4">
             <div v-if="beneficiary.card" class="grid grid-cols-2 gap-4">
-              <ProfileField label="Card Number"  :value="beneficiary.card.card_number" mono />
-              <ProfileField label="Card Status"  :value="beneficiary.card.status" capitalize />
-              <ProfileField label="Issued Date"  :value="beneficiary.card.issued_at ? formatDate(beneficiary.card.issued_at) : 'Pending'" />
+              <div><p class="text-xs text-slate-400 mb-0.5 font-medium uppercase tracking-wider">Card Number</p><p class="font-medium text-slate-700 font-mono text-xs">{{ beneficiary.card.card_number }}</p></div>
+              <div><p class="text-xs text-slate-400 mb-0.5 font-medium uppercase tracking-wider">Card Status</p><p class="font-medium text-slate-700 capitalize">{{ beneficiary.card.is_active ? 'Active' : 'Inactive' }}</p></div>
+              <div><p class="text-xs text-slate-400 mb-0.5 font-medium uppercase tracking-wider">Issued Date</p><p class="font-medium text-slate-700">{{ beneficiary.card.issued_at ? formatDate(beneficiary.card.issued_at) : 'Pending' }}</p></div>
             </div>
             <div v-else class="flex items-center gap-3 p-3 bg-warning-50 rounded-xl border border-yellow-200">
               <ExclamationTriangleIcon class="w-5 h-5 text-warning-600 shrink-0" />
@@ -143,7 +146,7 @@ import {
 } from '@heroicons/vue/24/outline'
 import BeneficiaryLayout from '@/Layouts/BeneficiaryLayout.vue'
 
-const props = defineProps({
+defineProps({
   beneficiary:  Object,
   unread_count: Number,
 })
@@ -153,19 +156,17 @@ const formatDate = (d) =>
 
 const formatYear = (d) => d ? new Date(d).getFullYear() : ''
 
-// Inline sub-component for cleanliness
-const ProfileField = {
-  props: ['label', 'value', 'capitalize', 'mono', 'small'],
-  template: `
-    <div>
-      <p class="text-xs text-slate-400 mb-0.5 font-medium uppercase tracking-wider">{{ label }}</p>
-      <p :class="[
-        'font-medium text-slate-700',
-        capitalize ? 'capitalize' : '',
-        mono ? 'font-mono text-xs' : '',
-        small ? 'text-sm' : ''
-      ]">{{ value ?? '—' }}</p>
-    </div>
-  `
+// Fallback age calculation — age is now in Beneficiary::$appends so it arrives via props.
+// This is used only if the backend accessor somehow returns null (e.g. birthdate missing).
+const calcAge = (birthdate) => {
+  if (!birthdate) return '—'
+  const birth = new Date(birthdate)
+  const today = new Date()
+  let age = today.getFullYear() - birth.getFullYear()
+  const m = today.getMonth() - birth.getMonth()
+  if (m < 0 || (m === 0 && today.getDate() < birth.getDate())) age--
+  return `${age} years old`
 }
 </script>
+
+

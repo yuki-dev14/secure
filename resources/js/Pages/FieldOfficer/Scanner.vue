@@ -163,44 +163,84 @@
                 </p>
                 <p class="text-xs text-brand-500 mt-1">For {{ result.grant.months_covered }} months</p>
               </div>
+            </div>
+          </div>
 
-              <!-- Documents summary -->
-              <div class="mt-4">
-                <p class="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Submitted Documents</p>
-                <div class="flex flex-wrap gap-2">
-                  <span v-for="doc in result.documents" :key="doc.id"
-                    :class="['badge', doc.is_verified ? 'badge-success' : 'badge-neutral']"
-                  >
-                    {{ doc.type_label }}
-                  </span>
+          <!-- Compliance / Verifier Check -->
+          <div class="card">
+            <div class="card-header">
+              <h3 class="font-semibold text-slate-800">Completion Verification</h3>
+              <span v-if="result.compliance?.is_fully_compliant" class="badge badge-success">✓ Verified</span>
+              <span v-else-if="result.compliance" class="badge badge-warning">Incomplete</span>
+              <span v-else class="badge badge-danger">Not Checked</span>
+            </div>
+            <div class="card-body">
+              <div v-if="result.compliance" class="space-y-2">
+                <div class="flex items-start gap-3 p-3 rounded-xl"
+                  :class="result.compliance.is_fully_compliant ? 'bg-success-50 border border-success-200' : 'bg-warning-50 border border-yellow-200'">
+                  <component :is="result.compliance.is_fully_compliant ? CheckCircleIcon : ExclamationTriangleIcon"
+                    :class="['w-5 h-5 shrink-0 mt-0.5', result.compliance.is_fully_compliant ? 'text-success-600' : 'text-warning-600']" />
+                  <div>
+                    <p class="font-semibold text-sm" :class="result.compliance.is_fully_compliant ? 'text-success-700' : 'text-warning-700'">
+                      {{ result.compliance.is_fully_compliant ? 'Requirements complete — eligible for grant' : 'Requirements not yet fully completed' }}
+                    </p>
+                    <p v-if="result.compliance.verified_by_name" class="text-xs text-slate-500 mt-1">
+                      Checked by: <strong>{{ result.compliance.verified_by_name }}</strong> on {{ result.compliance.verified_at }}
+                    </p>
+                    <p v-if="result.compliance.notes" class="text-xs text-slate-500 mt-1 italic">{{ result.compliance.notes }}</p>
+                  </div>
                 </div>
+              </div>
+              <div v-else class="flex items-center gap-3 p-3 bg-danger-50 rounded-xl border border-danger-200">
+                <ExclamationTriangleIcon class="w-5 h-5 text-danger-600 shrink-0" />
+                <p class="text-sm text-danger-700">This beneficiary has <strong>not been verified</strong> by a Compliance Verifier this quarter. Grant cannot be released.</p>
               </div>
             </div>
           </div>
 
-          <!-- Proxies -->
-          <div v-if="result.proxies?.length" class="card">
+          <!-- Documents Submitted -->
+          <div class="card">
             <div class="card-header">
-              <h3 class="font-semibold text-slate-800">Authorized Proxies</h3>
-              <span class="badge badge-info">{{ result.proxies.length }} registered</span>
+              <h3 class="font-semibold text-slate-800">Submitted Documents</h3>
+              <span class="badge badge-neutral">{{ result.documents?.length ?? 0 }} files</span>
             </div>
-            <div class="card-body space-y-3">
-              <div v-for="proxy in result.proxies" :key="proxy.id"
-                class="flex items-center gap-3 p-3 bg-slate-50 rounded-xl">
-                <UserGroupIcon class="w-8 h-8 text-slate-400 flex-shrink-0" />
-                <div class="flex-1 min-w-0">
-                  <p class="font-medium text-slate-700">{{ proxy.full_name }}</p>
-                  <p class="text-xs text-slate-500 capitalize">{{ proxy.relationship }}</p>
+            <div class="card-body">
+              <div v-if="result.documents?.length" class="space-y-2">
+                <div v-for="doc in result.documents" :key="doc.id"
+                  class="flex items-start gap-3 p-3 rounded-xl border"
+                  :class="doc.is_verified ? 'bg-success-50 border-success-200' : 'bg-slate-50 border-slate-200'">
+                  <!-- Status icon -->
+                  <div class="shrink-0 mt-0.5">
+                    <CheckCircleIcon v-if="doc.is_verified" class="w-5 h-5 text-success-600" />
+                    <ClockIcon v-else class="w-5 h-5 text-slate-400" />
+                  </div>
+                  <!-- Details -->
+                  <div class="flex-1 min-w-0">
+                    <p class="font-medium text-slate-800 text-sm">{{ doc.type_label }}</p>
+                    <p v-if="doc.document_name" class="text-xs text-slate-500 truncate">{{ doc.document_name }}</p>
+                    <div class="flex flex-wrap gap-2 mt-1">
+                      <span class="badge badge-sm" :class="doc.source === 'admin' ? 'badge-info' : 'badge-neutral'">
+                        {{ doc.source === 'admin' ? '🏛 Physically Submitted' : '📎 Self-uploaded' }}
+                      </span>
+                      <span v-if="doc.is_verified" class="text-xs text-success-600">
+                        Verified {{ doc.verified_at ?? '' }}
+                      </span>
+                      <span v-if="doc.validity_date" class="text-xs text-slate-400">
+                        Valid until {{ doc.validity_date }}
+                      </span>
+                    </div>
+                  </div>
+                  <!-- View link -->
+                  <a :href="doc.file_url" target="_blank"
+                    class="shrink-0 text-xs text-brand-600 hover:underline font-medium mt-0.5">View</a>
                 </div>
-                <span :class="['badge badge-sm', proxy.has_docs ? 'badge-success' : 'badge-warning']">
-                  {{ proxy.has_docs ? 'Docs OK' : 'Missing Docs' }}
-                </span>
               </div>
+              <p v-else class="text-sm text-slate-400 text-center py-4">No documents on file.</p>
             </div>
           </div>
 
           <!-- Release Button -->
-          <div v-if="result.beneficiary.is_compliant && !result.already_claimed && activeEvent" class="card">
+          <div v-if="result.compliance?.is_fully_compliant && !result.already_claimed && activeEvent" class="card">
             <div class="card-body">
               <p class="text-sm font-semibold text-slate-700 mb-3">Release Cash Grant</p>
               <div class="space-y-3">
@@ -226,9 +266,9 @@
             </div>
           </div>
 
-          <div v-else-if="!result.beneficiary.is_compliant" class="alert alert-danger">
-            <ExclamationTriangleIcon class="w-5 h-5 flex-shrink-0" />
-            <p>Beneficiary is <strong>non-compliant</strong>. Grant cannot be released. Refer to Compliance Verifier.</p>
+          <div v-else-if="!result.compliance?.is_fully_compliant" class="alert alert-danger">
+            <ExclamationTriangleIcon class="w-5 h-5 shrink-0" />
+            <p>Beneficiary is <strong>not yet verified</strong> by a Compliance Verifier. Grant cannot be released until verification is complete.</p>
           </div>
         </template>
 
@@ -254,7 +294,7 @@ import {
   CameraIcon, VideoCameraIcon, VideoCameraSlashIcon,
   XMarkIcon, XCircleIcon, ShieldExclamationIcon,
   MagnifyingGlassIcon, UserIcon, UserGroupIcon,
-  BanknotesIcon,
+  BanknotesIcon, CheckCircleIcon, ClockIcon,
 } from '@heroicons/vue/24/outline'
 import StaffLayout from '@/Layouts/StaffLayout.vue'
 import BeneficiaryCard from '@/Components/BeneficiaryCard.vue'

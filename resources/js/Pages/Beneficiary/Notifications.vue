@@ -1,6 +1,6 @@
 <template>
   <Head title="Notifications" />
-  <BeneficiaryLayout :unread-count="0">
+  <BeneficiaryLayout :unread-count="unread_count ?? 0">
     <div class="space-y-4">
 
       <!-- Header -->
@@ -53,7 +53,7 @@
               <p class="text-sm text-slate-600 mt-1">{{ notifData(notif).message ?? notifData(notif).body ?? '—' }}</p>
 
               <!-- Distribution event details -->
-              <template v-if="notifData(notif).type === 'distribution_schedule'">
+              <template v-if="notifData(notif).type?.includes('distribution')">
                 <div class="mt-3 p-3 bg-brand-50 rounded-xl border border-brand-100 space-y-1">
                   <p class="text-xs font-semibold text-brand-700">📅 Distribution Event Details</p>
                   <p v-if="notifData(notif).venue" class="text-xs text-brand-600">
@@ -64,6 +64,36 @@
                   </p>
                   <p v-if="notifData(notif).amount" class="text-xs text-brand-600 font-bold">
                     Expected: ₱{{ Number(notifData(notif).amount).toLocaleString('en-PH', { minimumFractionDigits: 2 }) }}
+                  </p>
+                </div>
+              </template>
+
+              <!-- Cash grant claimed receipt -->
+              <template v-if="notifData(notif).type === 'cash_grant_claimed'">
+                <div class="mt-3 p-3 bg-success-50 rounded-xl border border-success-200 space-y-1.5">
+                  <p class="text-xs font-semibold text-success-700">🧾 Claim Receipt</p>
+                  <div class="grid grid-cols-2 gap-x-4 gap-y-1">
+                    <div>
+                      <p class="text-xs text-slate-400">Amount Released</p>
+                      <p class="text-sm font-bold text-success-700">
+                        ₱{{ Number(notifData(notif).details?.amount ?? 0).toLocaleString('en-PH', { minimumFractionDigits: 2 }) }}
+                      </p>
+                    </div>
+                    <div>
+                      <p class="text-xs text-slate-400">Quarter</p>
+                      <p class="text-sm font-medium text-slate-700">{{ notifData(notif).details?.period ?? '—' }}</p>
+                    </div>
+                    <div>
+                      <p class="text-xs text-slate-400">Claimed By</p>
+                      <p class="text-sm font-medium text-slate-700 capitalize">{{ notifData(notif).details?.claimed_by_name ?? '—' }}</p>
+                    </div>
+                    <div>
+                      <p class="text-xs text-slate-400">Date</p>
+                      <p class="text-sm font-medium text-slate-700">{{ notifData(notif).details?.claimed_at ?? '—' }}</p>
+                    </div>
+                  </div>
+                  <p class="text-xs text-slate-400 pt-1 border-t border-success-200">
+                    Ref: <span class="font-mono text-slate-600">{{ notifData(notif).details?.transaction_ref ?? '—' }}</span>
                   </p>
                 </div>
               </template>
@@ -105,7 +135,7 @@ import { Head, Link } from '@inertiajs/vue3'
 import {
   BellIcon, BellSlashIcon, CalendarDaysIcon,
   MegaphoneIcon, InformationCircleIcon,
-  ExclamationTriangleIcon, CheckCircleIcon,
+  ExclamationTriangleIcon, CheckCircleIcon, BanknotesIcon,
 } from '@heroicons/vue/24/outline'
 import BeneficiaryLayout from '@/Layouts/BeneficiaryLayout.vue'
 
@@ -118,32 +148,42 @@ const hasUnread = computed(() =>
   props.notifications.data?.some(n => !n.read_at)
 )
 
+// Laravel passes notification data as an already-decoded object via Inertia.
+// JSON.parse() on an object returns NaN — so check type first.
 const notifData = (n) => {
-  try { return JSON.parse(n.data ?? '{}') } catch { return {} }
+  if (!n?.data) return {}
+  if (typeof n.data === 'object') return n.data
+  try { return JSON.parse(n.data) } catch { return {} }
 }
 
 const notifIcon = (n) => {
   const type = notifData(n).type ?? ''
-  if (type.includes('distribution')) return CalendarDaysIcon
+  if (type === 'cash_grant_claimed')         return BanknotesIcon
+  if (type.includes('distribution'))         return CalendarDaysIcon
   if (type.includes('alert') || type.includes('fraud')) return ExclamationTriangleIcon
-  if (type.includes('compliance')) return CheckCircleIcon
-  if (type.includes('announce')) return MegaphoneIcon
+  if (type.includes('compliance'))           return CheckCircleIcon
+  if (type === 'card_issued')                return CheckCircleIcon
+  if (type.includes('announce'))             return MegaphoneIcon
   return InformationCircleIcon
 }
 
 const notifIconBg = (n) => {
   const type = notifData(n).type ?? ''
-  if (type.includes('distribution')) return 'bg-brand-50'
-  if (type.includes('alert')) return 'bg-danger-50'
-  if (type.includes('compliance')) return 'bg-success-50'
+  if (type === 'cash_grant_claimed')         return 'bg-success-50'
+  if (type.includes('distribution'))         return 'bg-brand-50'
+  if (type.includes('alert'))                return 'bg-danger-50'
+  if (type.includes('compliance'))           return 'bg-success-50'
+  if (type === 'card_issued')                return 'bg-success-50'
   return 'bg-slate-50'
 }
 
 const notifIconColor = (n) => {
   const type = notifData(n).type ?? ''
-  if (type.includes('distribution')) return 'text-brand-600'
-  if (type.includes('alert')) return 'text-danger-600'
-  if (type.includes('compliance')) return 'text-success-600'
+  if (type === 'cash_grant_claimed')         return 'text-success-600'
+  if (type.includes('distribution'))         return 'text-brand-600'
+  if (type.includes('alert'))                return 'text-danger-600'
+  if (type.includes('compliance'))           return 'text-success-600'
+  if (type === 'card_issued')                return 'text-success-600'
   return 'text-slate-400'
 }
 

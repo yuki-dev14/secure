@@ -14,6 +14,7 @@ class BeneficiaryDocument extends Model
         'beneficiary_id', 'family_member_id', 'document_type', 'document_name',
         'file_path', 'file_type', 'file_size_kb', 'description',
         'is_verified', 'verified_by', 'verified_at', 'validity_date',
+        'uploaded_by', 'source',
     ];
 
     protected function casts(): array
@@ -28,6 +29,7 @@ class BeneficiaryDocument extends Model
     public function beneficiary(): BelongsTo  { return $this->belongsTo(Beneficiary::class); }
     public function familyMember(): BelongsTo { return $this->belongsTo(FamilyMember::class); }
     public function verifiedBy(): BelongsTo   { return $this->belongsTo(User::class, 'verified_by'); }
+    public function uploadedBy(): BelongsTo   { return $this->belongsTo(User::class, 'uploaded_by'); }
 
     public function getDocumentTypeLabelAttribute(): string
     {
@@ -39,12 +41,24 @@ class BeneficiaryDocument extends Model
             'health_record'        => 'Health Record',
             'vaccination_booklet'  => 'Vaccination Booklet',
             'medical_certificate'  => 'Medical Certificate',
-            'barangay_certificate' => 'Barangay Certificate',
+            'barangay_certificate' => 'Barangay Certificate (Proof of Residency)',
             'photo_1x1'            => '1x1 Photo',
             'certificate_of_indigency' => 'Certificate of Indigency',
             'prenatal_record'      => 'Prenatal Record',
             default                => ucwords(str_replace('_', ' ', $this->document_type)),
         };
+    }
+
+    /** Returns whether this document was submitted physically to the admin office. */
+    public function getIsAdminUploadedAttribute(): bool
+    {
+        return $this->source === 'admin';
+    }
+
+    /** The three required physical documents for card activation. */
+    public static function requiredActivationTypes(): array
+    {
+        return ['valid_id', 'birth_certificate', 'barangay_certificate'];
     }
 
     public function scopeVerified($query)   { return $query->where('is_verified', true); }

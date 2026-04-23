@@ -16,6 +16,14 @@ use Inertia\Response;
 
 class BeneficiaryController extends Controller
 {
+    // ─── Required document types for card activation ──────────────────────────
+
+    private const REQUIRED_DOC_TYPES = [
+        'valid_id'             => 'Valid ID',
+        'birth_certificate'    => 'Birth Certificate',
+        'barangay_certificate' => 'Proof of Residency (Barangay Certificate)',
+    ];
+
     // ─── List ────────────────────────────────────────────────────────────────
 
     public function index(Request $request): Response
@@ -50,20 +58,46 @@ class BeneficiaryController extends Controller
         ));
     }
 
-    // ─── Show (with documents) ────────────────────────────────────────────────
+    // ─── Show (with documents + doc checklist) ────────────────────────────────
 
     public function show(int $id): Response
     {
         $beneficiary = Beneficiary::with([
             'office', 'user', 'card',
             'familyMembers', 'proxies',
-            'documents',
+            'documents.uploadedBy',
             'complianceRecords.verifier',
             'grantCalculations.distributionEvent',
             'distributions.distributionEvent',
         ])->findOrFail($id);
 
-        return Inertia::render('Admin/Beneficiaries/Show', compact('beneficiary'));
+        // Build a checklist of the 3 required activation documents
+        $adminDocs = $beneficiary->documents
+            ->where('source', 'admin')
+            ->keyBy('document_type');
+
+        $docChecklist = collect(self::REQUIRED_DOC_TYPES)->map(function ($label, $type) use ($adminDocs) {
+            $doc = $adminDocs->get($type);
+            return [
+                'type'       => $type,
+                'label'      => $label,
+                'submitted'  => ! is_null($doc),
+                'doc'        => $doc ? [
+                    'id'          => $doc->id,
+                    'file_path'   => $doc->file_path,
+                    'is_verified' => $doc->is_verified,
+                    'uploaded_by' => $doc->uploadedBy?->name,
+                    'uploaded_at' => $doc->created_at?->format('M d, Y'),
+                ] : null,
+            ];
+        })->values();
+
+        $requiredDocTypes   = array_keys(self::REQUIRED_DOC_TYPES);
+        $allRequiredPresent = $docChecklist->every(fn($d) => $d['submitted']);
+
+        return Inertia::render('Admin/Beneficiaries/Show', compact(
+            'beneficiary', 'docChecklist', 'requiredDocTypes', 'allRequiredPresent'
+        ));
     }
 
     // ─── Update basic info ────────────────────────────────────────────────────
@@ -101,6 +135,21 @@ class BeneficiaryController extends Controller
             return back()->with('error', 'Beneficiary is already active.');
         }
 
+        // Guard: all 3 required documents must have been uploaded by admin
+        $submittedTypes = $beneficiary->documents()
+            ->where('source', 'admin')
+            ->pluck('document_type')
+            ->toArray();
+
+        $missing = array_diff(array_keys(self::REQUIRED_DOC_TYPES), $submittedTypes);
+
+        if (! empty($missing)) {
+            $labels = array_map(fn($t) => self::REQUIRED_DOC_TYPES[$t], $missing);
+            return back()->with('error',
+                'Cannot activate. Missing required documents: ' . implode(', ', $labels) . '.'
+            );
+        }
+
         $old = $beneficiary->toArray();
 
         DB::transaction(function () use ($beneficiary, $old) {
@@ -114,6 +163,15 @@ class BeneficiaryController extends Controller
             if ($beneficiary->user) {
                 $beneficiary->user->update(['is_active' => true]);
             }
+
+            // Mark all admin-uploaded docs as verified
+            $beneficiary->documents()
+                ->where('source', 'admin')
+                ->update([
+                    'is_verified' => true,
+                    'verified_by' => auth()->id(),
+                    'verified_at' => now(),
+                ]);
 
             // Issue the QR card
             $cardService = app(\App\Services\BeneficiaryCardService::class);
@@ -131,34 +189,45 @@ class BeneficiaryController extends Controller
         return back()->with('success', 'Beneficiary activated. QR card issued and ready to download.');
     }
 
-    // ─── Upload submitted document ────────────────────────────────────────────
+    // ─── Upload submitted document (admin only — 3 required types) ───────────
 
     public function uploadDocument(Request $request, int $id): RedirectResponse
     {
         $beneficiary = Beneficiary::findOrFail($id);
 
         $request->validate([
-            'document_type' => 'required|string|max:60',
-            'document_name' => 'nullable|string|max:255',
-            'description'   => 'nullable|string|max:500',
-            'validity_date' => 'nullable|date',
+            'document_type' => 'required|in:' . implode(',', array_keys(self::REQUIRED_DOC_TYPES)),
             'file'          => 'required|file|mimes:pdf,jpg,jpeg,png|max:10240',
         ]);
 
-        $file     = $request->file('file');
-        $ext      = $file->getClientOriginalExtension();
-        $path     = $file->store("documents/{$beneficiary->unique_id}", 'public');
-        $sizeKb   = (int) ceil($file->getSize() / 1024);
+        // If a doc of this type already exists (admin-uploaded), replace it
+        $existing = $beneficiary->documents()
+            ->where('source', 'admin')
+            ->where('document_type', $request->document_type)
+            ->first();
+
+        if ($existing) {
+            if (Storage::disk('public')->exists($existing->file_path)) {
+                Storage::disk('public')->delete($existing->file_path);
+            }
+            $existing->delete();
+        }
+
+        $file   = $request->file('file');
+        $path   = $file->store("documents/{$beneficiary->unique_id}", 'public');
+        $sizeKb = (int) ceil($file->getSize() / 1024);
+
+        $typeLabelMap = self::REQUIRED_DOC_TYPES;
 
         $doc = BeneficiaryDocument::create([
             'beneficiary_id'  => $beneficiary->id,
             'document_type'   => $request->document_type,
-            'document_name'   => $request->document_name ?? $file->getClientOriginalName(),
+            'document_name'   => $typeLabelMap[$request->document_type] . ' — ' . $beneficiary->full_name,
             'file_path'       => $path,
             'file_type'       => $file->getMimeType(),
             'file_size_kb'    => $sizeKb,
-            'description'     => $request->description,
-            'validity_date'   => $request->validity_date,
+            'source'          => 'admin',
+            'uploaded_by'     => auth()->id(),
             'is_verified'     => false,
         ]);
 
@@ -166,11 +235,29 @@ class BeneficiaryController extends Controller
             'document_uploaded',
             $beneficiary,
             [],
-            ['document_type' => $doc->document_type, 'file' => $doc->document_name],
-            'Document uploaded by admin'
+            ['document_type' => $doc->document_type, 'source' => 'admin'],
+            'Physical document uploaded by admin: ' . $typeLabelMap[$request->document_type]
         );
 
-        return back()->with('success', 'Document uploaded successfully.');
+        return back()->with('success', ucfirst(str_replace('_', ' ', $request->document_type)) . ' uploaded successfully.');
+    }
+
+    // ─── Verify / un-verify a document ───────────────────────────────────────
+
+    public function verifyDocument(int $beneficiaryId, int $docId): RedirectResponse
+    {
+        $beneficiary = Beneficiary::findOrFail($beneficiaryId);
+        $doc = BeneficiaryDocument::where('beneficiary_id', $beneficiary->id)
+            ->where('source', 'admin')
+            ->findOrFail($docId);
+
+        $doc->update([
+            'is_verified' => ! $doc->is_verified,
+            'verified_by' => auth()->id(),
+            'verified_at' => now(),
+        ]);
+
+        return back()->with('success', 'Document verification status updated.');
     }
 
     // ─── Delete document ──────────────────────────────────────────────────────

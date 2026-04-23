@@ -57,14 +57,13 @@
 
           <div>
             <p class="text-xs font-semibold text-slate-400 uppercase tracking-wide mb-2 flex items-center gap-1.5">
-              <CalendarDaysIcon class="w-3.5 h-3.5" />Distribution Date
+              <CalendarDaysIcon class="w-3.5 h-3.5" />Quarter Window
             </p>
-            <p class="font-semibold text-slate-800">{{ formatDate(event.distribution_date_start) }}</p>
-            <p v-if="event.distribution_date_end !== event.distribution_date_start" class="text-sm text-slate-500">
-              to {{ formatDate(event.distribution_date_end) }}
-            </p>
+            <p class="font-semibold text-slate-800">{{ event.period }}</p>
+            <p class="text-sm text-slate-500">{{ formatDate(event.period_start) }}</p>
+            <p class="text-xs text-slate-400">&rarr; {{ formatDate(event.period_end) }}</p>
             <p v-if="event.distribution_time_start" class="text-sm text-slate-400 mt-1">
-              🕐 {{ event.distribution_time_start }} – {{ event.distribution_time_end ?? '—' }}
+              🕐 Office hrs: {{ event.distribution_time_start }} &ndash; {{ event.distribution_time_end ?? '—' }}
             </p>
           </div>
 
@@ -100,6 +99,36 @@
         <div v-if="event.notes" class="px-6 pb-5 pt-4 border-t border-slate-100">
           <p class="text-xs font-semibold text-slate-400 uppercase tracking-wide mb-1">Notes</p>
           <p class="text-sm text-slate-600 leading-relaxed">{{ event.notes }}</p>
+        </div>
+
+        <!-- Full-quarter open claiming window banner -->
+        <div class="px-6 pb-5 pt-0 border-t border-slate-100">
+          <p class="text-xs font-semibold text-slate-400 uppercase tracking-wide mb-3 mt-4">Claiming Window</p>
+          <div class="border-2 border-brand-300 bg-brand-50 rounded-xl p-3 space-y-2">
+            <div class="flex items-center justify-between">
+              <span class="text-sm font-bold text-brand-700">{{ event.period }} — Full Quarter Open</span>
+              <span class="badge badge-info text-xs">{{ event.months_covered }} months</span>
+            </div>
+            <!-- Progress bar representing the quarter open window -->
+            <div class="relative h-8 bg-brand-100 rounded-lg overflow-hidden border border-brand-200">
+              <div class="absolute inset-0 bg-linear-to-r from-brand-300 to-indigo-300 opacity-60"></div>
+              <div class="absolute inset-0 flex items-center justify-center">
+                <span class="text-xs font-bold text-brand-800">
+                  {{ formatDate(event.period_start) }} — {{ formatDate(event.period_end) }}
+                </span>
+              </div>
+            </div>
+            <div class="grid grid-cols-2 gap-2 text-xs">
+              <div class="bg-white border border-brand-200 rounded-lg px-2 py-1.5">
+                <p class="text-brand-400 text-[10px] uppercase font-semibold">Opens</p>
+                <p class="text-brand-800 font-bold">{{ formatDate(event.period_start) }}</p>
+              </div>
+              <div class="bg-white border border-brand-200 rounded-lg px-2 py-1.5">
+                <p class="text-brand-400 text-[10px] uppercase font-semibold">Closes</p>
+                <p class="text-brand-800 font-bold">{{ formatDate(event.period_end) }}</p>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
 
