@@ -78,13 +78,13 @@
 
           <div>
             <p class="text-xs font-semibold text-slate-400 uppercase tracking-wide mb-2 flex items-center gap-1.5">
-              <ClockIcon class="w-3.5 h-3.5" />Coverage Period
+              <ClockIcon class="w-3.5 h-3.5" />Quarter
             </p>
             <p class="font-semibold text-slate-800">{{ event.period }}</p>
             <p class="text-sm text-slate-500">
               {{ formatDate(event.period_start) }} – {{ formatDate(event.period_end) }}
             </p>
-            <p class="text-xs text-slate-400 mt-1">{{ event.months_covered }} month(s) covered</p>
+            <p class="text-xs text-slate-400 mt-1">{{ event.months_covered }} month(s) — 1 quarter</p>
           </div>
 
           <div>
@@ -106,9 +106,9 @@
       <!-- ─── Summary KPI Row ─────────────────────────────────────────────── -->
       <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <div class="card p-5 text-center">
-          <p class="text-xs text-slate-400 uppercase tracking-wide font-medium">Total Beneficiaries</p>
+          <p class="text-xs text-slate-400 uppercase tracking-wide font-medium">Active Beneficiaries</p>
           <p class="text-3xl font-bold text-slate-800 mt-1">{{ summary.total_beneficiaries.toLocaleString() }}</p>
-          <p class="text-xs text-slate-400 mt-1">Active in Lipa City</p>
+          <p class="text-xs text-slate-400 mt-1">Status: active in Lipa City</p>
         </div>
         <div class="card p-5 text-center">
           <p class="text-xs text-slate-400 uppercase tracking-wide font-medium">Grants Computed</p>
@@ -134,6 +134,19 @@
             ₱{{ Number(summary.total_released).toLocaleString('en-PH', { minimumFractionDigits: 2 }) }}
           </p>
           <p class="text-xs text-slate-400 mt-1">Cash grants paid out</p>
+        </div>
+      </div>
+
+      <!-- Eligibility breakdown notice -->
+      <div v-if="eligibleCount !== null || ineligibleCount !== null"
+        class="flex items-center gap-6 px-5 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm">
+        <div class="flex items-center gap-2 text-success-700">
+          <span class="w-2.5 h-2.5 rounded-full bg-success-500 inline-block"></span>
+          <span><strong>{{ eligibleCount }}</strong> eligible (have quarter completion record)</span>
+        </div>
+        <div class="flex items-center gap-2 text-danger-600">
+          <span class="w-2.5 h-2.5 rounded-full bg-danger-400 inline-block"></span>
+          <span><strong>{{ ineligibleCount }}</strong> ineligible (no verified completion for {{ event.period }})</span>
         </div>
       </div>
 
@@ -171,7 +184,10 @@
           <div v-if="!event.calculations?.length" class="flex-1 px-5 py-14 text-center text-slate-400">
             <CalculatorIcon class="w-10 h-10 opacity-20 mx-auto mb-2" />
             <p class="text-sm font-medium">No grants computed yet.</p>
-            <p class="text-xs mt-1 mb-4">Click "Compute Grants" to calculate amounts for all eligible beneficiaries.</p>
+            <p class="text-xs mt-1 mb-4">
+              Click "Compute Grants" to calculate amounts for all active beneficiaries.
+              Only those with a <strong>completion record</strong> for <strong>{{ event.period }}</strong> will be eligible.
+            </p>
             <button @click="computeGrants" :disabled="computing" class="btn btn-primary btn-sm">
               <CalculatorIcon class="w-4 h-4" />
               Compute Now
@@ -184,22 +200,23 @@
                 <tr>
                   <th class="text-left px-5 py-2.5 text-xs font-semibold text-slate-500 uppercase tracking-wide">Beneficiary</th>
                   <th class="text-right px-5 py-2.5 text-xs font-semibold text-slate-500 uppercase tracking-wide">Amount</th>
-                  <th class="text-center px-5 py-2.5 text-xs font-semibold text-slate-500 uppercase tracking-wide">Status</th>
+                  <th class="text-center px-5 py-2.5 text-xs font-semibold text-slate-500 uppercase tracking-wide">Eligibility</th>
                 </tr>
               </thead>
               <tbody class="divide-y divide-slate-50">
-                <tr v-for="calc in event.calculations" :key="calc.id" class="hover:bg-slate-50/60 transition-colors">
+                <tr v-for="calc in event.calculations" :key="calc.id" class="hover:bg-slate-50/60 transition-colors"
+                  :class="!calc.is_eligible ? 'opacity-60' : ''">
                   <td class="px-5 py-3">
                     <p class="font-medium text-slate-700 text-xs">{{ calc.beneficiary?.full_name ?? '—' }}</p>
                     <p class="text-[10px] text-slate-400 font-mono">{{ calc.beneficiary?.unique_id }}</p>
                   </td>
-                  <td class="px-5 py-3 text-right font-bold text-brand-600 text-sm">
-                    ₱{{ Number(calc.total_amount).toLocaleString('en-PH', { minimumFractionDigits: 2 }) }}
+                  <td class="px-5 py-3 text-right font-bold text-sm"
+                    :class="calc.is_eligible ? 'text-brand-600' : 'text-slate-300'">
+                    {{ calc.is_eligible ? '\u20b1' + Number(calc.total_grant_amount).toLocaleString('en-PH', { minimumFractionDigits: 2 }) : '\u2014' }}
                   </td>
                   <td class="px-5 py-3 text-center">
-                    <span :class="['badge badge-sm', calc.is_eligible ? 'badge-success' : 'badge-danger']">
-                      {{ calc.is_eligible ? 'Eligible' : 'Ineligible' }}
-                    </span>
+                    <span v-if="calc.is_eligible" class="badge badge-sm badge-success">Eligible</span>
+                    <span v-else class="badge badge-sm badge-danger" :title="calc.ineligibility_reason">No Record</span>
                   </td>
                 </tr>
               </tbody>
@@ -412,6 +429,16 @@ const computeGrants = () => {
 const claimRate = computed(() => {
   if (!props.summary.computed) return 0
   return Math.round((props.summary.claimed / props.summary.computed) * 100)
+})
+
+// Eligibility breakdown — derived from already-loaded calculations
+const eligibleCount = computed(() => {
+  if (!props.event.calculations?.length) return null
+  return props.event.calculations.filter(c => c.is_eligible).length
+})
+const ineligibleCount = computed(() => {
+  if (!props.event.calculations?.length) return null
+  return props.event.calculations.filter(c => !c.is_eligible).length
 })
 
 // ─── Edit Form ───────────────────────────────────────────────────────────────

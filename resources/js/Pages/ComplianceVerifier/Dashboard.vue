@@ -1,6 +1,6 @@
 <template>
-  <Head title="Compliance Verifier Dashboard" />
-  <StaffLayout page-title="Dashboard" page-subtitle="Compliance monitoring overview for Lipa City 4Ps beneficiaries">
+  <Head title="Completion Verifier Dashboard" />
+  <StaffLayout page-title="Dashboard" page-subtitle="Quarterly completion monitoring overview for Lipa City 4Ps beneficiaries">
     <div class="space-y-6">
 
       <!-- ─── Greeting ─────────────────────────────────────────────────────── -->
@@ -69,12 +69,12 @@
         </div>
       </div>
 
-      <!-- ─── Compliance Overview Bar ────────────────────────────────────────── -->
+      <!-- ─── Completion Overview Bar ────────────────────────────────────────── -->
       <div class="card p-5">
         <div class="flex items-center justify-between mb-4">
           <div>
-            <p class="font-semibold text-slate-800 text-sm">Household Compliance Rate</p>
-            <p class="text-xs text-slate-400 mt-0.5">Compliant vs non-compliant active beneficiaries</p>
+            <p class="font-semibold text-slate-800 text-sm">Household Completion Rate</p>
+            <p class="text-xs text-slate-400 mt-0.5">Complete vs incomplete active beneficiaries this quarter</p>
           </div>
           <span class="text-2xl font-bold text-brand-600">{{ complianceRate }}%</span>
         </div>
@@ -90,11 +90,11 @@
         <div class="grid grid-cols-3 gap-4 mt-4">
           <div class="text-center p-3 bg-success-50 rounded-xl border border-green-200">
             <p class="text-lg font-bold text-success-700">{{ stats.compliant }}</p>
-            <p class="text-xs text-success-600 font-medium mt-0.5">✓ Compliant</p>
+            <p class="text-xs text-success-600 font-medium mt-0.5">&#x2713; Complete</p>
           </div>
           <div class="text-center p-3 bg-danger-50 rounded-xl border border-red-200">
             <p class="text-lg font-bold text-danger-600">{{ stats.non_compliant }}</p>
-            <p class="text-xs text-danger-500 font-medium mt-0.5">✗ Non-Compliant</p>
+            <p class="text-xs text-danger-500 font-medium mt-0.5">&#x2717; Incomplete</p>
           </div>
           <div class="text-center p-3 bg-slate-50 rounded-xl border border-slate-200">
             <p class="text-lg font-bold text-slate-700">{{ stats.total_for_review }}</p>
@@ -118,7 +118,7 @@
                 <AcademicCapIcon class="w-4 h-4 text-amber-600" />
               </div>
               <div class="flex-1 min-w-0">
-                <p class="text-sm font-semibold text-amber-800">Education Compliance</p>
+                <p class="text-sm font-semibold text-amber-800">Education Completion</p>
                 <p class="text-xs text-amber-600">{{ stats.pending_edu }} households pending</p>
               </div>
               <span class="text-lg font-bold text-amber-700">{{ stats.pending_edu }}</span>
@@ -129,7 +129,7 @@
                 <HeartIcon class="w-4 h-4 text-pink-500" />
               </div>
               <div class="flex-1 min-w-0">
-                <p class="text-sm font-semibold text-pink-800">Health Compliance</p>
+                <p class="text-sm font-semibold text-pink-800">Health Completion</p>
                 <p class="text-xs text-pink-600">{{ stats.pending_health }} households pending</p>
               </div>
               <span class="text-lg font-bold text-pink-700">{{ stats.pending_health }}</span>
@@ -140,20 +140,20 @@
                 <XCircleIcon class="w-4 h-4 text-danger-600" />
               </div>
               <div class="flex-1 min-w-0">
-                <p class="text-sm font-semibold text-danger-800">Non-Compliant HH</p>
-                <p class="text-xs text-danger-600">Require re-verification</p>
+                <p class="text-sm font-semibold text-danger-800">Incomplete Households</p>
+                <p class="text-xs text-danger-600">Require re-verification this quarter</p>
               </div>
               <span class="text-lg font-bold text-danger-600">{{ stats.non_compliant }}</span>
             </Link>
           </div>
         </div>
 
-        <!-- ─── Recent Compliance Records ─────────────────────────────────────── -->
+        <!-- ─── Recent Completion Records ─────────────────────────────────────── -->
         <div class="card overflow-hidden lg:col-span-2">
           <div class="px-5 py-4 border-b border-slate-100 flex items-center justify-between">
             <div class="flex items-center gap-2">
               <ClipboardDocumentCheckIcon class="w-5 h-5 text-brand-600" />
-              <h2 class="font-semibold text-slate-800 text-sm">Recent Compliance Records</h2>
+              <h2 class="font-semibold text-slate-800 text-sm">Recent Completion Records</h2>
             </div>
             <Link :href="route('verifier.beneficiaries')" class="text-xs text-brand-600 hover:underline">
               View All →
@@ -162,8 +162,8 @@
 
           <div v-if="!stats.recent_records?.length" class="px-5 py-14 text-center text-slate-400">
             <ClipboardDocumentCheckIcon class="w-10 h-10 opacity-20 mx-auto mb-2" />
-            <p class="text-sm font-medium">No compliance records yet.</p>
-            <p class="text-xs mt-1 mb-4">Start verifying beneficiary compliance to populate this list.</p>
+            <p class="text-sm font-medium">No completion records yet.</p>
+            <p class="text-xs mt-1 mb-4">Start verifying beneficiary completion to populate this list.</p>
             <Link :href="route('verifier.beneficiaries')" class="btn btn-primary btn-sm gap-1.5">
               <ClipboardDocumentCheckIcon class="w-4 h-4" />
               Start Verifying
@@ -175,7 +175,7 @@
               <thead class="bg-slate-50 border-b border-slate-100">
                 <tr>
                   <th class="text-left px-5 py-2.5 text-xs font-semibold text-slate-500 uppercase tracking-wide">Beneficiary</th>
-                  <th class="text-left px-5 py-2.5 text-xs font-semibold text-slate-500 uppercase tracking-wide">Period</th>
+                  <th class="text-left px-5 py-2.5 text-xs font-semibold text-slate-500 uppercase tracking-wide">Quarter</th>
                   <th class="text-center px-5 py-2.5 text-xs font-semibold text-slate-500 uppercase tracking-wide">Edu</th>
                   <th class="text-center px-5 py-2.5 text-xs font-semibold text-slate-500 uppercase tracking-wide">Health</th>
                   <th class="text-center px-5 py-2.5 text-xs font-semibold text-slate-500 uppercase tracking-wide">FDS</th>
@@ -206,7 +206,7 @@
                   </td>
                   <td class="px-5 py-3 text-center">
                     <span :class="['badge badge-sm', rec.is_fully_compliant ? 'badge-success' : 'badge-danger']">
-                      {{ rec.is_fully_compliant ? '✓ Pass' : '✗ Fail' }}
+                      {{ rec.is_fully_compliant ? '&#x2713; Complete' : '&#x2717; Incomplete' }}
                     </span>
                   </td>
                   <td class="px-5 py-3 text-xs text-slate-400">
@@ -257,7 +257,7 @@ const StatusDot = {
       'inline-block w-2.5 h-2.5 rounded-full',
       value === true  ? 'bg-success-500' :
       value === false ? 'bg-danger-500' : 'bg-slate-300'
-    ]" :title="value === true ? 'Compliant' : value === false ? 'Non-compliant' : 'Not recorded'" />
+    ]" :title="value === true ? 'Complete' : value === false ? 'Incomplete' : 'Not recorded'" />
   `,
 }
 </script>

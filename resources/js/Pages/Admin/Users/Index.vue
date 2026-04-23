@@ -102,15 +102,17 @@
                   {{ user.office?.name ?? 'Unassigned' }}
                 </td>
 
-                <!-- Active toggle -->
+                <!-- Active toggle — disabled for superadmins -->
                 <td>
                   <button
-                    @click="toggleActive(user)"
+                    @click="user.role !== 'superadmin' && toggleActive(user)"
+                    :disabled="user.role === 'superadmin'"
                     :class="[
                       'relative inline-flex h-5 w-9 items-center rounded-full transition-colors focus:outline-none',
+                      user.role === 'superadmin' ? 'opacity-30 cursor-not-allowed' : '',
                       user.is_active ? 'bg-success-500' : 'bg-slate-300'
                     ]"
-                    :title="user.is_active ? 'Click to deactivate' : 'Click to activate'"
+                    :title="user.role === 'superadmin' ? 'Superadmin — cannot be managed here' : (user.is_active ? 'Click to deactivate' : 'Click to activate')"
                   >
                     <span :class="[
                       'inline-block h-3.5 w-3.5 transform rounded-full bg-white shadow transition-transform',
@@ -124,9 +126,10 @@
                   {{ user.last_login_at ? formatDate(user.last_login_at) : 'Never' }}
                 </td>
 
-                <!-- Actions -->
+                <!-- Actions — hidden for superadmins -->
                 <td class="text-right">
-                  <div class="flex items-center justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <div v-if="user.role !== 'superadmin'"
+                    class="flex items-center justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                     <Link :href="route('admin.users.show', user.id)" class="btn btn-ghost btn-sm" title="View">
                       <EyeIcon class="w-4 h-4" />
                     </Link>
@@ -142,6 +145,7 @@
                       <TrashIcon class="w-4 h-4" />
                     </button>
                   </div>
+                  <span v-else class="text-xs text-slate-300 italic">Superadmin</span>
                 </td>
               </tr>
             </tbody>
@@ -261,21 +265,18 @@ const initials = (name) =>
   (name ?? '').split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase()
 
 const roleColor = (role) => ({
-  superadmin:          'bg-red-500',
   admin:               'bg-brand-600',
   compliance_verifier: 'bg-amber-500',
   field_officer:       'bg-green-600',
 }[role] ?? 'bg-slate-400')
 
 const roleBadge = (role) => ({
-  superadmin:          'badge-danger',
   admin:               'badge-info',
   compliance_verifier: 'badge-warning',
   field_officer:       'badge-success',
 }[role] ?? 'badge-neutral')
 
 const roleIcon = (role) => ({
-  superadmin:          ShieldCheckIcon,
   admin:               CogIcon,
   compliance_verifier: ClipboardDocumentCheckIcon,
   field_officer:       UserGroupIcon,

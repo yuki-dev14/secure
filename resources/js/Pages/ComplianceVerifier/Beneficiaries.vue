@@ -1,6 +1,6 @@
 <template>
-  <Head title="Beneficiary Compliance List" />
-  <StaffLayout page-title="Beneficiary Compliance" page-subtitle="Search, filter and verify household compliance records">
+  <Head title="Beneficiary Completion List" />
+  <StaffLayout page-title="Beneficiary Completion" page-subtitle="Search, filter and record household quarterly completion">
     <div class="space-y-4">
 
       <!-- ─── Search & Filters ──────────────────────────────────────────────── -->
@@ -24,11 +24,11 @@
             <option v-for="brgy in barangays" :key="brgy" :value="brgy">{{ brgy }}</option>
           </select>
 
-          <!-- Compliance status -->
+          <!-- Completion status -->
           <select v-model="filters.compliant" class="form-select">
             <option value="">All Statuses</option>
-            <option value="true">✓ Compliant</option>
-            <option value="false">✗ Non-Compliant</option>
+            <option value="true">&#x2713; Complete</option>
+            <option value="false">&#x2717; Incomplete</option>
           </select>
         </div>
         <div class="flex items-center gap-2 mt-3">
@@ -71,7 +71,7 @@
                 <th class="text-center px-5 py-2.5 text-xs font-semibold text-slate-500 uppercase tracking-wide">Members</th>
                 <th class="text-center px-5 py-2.5 text-xs font-semibold text-slate-500 uppercase tracking-wide">School-Age</th>
                 <th class="text-center px-5 py-2.5 text-xs font-semibold text-slate-500 uppercase tracking-wide">Under-5</th>
-                <th class="text-center px-5 py-2.5 text-xs font-semibold text-slate-500 uppercase tracking-wide">Compliance</th>
+                <th class="text-center px-5 py-2.5 text-xs font-semibold text-slate-500 uppercase tracking-wide">Completion</th>
                 <th class="text-center px-5 py-2.5 text-xs font-semibold text-slate-500 uppercase tracking-wide">Last Checked</th>
                 <th class="text-right px-5 py-2.5 text-xs font-semibold text-slate-500 uppercase tracking-wide">Action</th>
               </tr>
@@ -115,7 +115,7 @@
                 </td>
                 <td class="px-5 py-3 text-center">
                   <span :class="['badge badge-sm', ben.is_compliant ? 'badge-success' : 'badge-danger']">
-                    {{ ben.is_compliant ? '✓ Compliant' : '✗ Non-Compliant' }}
+                    {{ ben.is_compliant ? '&#x2713; Complete' : '&#x2717; Incomplete' }}
                   </span>
                 </td>
                 <td class="px-5 py-3 text-center text-xs text-slate-400">
@@ -159,16 +159,16 @@
       <!-- ─── Legend ──────────────────────────────────────────────────────────── -->
       <div class="flex flex-wrap items-center gap-4 text-xs text-slate-400 px-1">
         <span class="flex items-center gap-1.5">
-          <span class="badge badge-success badge-sm">✓ Compliant</span>
-          All compliance conditions met for the current period
+          <span class="badge badge-success badge-sm">&#x2713; Complete</span>
+          All quarterly completion conditions met — eligible for grant
         </span>
         <span class="flex items-center gap-1.5">
-          <span class="badge badge-danger badge-sm">✗ Non-Compliant</span>
-          One or more conditions not satisfied — cannot claim grant
+          <span class="badge badge-danger badge-sm">&#x2717; Incomplete</span>
+          One or more conditions not satisfied — ineligible for grant this quarter
         </span>
         <span class="flex items-center gap-1.5">
           <span class="w-2 h-2 bg-slate-300 rounded-full inline-block"></span>
-          hover row to reveal Verify button
+          hover row to reveal Record button
         </span>
       </div>
     </div>

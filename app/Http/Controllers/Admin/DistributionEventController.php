@@ -38,10 +38,10 @@ class DistributionEventController extends Controller
     {
         $validated = $request->validate([
             'title'                   => 'required|string|max:200',
-            'period'                  => 'required|string|max:50',
+            'period'                  => 'required|string|max:50',   // e.g. "2026-Q2"
             'period_start'            => 'required|date',
             'period_end'              => 'required|date|after:period_start',
-            'months_covered'          => 'required|integer|min:1|max:12',
+            'months_covered'          => 'required|integer|min:1|max:3', // One quarter = 3 months
             'distribution_date_start' => 'required|date',
             'distribution_date_end'   => 'required|date|after_or_equal:distribution_date_start',
             'distribution_time_start' => 'nullable|date_format:H:i',
@@ -137,17 +137,19 @@ class DistributionEventController extends Controller
     }
 
     /**
-     * Batch-compute cash grants for all eligible beneficiaries.
+     * Batch-compute cash grants for all active beneficiaries.
+     * Eligibility is determined by the quarterly ComplianceRecord (is_fully_compliant).
+     * Ineligible beneficiaries are recorded with zero amounts + reason.
      */
     public function batchComputeGrants(DistributionEvent $event): RedirectResponse
     {
         $results = $this->calculator->batchCalculate($event);
 
         AuditLogService::log('grants_batch_computed', $event, [], $results,
-            "Batch computation: {$results['computed']} computed, {$results['errors']} errors");
+            "Batch computation: {$results['computed']} processed, {$results['eligible']} eligible, {$results['ineligible']} ineligible, {$results['errors']} errors");
 
         return back()->with('success',
-            "Grants computed for {$results['computed']} beneficiaries. Total: ₱".number_format($results['total_amount'], 2)
+            "Computation complete: {$results['eligible']} eligible ✓ · {$results['ineligible']} ineligible (no completion record) · Total: ₱" . number_format($results['total_amount'], 2)
         );
     }
 }

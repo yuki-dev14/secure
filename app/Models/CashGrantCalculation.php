@@ -9,6 +9,7 @@ class CashGrantCalculation extends Model
 {
     protected $fillable = [
         'beneficiary_id', 'distribution_event_id', 'months_covered',
+        'is_eligible', 'ineligibility_reason',
         'health_grant_eligible', 'health_grant_amount',
         'elementary_children_count', 'elementary_grant_amount',
         'junior_high_children_count', 'junior_high_grant_amount',
@@ -22,6 +23,7 @@ class CashGrantCalculation extends Model
     protected function casts(): array
     {
         return [
+            'is_eligible'             => 'boolean',
             'health_grant_eligible'   => 'boolean',
             'rice_subsidy_eligible'   => 'boolean',
             'health_grant_amount'     => 'decimal:2',

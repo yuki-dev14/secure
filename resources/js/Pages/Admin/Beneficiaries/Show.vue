@@ -12,6 +12,16 @@
         <span :class="['badge', beneficiary.is_compliant ? 'badge-success' : 'badge-danger']">
           {{ beneficiary.is_compliant ? '✓ Compliant' : '✗ Non-Compliant' }}
         </span>
+        <!-- Activate button: shown for inactive beneficiaries -->
+        <button
+          v-if="beneficiary.status === 'inactive'"
+          @click="activateBeneficiary"
+          :disabled="activating"
+          class="btn btn-success btn-sm ml-auto"
+        >
+          <CheckCircleIcon class="w-4 h-4" />
+          {{ activating ? 'Activating…' : 'Activate & Issue Card' }}
+        </button>
       </div>
 
       <div class="grid grid-cols-1 lg:grid-cols-3 gap-5">
@@ -335,12 +345,24 @@ import { Head, Link, useForm, router } from '@inertiajs/vue3'
 import {
   UserIcon, PencilIcon, EyeIcon, TrashIcon,
   ChevronLeftIcon, ArrowUpTrayIcon, DocumentIcon,
+  CheckCircleIcon,
 } from '@heroicons/vue/24/outline'
 import StaffLayout from '@/Layouts/StaffLayout.vue'
 
 const props = defineProps({ beneficiary: Object })
 
-const editing = ref(false)
+const editing   = ref(false)
+const activating = ref(false)
+
+const activateBeneficiary = () => {
+  if (!confirm(
+    'Activate this beneficiary? This confirms that their documentary requirements have been verified.\n\nA QR card will be automatically issued.'
+  )) return
+  activating.value = true
+  router.post(route('admin.beneficiaries.activate', props.beneficiary.id), {}, {
+    onFinish: () => { activating.value = false },
+  })
+}
 
 // ── Edit form ──────────────────────────────────────────────────────────
 const editForm = useForm({

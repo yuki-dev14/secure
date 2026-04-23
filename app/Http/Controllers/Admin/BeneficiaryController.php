@@ -9,6 +9,7 @@ use App\Models\Office;
 use App\Services\AuditLogService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -88,6 +89,46 @@ class BeneficiaryController extends Controller
         AuditLogService::updated($beneficiary, $old, $beneficiary->fresh()->toArray());
 
         return back()->with('success', 'Beneficiary record updated successfully.');
+    }
+
+    // ─── Activate beneficiary (approve application + issue card) ─────────────
+
+    public function activate(int $id): RedirectResponse
+    {
+        $beneficiary = Beneficiary::with(['user', 'cards'])->findOrFail($id);
+
+        if ($beneficiary->status === 'active') {
+            return back()->with('error', 'Beneficiary is already active.');
+        }
+
+        $old = $beneficiary->toArray();
+
+        DB::transaction(function () use ($beneficiary, $old) {
+            // Activate the beneficiary record
+            $beneficiary->update([
+                'status'          => 'active',
+                'enrollment_date' => $beneficiary->enrollment_date ?? now()->toDateString(),
+            ]);
+
+            // Activate the linked portal user account
+            if ($beneficiary->user) {
+                $beneficiary->user->update(['is_active' => true]);
+            }
+
+            // Issue the QR card
+            $cardService = app(\App\Services\BeneficiaryCardService::class);
+            $card = $cardService->issueCard($beneficiary, auth()->id());
+
+            AuditLogService::log(
+                'beneficiary_activated',
+                $beneficiary,
+                $old,
+                ['status' => 'active', 'card_number' => $card->card_number],
+                'Beneficiary application approved by admin and card issued'
+            );
+        });
+
+        return back()->with('success', 'Beneficiary activated. QR card issued and ready to download.');
     }
 
     // ─── Upload submitted document ────────────────────────────────────────────

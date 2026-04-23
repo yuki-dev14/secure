@@ -41,10 +41,16 @@
           </select>
         </div>
 
-        <Link :href="route('superadmin.beneficiaries.create')" class="btn btn-primary">
-          <UserPlusIcon class="w-4 h-4" />
-          Register Beneficiary
-        </Link>
+        <div class="flex items-center gap-2">
+          <Link :href="route('superadmin.beneficiaries.import')" class="btn btn-secondary">
+            <ArrowUpTrayIcon class="w-4 h-4" />
+            Bulk Import
+          </Link>
+          <Link :href="route('superadmin.beneficiaries.create')" class="btn btn-primary">
+            <UserPlusIcon class="w-4 h-4" />
+            Register Beneficiary
+          </Link>
+        </div>
       </div>
 
       <!-- Stats strip -->
@@ -285,7 +291,7 @@ import { Head, Link, router } from '@inertiajs/vue3'
 import {
   MagnifyingGlassIcon, UserPlusIcon, UsersIcon,
   CheckBadgeIcon, UserGroupIcon, UserIcon,
-  EyeIcon, ArrowDownTrayIcon, CreditCardIcon,
+  EyeIcon, ArrowDownTrayIcon, ArrowUpTrayIcon, CreditCardIcon,
   XMarkIcon, CheckCircleIcon,
 } from '@heroicons/vue/24/outline'
 import StaffLayout from '@/Layouts/StaffLayout.vue'

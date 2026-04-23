@@ -30,9 +30,9 @@
             <ClipboardDocumentCheckIcon class="w-5 h-5 text-blue-600" />
           </div>
           <div>
-            <p class="text-[10px] text-slate-400 uppercase tracking-wide">Compliance</p>
+            <p class="text-[10px] text-slate-400 uppercase tracking-wide">Completion Records</p>
             <p class="text-xl font-bold text-slate-800">{{ summary.compliance.total }}</p>
-            <p class="text-[10px] text-success-600">{{ summary.compliance.fully_compliant }} compliant</p>
+            <p class="text-[10px] text-success-600">{{ summary.compliance.fully_compliant }} complete</p>
           </div>
         </div>
         <div class="card p-4 flex items-center gap-3">
@@ -170,7 +170,7 @@ const reports = [
   {
     id:          'compliance',
     title:       'Compliance Report',
-    description: 'Education, health, and FDS compliance records per period.',
+    description: 'Education, health, and FDS completion records per quarter.',
     icon:        'CheckBadgeIcon',
     color:       'success',
     viewRoute:   'superadmin.reports.compliance',

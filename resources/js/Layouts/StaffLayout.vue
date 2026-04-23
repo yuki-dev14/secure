@@ -148,6 +148,7 @@ const navItems = computed(() => {
       { route: 'superadmin.audit-logs.index',    label: 'Audit Trail',    icon: ShieldCheckIcon,          routePrefix: '/superadmin/audit' },
       { route: 'superadmin.reports.index',       label: 'Reports',        icon: DocumentChartBarIcon,     routePrefix: '/superadmin/reports' },
       { route: 'admin.users.index',              label: 'Users',          icon: CogIcon,                  routePrefix: '/admin/users' },
+      { route: 'superadmin.settings.index',      label: 'Settings',       icon: CogIcon,                  routePrefix: '/superadmin/settings' },
     )
   }
 
@@ -161,7 +162,7 @@ const navItems = computed(() => {
 
   if (role.value === 'compliance_verifier') {
     base.push(
-      { route: 'verifier.beneficiaries', label: 'Verify Compliance', icon: ClipboardDocumentCheckIcon, routePrefix: '/verifier/beneficiaries' },
+      { route: 'verifier.beneficiaries', label: 'Record Completion', icon: ClipboardDocumentCheckIcon, routePrefix: '/verifier/beneficiaries' },
     )
   }
 

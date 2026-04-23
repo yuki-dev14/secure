@@ -1,6 +1,6 @@
 <template>
-  <Head title="Compliance Report" />
-  <StaffLayout page-title="Compliance Report" page-subtitle="Education, health, and FDS compliance records per period">
+  <Head title="Completion Report" />
+  <StaffLayout page-title="Completion Report" page-subtitle="Education, health, and FDS completion records per quarter">
     <div class="space-y-4">
 
       <div class="flex items-center justify-between">
@@ -20,9 +20,9 @@
           <option v-for="p in periods" :key="p" :value="p">{{ p }}</option>
         </select>
         <select v-model="filters.compliant" class="form-select w-48" @change="applyFilters">
-          <option value="">All Compliance</option>
-          <option value="1">Fully Compliant</option>
-          <option value="0">Non-Compliant</option>
+          <option value="">All Completion</option>
+          <option value="1">Fully Complete</option>
+          <option value="0">Incomplete</option>
         </select>
       </div>
 
@@ -34,15 +34,15 @@
         </div>
         <div class="card px-4 py-3 text-center">
           <p class="text-2xl font-bold text-success-700">{{ compliantCount }}</p>
-          <p class="text-xs text-slate-400 mt-0.5">Fully Compliant</p>
+          <p class="text-xs text-slate-400 mt-0.5">Fully Complete</p>
         </div>
         <div class="card px-4 py-3 text-center">
           <p class="text-2xl font-bold text-danger-700">{{ nonCompliantCount }}</p>
-          <p class="text-xs text-slate-400 mt-0.5">Non-Compliant</p>
+          <p class="text-xs text-slate-400 mt-0.5">Incomplete</p>
         </div>
         <div class="card px-4 py-3 text-center">
           <p class="text-2xl font-bold text-brand-700">{{ complianceRate }}%</p>
-          <p class="text-xs text-slate-400 mt-0.5">Compliance Rate</p>
+          <p class="text-xs text-slate-400 mt-0.5">Completion Rate</p>
         </div>
       </div>
 
@@ -90,7 +90,7 @@
                 </td>
                 <td class="px-5 py-3">
                   <span :class="['badge badge-sm', r.is_fully_compliant ? 'badge-success' : 'badge-danger']">
-                    {{ r.is_fully_compliant ? 'Compliant' : 'Non-Compliant' }}
+                    {{ r.is_fully_compliant ? 'Complete' : 'Incomplete' }}
                   </span>
                 </td>
                 <td class="px-5 py-3">

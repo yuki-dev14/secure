@@ -22,6 +22,16 @@
           {{ beneficiary.is_compliant ? '✓ Compliant' : '✗ Non-Compliant' }}
         </span>
         <div class="ml-auto flex gap-2">
+          <!-- Activate button: shown only for inactive/pending beneficiaries -->
+          <button
+            v-if="beneficiary.status === 'inactive'"
+            @click="activateBeneficiary"
+            :disabled="activating"
+            class="btn btn-success btn-sm"
+          >
+            <CheckCircleIcon class="w-4 h-4" />
+            {{ activating ? 'Activating…' : 'Activate & Issue Card' }}
+          </button>
           <button @click="issueNewCard" :disabled="issuingCard" class="btn btn-secondary btn-sm">
             <CreditCardIcon class="w-4 h-4" />
             {{ issuingCard ? 'Issuing…' : 'Re-issue Card' }}
@@ -501,8 +511,9 @@ import StaffLayout from '@/Layouts/StaffLayout.vue'
 const props = defineProps({ beneficiary: Object })
 
 // ── Profile editing ─────────────────────────────────────────────────────────
-const editing    = ref(false)
+const editing     = ref(false)
 const issuingCard = ref(false)
+const activating  = ref(false)
 
 const editForm = useForm({
   first_name:     props.beneficiary.first_name,
@@ -518,6 +529,16 @@ const editForm = useForm({
 const saveEdit = () => {
   editForm.put(route('superadmin.beneficiaries.update', props.beneficiary.id), {
     onSuccess: () => { editing.value = false },
+  })
+}
+
+const activateBeneficiary = () => {
+  if (!confirm(
+    'Activate this beneficiary? This confirms that their documentary requirements have been verified.\n\nA QR card will be automatically issued.'
+  )) return
+  activating.value = true
+  router.post(route('superadmin.beneficiaries.activate', props.beneficiary.id), {}, {
+    onFinish: () => { activating.value = false },
   })
 }
 

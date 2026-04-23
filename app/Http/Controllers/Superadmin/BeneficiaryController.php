@@ -11,6 +11,7 @@ use App\Services\AuditLogService;
 use App\Services\BeneficiaryCardService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
@@ -110,7 +111,8 @@ class BeneficiaryController extends Controller
                 $photoPath = $request->file('photo')->store("photos/{$uniqueId}", 'public');
             }
 
-            // Create beneficiary
+            // Create beneficiary — defaults to 'inactive' until admin approves
+            // their physical documentary requirements and activates their account.
             $beneficiary = Beneficiary::create([
                 ...$validated,
                 'unique_id'           => $uniqueId,
@@ -119,13 +121,13 @@ class BeneficiaryController extends Controller
                 'province'            => 'Batangas',
                 'zip_code'            => '4217',
                 'photo_path'          => $photoPath,
-                'status'              => 'active',
+                'status'              => 'inactive',
                 'created_by'          => auth()->id(),
             ]);
 
             // Create family members
             foreach ($validated['family_members'] ?? [] as $member) {
-                $age = now()->diffInYears($member['birthdate']);
+                $age = Carbon::parse($member['birthdate'])->diffInYears(now());
                 $isSchoolAge = $age >= 3 && $age <= 18;
                 $beneficiary->allFamilyMembers()->create([
                     ...$member,
@@ -139,7 +141,7 @@ class BeneficiaryController extends Controller
                 ]);
             }
 
-            // Create portal user account
+            // Create portal user account — inactive until beneficiary is approved
             $user = User::create([
                 'name'                => $beneficiary->full_name,
                 'username'            => strtolower(str_replace('-', '', $uniqueId)),
@@ -147,20 +149,22 @@ class BeneficiaryController extends Controller
                 'password'            => Hash::make('temp'),
                 'role'                => 'beneficiary',
                 'office_id'           => $beneficiary->office_id,
-                'is_active'           => true,
+                'is_active'           => false,
                 'must_change_password'=> true,
             ]);
 
             $beneficiary->update(['user_id' => $user->id]);
 
-            // Issue QR card
-            $this->cardService->issueCard($beneficiary, auth()->id());
+            // NOTE: Card is NOT issued here.
+            // The admin must first verify the physical documents (Birth Certificates,
+            // Valid ID, School/Health Documents, Barangay Certificate, Photo 1x1)
+            // then activate the beneficiary. The card is issued upon activation.
 
             AuditLogService::created($beneficiary, $beneficiary->toArray());
         });
 
         return redirect()->route('superadmin.beneficiaries.index')
-            ->with('success', 'Beneficiary registered successfully. Card generated and ready for download.');
+            ->with('success', 'Beneficiary registered and set to INACTIVE. Activate their account after verifying submitted documents.');
     }
 
     public function show(int $id): Response
@@ -212,6 +216,47 @@ class BeneficiaryController extends Controller
 
         return redirect()->route('superadmin.beneficiaries.index')
             ->with('success', 'Beneficiary record deleted.');
+    }
+
+    /**
+     * Activate a beneficiary after verifying their physical documentary requirements.
+     * This sets status → active, enables their portal account, and issues their QR card.
+     */
+    public function activate(int $id): RedirectResponse
+    {
+        $beneficiary = Beneficiary::with(['user', 'cards'])->findOrFail($id);
+
+        if ($beneficiary->status === 'active') {
+            return back()->with('error', 'Beneficiary is already active.');
+        }
+
+        DB::transaction(function () use ($beneficiary) {
+            $old = $beneficiary->toArray();
+
+            // Activate the beneficiary record
+            $beneficiary->update([
+                'status'          => 'active',
+                'enrollment_date' => $beneficiary->enrollment_date ?? now()->toDateString(),
+            ]);
+
+            // Activate the linked portal user account
+            if ($beneficiary->user) {
+                $beneficiary->user->update(['is_active' => true]);
+            }
+
+            // Issue the QR card (first-time activation)
+            $card = $this->cardService->issueCard($beneficiary, auth()->id());
+
+            AuditLogService::log(
+                'beneficiary_activated',
+                $beneficiary,
+                $old,
+                ['status' => 'active', 'card_number' => $card->card_number],
+                'Beneficiary application approved and card issued'
+            );
+        });
+
+        return back()->with('success', 'Beneficiary activated. QR card issued and ready to download.');
     }
 
     public function issueCard(int $id): RedirectResponse

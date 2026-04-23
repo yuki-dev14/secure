@@ -16,7 +16,12 @@ class UserManagementController extends Controller
 {
     public function index(Request $request): Response
     {
-        $query = User::with('office')->staff()->latest();
+        // Admins can only see admin, verifier, and field_officer accounts.
+        // Superadmins are excluded from the admin's staff management view.
+        $query = User::with('office')
+            ->staff()
+            ->whereNotIn('role', ['superadmin', 'beneficiary'])
+            ->latest();
 
         if ($request->filled('search')) {
             $s = $request->search;
@@ -70,18 +75,22 @@ class UserManagementController extends Controller
 
     public function show(User $user): Response
     {
+        $this->denyIfSuperadmin($user);
         $user->load('office');
         return Inertia::render('Admin/Users/Show', compact('user'));
     }
 
     public function edit(User $user): Response
     {
+        $this->denyIfSuperadmin($user);
         $offices = Office::active()->get(['id', 'name']);
         return Inertia::render('Admin/Users/Edit', compact('user', 'offices'));
     }
 
     public function update(Request $request, User $user): RedirectResponse
     {
+        $this->denyIfSuperadmin($user);
+
         $validated = $request->validate([
             'name'           => 'required|string|max:150',
             'email'          => "required|email|unique:users,email,{$user->id}",
@@ -115,6 +124,8 @@ class UserManagementController extends Controller
 
     public function destroy(User $user): RedirectResponse
     {
+        $this->denyIfSuperadmin($user);
+
         if ($user->id === auth()->id()) {
             return back()->with('error', 'You cannot delete your own account.');
         }
@@ -128,9 +139,21 @@ class UserManagementController extends Controller
 
     public function toggleActive(User $user): RedirectResponse
     {
+        $this->denyIfSuperadmin($user);
         $user->update(['is_active' => !$user->is_active]);
         $status = $user->is_active ? 'activated' : 'deactivated';
         AuditLogService::log("user_{$status}", $user, [], [], "User account {$status}");
         return back()->with('success', "Account {$status} for {$user->name}.");
+    }
+
+    /**
+     * Abort with 403 if the target user is a superadmin.
+     * Admins should never be able to view or manage superadmin accounts.
+     */
+    private function denyIfSuperadmin(User $user): void
+    {
+        if ($user->role === 'superadmin') {
+            abort(403, 'You do not have permission to manage superadmin accounts.');
+        }
     }
 }

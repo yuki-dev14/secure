@@ -6,6 +6,8 @@ use App\Http\Controllers\Superadmin\DashboardController as SuperAdminDashboardCo
 use App\Http\Controllers\Superadmin\AuditLogController;
 use App\Http\Controllers\Superadmin\ReportController;
 use App\Http\Controllers\Superadmin\ProxyController;
+use App\Http\Controllers\Superadmin\SettingsController;
+use App\Http\Controllers\Superadmin\BeneficiaryImportController;
 use App\Http\Controllers\Admin\DashboardController as AdminDashboardController;
 use App\Http\Controllers\Admin\BeneficiaryController as AdminBeneficiaryController;
 use App\Http\Controllers\Admin\UserManagementController;
@@ -72,12 +74,23 @@ Route::middleware(['auth', 'role:superadmin'])
     ->group(function () {
         Route::get('/dashboard',                [SuperAdminDashboardController::class, 'index'])->name('dashboard');
 
-        // Beneficiary Management
+        // Bulk Import — must be declared BEFORE resource() to prevent
+        // 'import' being matched as the {beneficiary} wildcard parameter.
+        Route::get('beneficiaries/import',              [BeneficiaryImportController::class, 'index'])->name('beneficiaries.import');
+        Route::post('beneficiaries/import',             [BeneficiaryImportController::class, 'store'])->name('beneficiaries.import.store');
+        Route::get('beneficiaries/import/template',     [BeneficiaryImportController::class, 'template'])->name('beneficiaries.import.template');
+
+        // Static batch routes — also before resource() for the same reason
+        Route::post('beneficiaries/batch-cards',        [SuperAdminBeneficiaryController::class, 'batchIssueCards'])->name('beneficiaries.cards.batch');
+
+        // Beneficiary CRUD resource
         Route::resource('beneficiaries',        SuperAdminBeneficiaryController::class);
-        Route::post('beneficiaries/{id}/card',  [SuperAdminBeneficiaryController::class, 'issueCard'])->name('beneficiaries.card.issue');
-        Route::get('beneficiaries/{id}/card/download', [SuperAdminBeneficiaryController::class, 'downloadCard'])->name('beneficiaries.card.download');
-        Route::get('beneficiaries/{id}/card/preview',  [SuperAdminBeneficiaryController::class, 'cardPreview'])->name('beneficiaries.card.preview');
-        Route::post('beneficiaries/batch-cards',       [SuperAdminBeneficiaryController::class, 'batchIssueCards'])->name('beneficiaries.cards.batch');
+
+        // Per-beneficiary actions (these use {id} so they're fine after resource)
+        Route::post('beneficiaries/{id}/card',         [SuperAdminBeneficiaryController::class, 'issueCard'])->name('beneficiaries.card.issue');
+        Route::get('beneficiaries/{id}/card/download',  [SuperAdminBeneficiaryController::class, 'downloadCard'])->name('beneficiaries.card.download');
+        Route::get('beneficiaries/{id}/card/preview',   [SuperAdminBeneficiaryController::class, 'cardPreview'])->name('beneficiaries.card.preview');
+        Route::post('beneficiaries/{id}/activate',      [SuperAdminBeneficiaryController::class, 'activate'])->name('beneficiaries.activate');
 
         // Proxy Management
         Route::post('beneficiaries/{beneficiary}/proxies',                 [ProxyController::class, 'store'])->name('beneficiaries.proxies.store');
@@ -90,8 +103,13 @@ Route::middleware(['auth', 'role:superadmin'])
         Route::get('/audit-logs/{id}',          [AuditLogController::class, 'show'])->name('audit-logs.show');
         Route::get('/audit-logs/export',        [AuditLogController::class, 'export'])->name('audit-logs.export');
 
+        // System Settings
+        Route::get('/settings',                [SettingsController::class, 'index'])->name('settings.index');
+        Route::put('/settings',                [SettingsController::class, 'update'])->name('settings.update');
+        Route::post('/settings/test-email',    [SettingsController::class, 'sendTestEmail'])->name('settings.test-email');
+
         // User management (with broader scope)
-        Route::resource('users',                UserManagementController::class);
+        Route::resource('users',               UserManagementController::class);
 
         // Reports & Exports
         Route::get('/reports',                          [ReportController::class, 'index'])->name('reports.index');
@@ -121,6 +139,7 @@ Route::middleware(['auth', 'role:admin,superadmin'])
         Route::get('beneficiaries',                                  [AdminBeneficiaryController::class, 'index'])->name('beneficiaries.index');
         Route::get('beneficiaries/{id}',                             [AdminBeneficiaryController::class, 'show'])->name('beneficiaries.show');
         Route::put('beneficiaries/{id}',                             [AdminBeneficiaryController::class, 'update'])->name('beneficiaries.update');
+        Route::post('beneficiaries/{id}/activate',                   [AdminBeneficiaryController::class, 'activate'])->name('beneficiaries.activate');
         Route::post('beneficiaries/{id}/documents',                  [AdminBeneficiaryController::class, 'uploadDocument'])->name('beneficiaries.documents.upload');
         Route::delete('beneficiaries/{id}/documents/{docId}',        [AdminBeneficiaryController::class, 'deleteDocument'])->name('beneficiaries.documents.delete');
 

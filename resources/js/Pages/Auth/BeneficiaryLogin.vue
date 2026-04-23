@@ -51,6 +51,7 @@
             <template v-if="!qrScanning && !qrLoginError">
               <div class="text-center text-sm text-slate-500 mb-4">
                 Point your camera at the QR code on your 4Ps ID card
+                <span class="block text-xs text-success-600 font-medium mt-0.5">No password required — just scan to sign in</span>
               </div>
               <div class="relative bg-slate-900 rounded-2xl overflow-hidden aspect-square max-w-xs mx-auto">
                 <div id="qr-reader" class="w-full h-full"></div>
@@ -100,8 +101,8 @@
             </template>
 
             <p class="text-center text-xs text-slate-400">
-              Or
-              <button @click="activeTab = 'id'" class="text-brand-600 hover:underline font-medium">enter your Unique ID manually</button>
+              No QR card?
+              <button @click="activeTab = 'id'" class="text-brand-600 hover:underline font-medium">Enter your Unique ID and password instead</button>
             </p>
           </div>
 
@@ -178,7 +179,7 @@ import {
   LockClosedIcon, EyeIcon, EyeSlashIcon, ExclamationCircleIcon, ArrowLeftIcon,
 } from '@heroicons/vue/24/outline'
 
-const activeTab     = ref('id')
+const activeTab     = ref('qr')       // Default to QR scan — primary login method
 const showPassword  = ref(false)
 const scanning      = ref(false)       // camera is active
 const qrScanning    = ref(false)       // auto-login request in flight
@@ -187,8 +188,8 @@ const qrLoginError  = ref('')          // server-side QR rejection
 let html5QrCode     = null
 
 const tabs = [
-  { id: 'id',  label: 'Unique ID',    icon: IdentificationIcon },
-  { id: 'qr',  label: 'Scan QR Code', icon: QrCodeIcon },
+  { id: 'qr',  label: 'Scan QR Card', icon: QrCodeIcon },
+  { id: 'id',  label: 'Unique ID + Password', icon: IdentificationIcon },
 ]
 
 // Manual ID + Password form
@@ -230,11 +231,15 @@ const handleQrDecoded = async (payload) => {
     route('beneficiary.qr-login.post'),
     { payload },
     {
+      onSuccess: () => {
+        // Inertia handles redirect automatically.
+        // This no-op ensures any custom redirect logic fires.
+        qrScanning.value = false
+      },
       onError: (errors) => {
         qrScanning.value  = false
         qrLoginError.value = errors.payload ?? 'QR login failed. Please try again.'
       },
-      // onSuccess: Inertia will redirect automatically
     }
   )
 }

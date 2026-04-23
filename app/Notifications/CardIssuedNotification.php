@@ -4,11 +4,10 @@ namespace App\Notifications;
 
 use App\Models\BeneficiaryCard;
 use Illuminate\Bus\Queueable;
-use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 
-class CardIssuedNotification extends Notification implements ShouldQueue
+class CardIssuedNotification extends Notification
 {
     use Queueable;
 
