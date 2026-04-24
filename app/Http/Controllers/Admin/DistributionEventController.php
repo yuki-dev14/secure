@@ -136,6 +136,27 @@ class DistributionEventController extends Controller
                 . "{$notified} beneficiaries notified that claims are now open.";
         }
 
+        // Reset all beneficiary completion flags when event is COMPLETED
+        if ($oldStatus !== 'completed' && $newStatus === 'completed') {
+            $resetCount = \App\Models\Beneficiary::where('status', 'active')
+                ->update([
+                    'is_compliant'          => false,
+                    'last_compliance_check' => null,
+                ]);
+
+            AuditLogService::log(
+                'beneficiary_compliance_reset',
+                $distributionEvent,
+                [],
+                ['reset_count' => $resetCount, 'period' => $distributionEvent->period],
+                "Event {$distributionEvent->period} completed — {$resetCount} beneficiary completion flags reset for next quarter"
+            );
+
+            $message = "Event marked as Completed. "
+                . "{$resetCount} beneficiaries reset to Incomplete — "
+                . "verifier must re-verify submissions for the next quarter.";
+        }
+
         return back()->with('success', $message);
     }
 

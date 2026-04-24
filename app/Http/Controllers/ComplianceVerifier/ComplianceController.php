@@ -99,7 +99,17 @@ class ComplianceController extends Controller
             'override_reason'                => 'nullable|string|max:500',
             'remarks'                        => 'nullable|string',
             'non_compliance_reasons'         => 'nullable|string',
+
+            // Per-child education attendance rates
+            'child_attendances'              => 'nullable|array',
+            'child_attendances.*.id'         => 'integer|exists:family_members,id',
+            'child_attendances.*.enrolled'   => 'boolean',
+            'child_attendances.*.rate'       => 'nullable|numeric|min:0|max:100',
         ]);
+
+        // Pull child_attendances out before DB insert (not a compliance_records column)
+        $childAttendances = $validated['child_attendances'] ?? [];
+        unset($validated['child_attendances']);
 
         // Auto-compute attendance compliance
         if (isset($validated['edu_attendance_rate'])) {
@@ -130,6 +140,12 @@ class ComplianceController extends Controller
             ],
             array_merge($validated, ['verified_by' => auth()->id()])
         );
+
+        // Save per-child attendance rates to family_members
+        foreach ($childAttendances as $childData) {
+            \App\Models\FamilyMember::where('id', $childData['id'])
+                ->update(['attendance_rate' => $childData['rate'] ?? null]);
+        }
 
         // Recompute household compliance
         $this->recomputeHouseholdCompliance($beneficiary);

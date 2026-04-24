@@ -146,47 +146,60 @@
 
         <form v-if="selectedPeriod" @submit.prevent="submitCompliance" class="space-y-4">
 
-          <!-- ── EDUCATION — school-age children 3–18 ── -->
-          <div class="card" v-if="schoolAgeCount > 0">
+          <!-- ── EDUCATION — one row per school-age child ── -->
+          <div class="card" v-if="schoolAgeChildren.length > 0">
             <div class="card-header">
               <div class="flex items-center gap-2">
                 <AcademicCapIcon class="w-5 h-5 text-brand-600" />
                 <h3 class="font-semibold text-slate-800">Education</h3>
-                <span class="badge badge-info badge-sm">{{ schoolAgeCount }} school-age child{{ schoolAgeCount > 1 ? 'ren' : '' }} (3–18 yrs)</span>
+                <span class="badge badge-info badge-sm">{{ schoolAgeChildren.length }} school-age child{{ schoolAgeChildren.length > 1 ? 'ren' : '' }} (3–18 yrs)</span>
               </div>
               <span class="text-xs text-slate-400">Enrolled in daycare, preschool, elementary or high school</span>
             </div>
             <div class="card-body space-y-4">
 
-              <!-- Enrolled? -->
-              <YesNoField
-                v-model="compForm.edu_enrolled"
-                label="Is the child/children enrolled in school?"
-                hint="Daycare, preschool, elementary, junior high, or senior high."
-              />
-
-              <!-- Attendance % -->
-              <div>
-                <label class="form-label">
-                  Class Attendance Rate (%) <span class="text-danger-500">*</span>
-                </label>
-                <p class="text-xs text-slate-400 mb-1.5">
-                  Input the percentage value from the school report card. Must meet the 85% threshold.
-                </p>
-                <div class="relative max-w-xs">
-                  <input
-                    v-model.number="compForm.edu_attendance_rate"
-                    type="number" min="0" max="100" step="0.1"
-                    class="form-input pr-8" placeholder="e.g. 92.5"
-                    @input="autoCheckAttendance"
-                  />
-                  <span class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm">%</span>
+              <!-- Per-child card -->
+              <div
+                v-for="child in schoolAgeChildren"
+                :key="child.id"
+                class="p-4 border border-slate-100 rounded-xl space-y-3 bg-slate-50/50"
+              >
+                <!-- Child header -->
+                <div class="flex items-center justify-between">
+                  <div>
+                    <p class="font-medium text-slate-700 text-sm">{{ child.first_name }} {{ child.last_name }}</p>
+                    <p class="text-xs text-slate-400">Age {{ getAge(child.birthdate) }}</p>
+                  </div>
+                  <span class="badge badge-sm badge-neutral capitalize">{{ (child.education_level ?? '').replace('_', ' ') }}</span>
                 </div>
-                <p v-if="compForm.edu_attendance_rate !== null && compForm.edu_attendance_rate !== ''"
-                  class="text-xs mt-1.5 font-medium"
-                  :class="compForm.edu_attendance_rate >= 85 ? 'text-success-600' : 'text-danger-600'">
-                  {{ compForm.edu_attendance_rate >= 85 ? '✓ Meets the 85% attendance requirement' : '✗ Below the 85% threshold — will be marked incomplete' }}
-                </p>
+
+                <!-- Enrolled? -->
+                <YesNoField
+                  v-model="childEnrolled[child.id]"
+                  label="Is this child enrolled in school?"
+                  hint="Based on the school enrollment record / Form 138."
+                />
+
+                <!-- Attendance rate (only if enrolled) -->
+                <div v-if="childEnrolled[child.id] === true">
+                  <label class="form-label">
+                    Class Attendance Rate (%) <span class="text-danger-500">*</span>
+                  </label>
+                  <p class="text-xs text-slate-400 mb-1.5">From the school report card. Must meet the 85% threshold.</p>
+                  <div class="relative max-w-xs">
+                    <input
+                      v-model.number="childRates[child.id]"
+                      type="number" min="0" max="100" step="0.1"
+                      class="form-input pr-8" :placeholder="`e.g. 92.5`"
+                    />
+                    <span class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm">%</span>
+                  </div>
+                  <p v-if="childRates[child.id] !== null && childRates[child.id] !== undefined && childRates[child.id] !== ''"
+                    class="text-xs mt-1.5 font-medium"
+                    :class="childRates[child.id] >= 85 ? 'text-success-600' : 'text-danger-600'">
+                    {{ childRates[child.id] >= 85 ? '✓ Meets the 85% attendance requirement' : '✗ Below the 85% threshold — will be marked incomplete' }}
+                  </p>
+                </div>
               </div>
             </div>
           </div>
@@ -440,7 +453,22 @@ const compForm = useForm({
   non_compliance_reasons:          '',
 })
 
-// ── Attendance auto-check ──────────────────────────────────────────────────
+// ── Per-child education state ──────────────────────────────────────────────
+const schoolAgeChildren = computed(() =>
+  members.value.filter(m => m.is_school_age &&
+    ['daycare','preschool','elementary','junior_high','senior_high'].includes(m.education_level)
+  )
+)
+
+const childEnrolled = ref({})   // { [memberId]: true|false|null }
+const childRates    = ref({})   // { [memberId]: number|null }
+
+const getAge = (birthdate) => {
+  if (!birthdate) return '?'
+  return Math.floor((Date.now() - new Date(birthdate)) / (365.25 * 86400000))
+}
+
+// ── Attendance auto-check (kept for backward compat) ──────────────────────
 const autoCheckAttendance = () => {
   if (compForm.edu_attendance_rate !== null && compForm.edu_attendance_rate !== '') {
     compForm.edu_attendance_compliant = Number(compForm.edu_attendance_rate) >= 85
@@ -451,9 +479,14 @@ const autoCheckAttendance = () => {
 // Each section only counts if it's applicable to the household.
 // null = not yet answered → treated as incomplete to force an explicit decision.
 const autoComplete = computed(() => {
-  // Education: required if school-age children exist
-  const eduOk = schoolAgeCount.value === 0
-    || (compForm.edu_enrolled === true && compForm.edu_attendance_compliant === true)
+  // Education: ALL enrolled school-age children must meet 85%
+  const eduOk = schoolAgeChildren.value.length === 0 || schoolAgeChildren.value.every(child => {
+    if (childEnrolled.value[child.id] !== true) return false
+    const rate = childRates.value[child.id]
+    // daycare/preschool: no attendance threshold
+    if (['daycare','preschool'].includes(child.education_level)) return true
+    return rate !== null && rate !== undefined && Number(rate) >= 85
+  })
 
   // Health 0–5: required if under-five children exist
   const immunizationOk = underFiveCount.value === 0 || compForm.health_immunization_complete === true
@@ -483,6 +516,26 @@ const submitCompliance = () => {
   compForm.period       = selectedPeriod.value?.value ?? ''
   compForm.period_start = selectedPeriod.value?.start ?? ''
   compForm.period_end   = selectedPeriod.value?.end   ?? ''
+
+  // Build per-child data for the backend
+  const childAttendances = schoolAgeChildren.value.map(child => ({
+    id:       child.id,
+    enrolled: childEnrolled.value[child.id] ?? false,
+    rate:     childEnrolled.value[child.id] === true ? (childRates.value[child.id] ?? null) : null,
+  }))
+
+  // Aggregate edu fields for the compliance_record row
+  compForm.edu_enrolled = childAttendances.some(c => c.enrolled)
+  const allEduOk = schoolAgeChildren.value.length === 0 || schoolAgeChildren.value.every(child => {
+    if (childEnrolled.value[child.id] !== true) return false
+    if (['daycare','preschool'].includes(child.education_level)) return true
+    const rate = childRates.value[child.id]
+    return rate !== null && Number(rate) >= 85
+  })
+  compForm.edu_attendance_compliant = allEduOk
+  // Use the lowest rate as the representative for the compliance record
+  const rates = childAttendances.filter(c => c.rate !== null).map(c => Number(c.rate))
+  compForm.edu_attendance_rate = rates.length ? Math.min(...rates) : null
 
   // Combine split weighing fields into the single backend column
   if (underFiveCount.value > 0) {
@@ -516,6 +569,8 @@ const submitCompliance = () => {
         else if (v === false) out[k] = 0
         else                  out[k] = v
       }
+      // Attach per-child attendance array (not in compForm fields, passed separately)
+      out.child_attendances = childAttendances
       return out
     })
     .post(route('verifier.compliance.store', props.beneficiary.id), {
