@@ -6,6 +6,7 @@ use App\Models\Beneficiary;
 use App\Models\CashGrantCalculation;
 use App\Models\ComplianceRecord;
 use App\Models\DistributionEvent;
+use App\Models\NonComplianceRecord;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
@@ -13,7 +14,7 @@ use Illuminate\Support\Facades\Log;
  * CashGrantCalculatorService
  *
  * Computes the total cash grant amount for a 4Ps beneficiary
- * given a specific distribution event (quarterly).
+ * given a specific distribution event (quarterly or bimonthly).
  *
  * Grant Rates (per RA 11310):
  * - Health Grant:    ₱750.00 / month / household
@@ -23,14 +24,14 @@ use Illuminate\Support\Facades\Log;
  *                    Maximum 3 children per household
  * - Rice Subsidy:    ₱600.00 / month / household
  *
- * Quarterly Release:
- * - Grants are released every quarter (Q1-Q4), 3 months per grant.
+ * Release Schedule:
+ * - Bimonthly (every 2 months): P1-P6 per year per RA 11310
  *
- * Eligibility Rule:
- * - A beneficiary MUST have a ComplianceRecord for the event's quarter (period)
- *   with is_fully_compliant = true to receive any grant.
- * - If no qualifying record exists, all grant amounts are set to 0
- *   and is_eligible = false with an ineligibility_reason is recorded.
+ * Non-Compliance Zero-Out Logic:
+ * - Each grant component is independently zeroed if a CONFIRMED
+ *   NonComplianceRecord exists for that component in the period.
+ * - Partial compliance is possible: e.g. health NC only zeros health grant,
+ *   education and rice remain payable.
  */
 class CashGrantCalculatorService
 {
@@ -72,6 +73,213 @@ class CashGrantCalculatorService
     }
 
     /**
+     * Get confirmed non-compliance records for a beneficiary in a given period.
+     * Returns a collection of grant_affected values that should be zeroed out.
+     */
+    public function getConfirmedNonCompliance(Beneficiary $beneficiary, string $period): array
+    {
+        $ncRecords = NonComplianceRecord::where('beneficiary_id', $beneficiary->id)
+            ->where('period', $period)
+            ->where('status', 'confirmed')
+            ->pluck('grant_affected')
+            ->unique()
+            ->toArray();
+
+        return $ncRecords;
+    }
+
+    /**
+     * Calculate grant for bimonthly period using NonComplianceRecord zero-out logic.
+     * Each component is independently checked against confirmed NC records.
+     *
+     * @param  Beneficiary       $beneficiary
+     * @param  DistributionEvent $event       Event with bimonthly period (e.g. "2026-P4")
+     * @return CashGrantCalculation
+     */
+    public function calculateBimonthly(
+        Beneficiary $beneficiary,
+        DistributionEvent $event,
+    ): CashGrantCalculation {
+        return DB::transaction(function () use ($beneficiary, $event) {
+            $months = $event->months_covered ?? 2; // Bimonthly = 2 months
+            $period = $event->period;
+
+            // ── Basic eligibility — active status is sufficient ──────────────────
+            if ($beneficiary->status !== 'active') {
+                return $this->recordIneligible($beneficiary, $event, $months,
+                    "Beneficiary account is not active (status: {$beneficiary->status}).");
+            }
+
+            // ── Get confirmed non-compliance for this period ─────────────────────
+            $ncAffected = $this->getConfirmedNonCompliance($beneficiary, $period);
+            $ncNotes    = [];
+
+            // ── Health Grant ─────────────────────────────────────────────────────
+            $healthEligible = !in_array('health_grant', $ncAffected);
+            $healthAmount   = $healthEligible ? self::HEALTH_GRANT_PER_MONTH * $months : 0.00;
+            if (!$healthEligible) {
+                $ncNotes[] = 'Health grant zeroed (non-compliant)';
+            }
+
+            // ── Education Grant ──────────────────────────────────────────────────
+            $eligibleChildren = $this->getEducationEligibleChildren($beneficiary);
+            $allSorted = $eligibleChildren->sortByDesc(fn($c) => match($c->education_level) {
+                'senior_high' => 700,
+                'junior_high' => 500,
+                'elementary'  => 300,
+                default       => 0,
+            });
+            $capped = $allSorted->take(self::MAX_EDUCATION_CHILDREN);
+
+            // Check education NC per level
+            $elemNC = in_array('education_elementary', $ncAffected);
+            $jrHiNC = in_array('education_junior_high', $ncAffected);
+            $srHiNC = in_array('education_senior_high', $ncAffected);
+
+            $elemCount  = $capped->where('education_level', 'elementary')->count();
+            $jrHiCount  = $capped->where('education_level', 'junior_high')->count();
+            $srHiCount  = $capped->where('education_level', 'senior_high')->count();
+
+            $elemAmount = $elemNC ? 0.00 : $elemCount * self::ELEMENTARY_GRANT_PER_MONTH  * $months;
+            $jrHiAmount = $jrHiNC ? 0.00 : $jrHiCount * self::JUNIOR_HIGH_GRANT_PER_MONTH * $months;
+            $srHiAmount = $srHiNC ? 0.00 : $srHiCount * self::SENIOR_HIGH_GRANT_PER_MONTH * $months;
+            $eduTotal   = $elemAmount + $jrHiAmount + $srHiAmount;
+
+            if ($elemNC) $ncNotes[] = 'Elementary education grant zeroed';
+            if ($jrHiNC) $ncNotes[] = 'Junior high education grant zeroed';
+            if ($srHiNC) $ncNotes[] = 'Senior high education grant zeroed';
+
+            // ── Rice Subsidy ─────────────────────────────────────────────────────
+            $riceEligible = !in_array('rice_subsidy', $ncAffected);
+            $riceAmount   = $riceEligible ? self::RICE_SUBSIDY_PER_MONTH * $months : 0.00;
+            if (!$riceEligible) {
+                $ncNotes[] = 'Rice subsidy zeroed (non-compliant)';
+            }
+
+            // ── Total ────────────────────────────────────────────────────────────
+            $total = $healthAmount + $eduTotal + $riceAmount;
+            $isEligible = $total > 0;
+
+            $notes = count($ncNotes) > 0
+                ? 'Non-compliance adjustments: ' . implode('; ', $ncNotes)
+                : null;
+
+            return CashGrantCalculation::updateOrCreate(
+                [
+                    'beneficiary_id'        => $beneficiary->id,
+                    'distribution_event_id' => $event->id,
+                ],
+                [
+                    'months_covered'              => $months,
+                    'is_eligible'                 => $isEligible,
+                    'ineligibility_reason'        => $isEligible ? null : 'All grant components zeroed due to non-compliance.',
+                    'health_grant_eligible'       => $healthEligible,
+                    'health_grant_amount'         => $healthAmount,
+                    'elementary_children_count'   => $elemCount,
+                    'elementary_grant_amount'     => $elemAmount,
+                    'junior_high_children_count'  => $jrHiCount,
+                    'junior_high_grant_amount'    => $jrHiAmount,
+                    'senior_high_children_count'  => $srHiCount,
+                    'senior_high_grant_amount'    => $srHiAmount,
+                    'education_grant_total'       => $eduTotal,
+                    'rice_subsidy_eligible'       => $riceEligible,
+                    'rice_subsidy_amount'         => $riceAmount,
+                    'total_grant_amount'          => $total,
+                    'compute_status'              => 'computed',
+                    'computed_by'                 => auth()->id(),
+                    'computed_at'                 => now(),
+                    'computation_notes'           => $notes,
+                ]
+            );
+        });
+    }
+
+    /**
+     * Batch calculate grants using bimonthly non-compliance logic.
+     */
+    public function batchCalculateBimonthly(DistributionEvent $event): array
+    {
+        $beneficiaries = Beneficiary::active()->with(['familyMembers'])->get();
+
+        $results = [
+            'computed'       => 0,
+            'eligible'       => 0,
+            'partial'        => 0,  // Has NC but still receives some grant
+            'ineligible'     => 0,
+            'errors'         => 0,
+            'total_amount'   => 0.00,
+            'health_total'   => 0.00,
+            'edu_total'      => 0.00,
+            'rice_total'     => 0.00,
+        ];
+
+        foreach ($beneficiaries as $beneficiary) {
+            try {
+                $calc = $this->calculateBimonthly($beneficiary, $event);
+                $results['computed']++;
+
+                if ($calc->is_eligible) {
+                    $results['total_amount'] += $calc->total_grant_amount;
+                    $results['health_total'] += $calc->health_grant_amount;
+                    $results['edu_total']    += $calc->education_grant_total;
+                    $results['rice_total']   += $calc->rice_subsidy_amount;
+
+                    if ($calc->computation_notes) {
+                        $results['partial']++;
+                    } else {
+                        $results['eligible']++;
+                    }
+                } else {
+                    $results['ineligible']++;
+                }
+            } catch (\Throwable $e) {
+                $results['errors']++;
+                Log::error("Bimonthly grant calc failed for beneficiary #{$beneficiary->id}: " . $e->getMessage());
+            }
+        }
+
+        return $results;
+    }
+
+    /**
+     * Helper to record an ineligible entry with zero amounts.
+     */
+    private function recordIneligible(
+        Beneficiary $beneficiary,
+        DistributionEvent $event,
+        int $months,
+        string $reason
+    ): CashGrantCalculation {
+        return CashGrantCalculation::updateOrCreate(
+            [
+                'beneficiary_id'        => $beneficiary->id,
+                'distribution_event_id' => $event->id,
+            ],
+            [
+                'months_covered'              => $months,
+                'is_eligible'                 => false,
+                'ineligibility_reason'        => $reason,
+                'health_grant_eligible'       => false,
+                'health_grant_amount'         => 0.00,
+                'elementary_children_count'   => 0,
+                'elementary_grant_amount'     => 0.00,
+                'junior_high_children_count'  => 0,
+                'junior_high_grant_amount'    => 0.00,
+                'senior_high_children_count'  => 0,
+                'senior_high_grant_amount'    => 0.00,
+                'education_grant_total'       => 0.00,
+                'rice_subsidy_eligible'       => false,
+                'rice_subsidy_amount'         => 0.00,
+                'total_grant_amount'          => 0.00,
+                'compute_status'              => 'computed',
+                'computed_by'                 => auth()->id(),
+                'computed_at'                 => now(),
+                'computation_notes'           => $reason,
+            ]
+        );
+    }
+
+    /**
      * Calculate and persist the cash grant for a beneficiary and distribution event.
      * If the beneficiary is ineligible for this quarter, records a zero-amount entry.
      */
@@ -87,34 +295,7 @@ class CashGrantCalculatorService
             $isEligible          = $ineligibilityReason === null;
 
             if (!$isEligible) {
-                // Record an ineligible entry with zero amounts
-                return CashGrantCalculation::updateOrCreate(
-                    [
-                        'beneficiary_id'        => $beneficiary->id,
-                        'distribution_event_id' => $event->id,
-                    ],
-                    [
-                        'months_covered'              => $months,
-                        'is_eligible'                 => false,
-                        'ineligibility_reason'        => $ineligibilityReason,
-                        'health_grant_eligible'       => false,
-                        'health_grant_amount'         => 0.00,
-                        'elementary_children_count'   => 0,
-                        'elementary_grant_amount'     => 0.00,
-                        'junior_high_children_count'  => 0,
-                        'junior_high_grant_amount'    => 0.00,
-                        'senior_high_children_count'  => 0,
-                        'senior_high_grant_amount'    => 0.00,
-                        'education_grant_total'       => 0.00,
-                        'rice_subsidy_eligible'       => false,
-                        'rice_subsidy_amount'         => 0.00,
-                        'total_grant_amount'          => 0.00,
-                        'compute_status'              => 'computed',
-                        'computed_by'                 => auth()->id(),
-                        'computed_at'                 => now(),
-                        'computation_notes'           => $ineligibilityReason,
-                    ]
-                );
+                return $this->recordIneligible($beneficiary, $event, $months, $ineligibilityReason);
             }
 
             // ── Health Grant ──────────────────────────────────────────────────────

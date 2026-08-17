@@ -99,6 +99,16 @@ class Beneficiary extends Model
         return $this->hasMany(CashGrantCalculation::class);
     }
 
+    public function nonComplianceRecords(): HasMany
+    {
+        return $this->hasMany(NonComplianceRecord::class);
+    }
+
+    public function fdsAttendance(): HasMany
+    {
+        return $this->hasMany(FdsAttendance::class);
+    }
+
     // ─── Scopes ──────────────────────────────────────────────────────────────────
 
     public function scopeActive($query)

@@ -38,15 +38,16 @@ class User extends Authenticatable
 
     // ─── Role Helpers ────────────────────────────────────────────────────────────
 
-    public function isSuperAdmin(): bool  { return $this->role === 'superadmin'; }
-    public function isAdmin(): bool        { return $this->role === 'admin'; }
-    public function isVerifier(): bool     { return $this->role === 'compliance_verifier'; }
-    public function isFieldOfficer(): bool { return $this->role === 'field_officer'; }
-    public function isBeneficiary(): bool  { return $this->role === 'beneficiary'; }
+    public function isSuperAdmin(): bool        { return $this->role === 'superadmin'; }
+    public function isAdmin4ps(): bool         { return $this->role === 'admin_4ps'; }
+    public function isAdminSwa(): bool         { return $this->role === 'admin_swa'; }
+    public function isBarangayAssistant(): bool { return $this->role === 'barangay_assistant'; }
+    public function isAdmin(): bool            { return in_array($this->role, ['admin', 'admin_4ps', 'admin_swa']); }
+    public function isBeneficiary(): bool      { return $this->role === 'beneficiary'; }
 
     public function isStaff(): bool
     {
-        return in_array($this->role, ['superadmin', 'admin', 'compliance_verifier', 'field_officer']);
+        return in_array($this->role, ['superadmin', 'admin', 'admin_4ps', 'admin_swa', 'barangay_assistant']);
     }
 
     // ─── Relationships ───────────────────────────────────────────────────────────
@@ -75,7 +76,7 @@ class User extends Authenticatable
 
     public function scopeStaff($query)
     {
-        return $query->whereIn('role', ['superadmin', 'admin', 'compliance_verifier', 'field_officer']);
+        return $query->whereIn('role', ['superadmin', 'admin', 'admin_4ps', 'admin_swa', 'barangay_assistant']);
     }
 
     // ─── Accessors ───────────────────────────────────────────────────────────────
@@ -84,9 +85,10 @@ class User extends Authenticatable
     {
         return match ($this->role) {
             'superadmin'          => 'Super Administrator',
+            'admin_4ps'           => 'Admin (4Ps / FDS)',
+            'admin_swa'           => 'Admin (SWA / Health & Education)',
+            'barangay_assistant'  => 'Barangay Assistant (FDS)',
             'admin'               => 'Administrator',
-            'compliance_verifier' => 'Compliance Verifier',
-            'field_officer'       => 'Field Officer',
             'beneficiary'         => 'Beneficiary',
             default               => ucfirst($this->role),
         };
@@ -96,9 +98,10 @@ class User extends Authenticatable
     {
         return match ($this->role) {
             'superadmin'          => 'danger',
+            'admin_4ps'           => 'info',
+            'admin_swa'           => 'warning',
+            'barangay_assistant'  => 'success',
             'admin'               => 'info',
-            'compliance_verifier' => 'warning',
-            'field_officer'       => 'success',
             'beneficiary'         => 'neutral',
             default               => 'neutral',
         };

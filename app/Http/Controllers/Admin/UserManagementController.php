@@ -16,7 +16,7 @@ class UserManagementController extends Controller
 {
     public function index(Request $request): Response
     {
-        // Admins can only see admin, verifier, and field_officer accounts.
+        // Admins can only see admin, admin_4ps, admin_swa, and barangay_assistant accounts.
         // Superadmins are excluded from the admin's staff management view.
         $query = User::with('office')
             ->staff()
@@ -53,7 +53,7 @@ class UserManagementController extends Controller
             'name'           => 'required|string|max:150',
             'email'          => 'required|email|unique:users',
             'username'       => 'required|string|max:50|unique:users|alpha_dash',
-            'role'           => 'required|in:admin,compliance_verifier,field_officer',
+            'role'           => 'required|in:admin,admin_4ps,admin_swa,barangay_assistant',
             'office_id'      => 'nullable|exists:offices,id',
             'employee_id'    => 'nullable|string|unique:users',
             'contact_number' => 'nullable|string|max:20',
@@ -94,7 +94,7 @@ class UserManagementController extends Controller
         $validated = $request->validate([
             'name'           => 'required|string|max:150',
             'email'          => "required|email|unique:users,email,{$user->id}",
-            'role'           => 'required|in:admin,compliance_verifier,field_officer',
+            'role'           => 'required|in:admin,admin_4ps,admin_swa,barangay_assistant',
             'office_id'      => 'nullable|exists:offices,id',
             'contact_number' => 'nullable|string|max:20',
             'position'       => 'nullable|string|max:100',

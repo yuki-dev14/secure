@@ -103,24 +103,6 @@ class BeneficiaryImportController extends Controller
             'AK' => 'member_3_relationship',
             'AL' => 'member_3_education_level',
             'AM' => 'member_3_school_name',
-            // Member 4
-            'AN' => 'member_4_first_name',
-            'AO' => 'member_4_middle_name',
-            'AP' => 'member_4_last_name',
-            'AQ' => 'member_4_birthdate',
-            'AR' => 'member_4_sex',
-            'AS' => 'member_4_relationship',
-            'AT' => 'member_4_education_level',
-            'AU' => 'member_4_school_name',
-            // Member 5
-            'AV' => 'member_5_first_name',
-            'AW' => 'member_5_middle_name',
-            'AX' => 'member_5_last_name',
-            'AY' => 'member_5_birthdate',
-            'AZ' => 'member_5_sex',
-            'BA' => 'member_5_relationship',
-            'BB' => 'member_5_education_level',
-            'BC' => 'member_5_school_name',
         ];
 
         foreach ($headers as $col => $label) {
@@ -128,7 +110,7 @@ class BeneficiaryImportController extends Controller
         }
 
         // ── Header row styling ────────────────────────────────────────────────
-        $lastCol = 'BC';
+        $lastCol = 'AM';
         $headerRange = "A1:{$lastCol}1";
 
         $sheet->getStyle($headerRange)->applyFromArray([
@@ -193,6 +175,15 @@ class BeneficiaryImportController extends Controller
             'AC' => 'child',
             'AD' => 'not_applicable',
             'AE' => '',
+            // Member 3
+            'AF' => 'Luis',
+            'AG' => '',
+            'AH' => 'dela Cruz',
+            'AI' => '2012-11-05',
+            'AJ' => 'male',
+            'AK' => 'child',
+            'AL' => 'junior_high',
+            'AM' => 'Balintawak National HS',
         ];
 
         foreach ($sample as $col => $value) {
@@ -226,8 +217,8 @@ class BeneficiaryImportController extends Controller
             ['enrollment_date', 'No', 'YYYY-MM-DD', 'Date of 4Ps enrollment.'],
             ['remarks', 'No', 'Text', 'Any additional notes.'],
             ['', '', '', ''],
-            ['FAMILY MEMBER COLUMNS', '', '', ''],
-            ['member_N_first_name', 'If adding member', 'Text', 'N = 1 to 5. All member fields for N are optional as a group, but first_name, last_name, and birthdate are required if adding any member.'],
+            ['FAMILY MEMBER COLUMNS (max 3 per RA 11310)', '', '', ''],
+            ['member_N_first_name', 'If adding member', 'Text', 'N = 1 to 3. All member fields for N are optional as a group, but first_name, last_name, and birthdate are required if adding any member.'],
             ['member_N_last_name', 'If adding member', 'Text', ''],
             ['member_N_birthdate', 'If adding member', 'YYYY-MM-DD', ''],
             ['member_N_sex', 'No', 'male | female', 'Defaults to female.'],
@@ -237,8 +228,8 @@ class BeneficiaryImportController extends Controller
             ['', '', '', ''],
             ['NOTES', '', '', ''],
             ['- Row 2 (blue italic) is a sample row. Delete or replace it.', '', '', ''],
-            ['- All imported beneficiaries start as INACTIVE. Activate them individually after verifying documents.', '', '', ''],
-            ['- Up to 5 family members per beneficiary can be added via columns P–BC.', '', '', ''],
+            ['- All imported beneficiaries start as ACTIVE with requirements pre-compiled.', '', '', ''],
+            ['- Maximum 3 family members (children) per beneficiary per RA 11310 (4Ps Act).', '', '', ''],
             ['- Rows with missing required fields will be skipped and reported in the import summary.', '', '', ''],
             ['- Duplicate Listahanan IDs will be skipped.', '', '', ''],
         ];

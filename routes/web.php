@@ -9,17 +9,19 @@ use App\Http\Controllers\Superadmin\ProxyController;
 use App\Http\Controllers\Superadmin\SettingsController;
 use App\Http\Controllers\Superadmin\BeneficiaryImportController;
 use App\Http\Controllers\Superadmin\UserManagementController as SuperadminUserController;
+use App\Http\Controllers\Superadmin\GrantComputationController;
 use App\Http\Controllers\Admin\DashboardController as AdminDashboardController;
 use App\Http\Controllers\Admin\BeneficiaryController as AdminBeneficiaryController;
 use App\Http\Controllers\Admin\UserManagementController;
 use App\Http\Controllers\Admin\DistributionEventController;
 use App\Http\Controllers\Admin\AdminReportController;
-use App\Http\Controllers\ComplianceVerifier\DashboardController as VerifierDashboardController;
-use App\Http\Controllers\ComplianceVerifier\ComplianceController;
-use App\Http\Controllers\FieldOfficer\DashboardController as OfficerDashboardController;
-use App\Http\Controllers\FieldOfficer\ScannerController;
-use App\Http\Controllers\FieldOfficer\DistributionController;
-use App\Http\Controllers\FieldOfficer\ClaimHistoryController;
+use App\Http\Controllers\AdminSwa\DashboardController as SwaDashboardController;
+use App\Http\Controllers\AdminSwa\NonComplianceController;
+use App\Http\Controllers\AdminSwa\ComplianceVerificationController;
+use App\Http\Controllers\AdminSwa\GrantSummaryController;
+use App\Http\Controllers\Admin4ps\DashboardController as FourPsDashboardController;
+use App\Http\Controllers\Admin4ps\FdsAttendanceController;
+use App\Http\Controllers\BarangayAssistant\DashboardController as BarangayDashboardController;
 use App\Http\Controllers\Beneficiary\DashboardController as BeneficiaryDashboardController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -123,17 +125,18 @@ Route::middleware(['auth', 'role:superadmin'])
         Route::get('/reports',                          [ReportController::class, 'index'])->name('reports.index');
         Route::get('/reports/beneficiaries',            [ReportController::class, 'beneficiaries'])->name('reports.beneficiaries');
         Route::get('/reports/beneficiaries/export',     [ReportController::class, 'exportBeneficiaries'])->name('reports.beneficiaries.export');
-        Route::get('/reports/compliance',               [ReportController::class, 'compliance'])->name('reports.compliance');
-        Route::get('/reports/compliance/export',        [ReportController::class, 'exportCompliance'])->name('reports.compliance.export');
-        Route::get('/reports/distributions',            [ReportController::class, 'distributions'])->name('reports.distributions');
-        Route::get('/reports/distributions/export',     [ReportController::class, 'exportDistributions'])->name('reports.distributions.export');
         Route::get('/reports/grants',                   [ReportController::class, 'grants'])->name('reports.grants');
         Route::get('/reports/grants/export',            [ReportController::class, 'exportGrants'])->name('reports.grants.export');
+
+        // Grant Computation Tab
+        Route::get('/grant-computation',                [GrantComputationController::class, 'index'])->name('grant-computation.index');
+        Route::post('/grant-computation/compute',       [GrantComputationController::class, 'compute'])->name('grant-computation.compute');
+        Route::get('/grant-computation/export',         [GrantComputationController::class, 'export'])->name('grant-computation.export');
     });
 
 // ─── Admin ────────────────────────────────────────────────────────────────────
 
-Route::middleware(['auth', 'role:admin,superadmin'])
+Route::middleware(['auth', 'role:admin,admin_4ps,admin_swa,superadmin'])
     ->prefix('admin')
     ->name('admin.')
     ->group(function () {
@@ -160,37 +163,83 @@ Route::middleware(['auth', 'role:admin,superadmin'])
         Route::post('distribution-events/{event}/compute', [DistributionEventController::class, 'batchComputeGrants'])->name('events.compute');
     });
 
-// ─── Compliance Verifier ──────────────────────────────────────────────────────
+// ─── Admin SWA (Health & Education Non-Compliance) ───────────────────────────
 
-Route::middleware(['auth', 'role:compliance_verifier,admin,superadmin'])
-    ->prefix('verifier')
-    ->name('verifier.')
+Route::middleware(['auth', 'role:admin_swa,superadmin'])
+    ->prefix('adminswa')
+    ->name('adminswa.')
     ->group(function () {
-        Route::get('/dashboard',                [VerifierDashboardController::class, 'index'])->name('dashboard');
-        Route::get('/beneficiaries',            [ComplianceController::class, 'index'])->name('beneficiaries');
-        Route::get('/beneficiaries/{id}',       [ComplianceController::class, 'show'])->name('beneficiaries.show');
-        Route::post('/beneficiaries/{id}/compliance', [ComplianceController::class, 'store'])->name('compliance.store');
-        Route::put('/compliance/{record}',      [ComplianceController::class, 'update'])->name('compliance.update');
-        Route::get('/compliance/periods',       [ComplianceController::class, 'periods'])->name('compliance.periods');
+        Route::get('/dashboard',                              [SwaDashboardController::class, 'index'])->name('dashboard');
+
+        // Non-compliance CRUD
+        Route::get('/non-compliance',                         [NonComplianceController::class, 'index'])->name('non-compliance.index');
+        Route::get('/non-compliance/create',                  [NonComplianceController::class, 'create'])->name('non-compliance.create');
+        Route::post('/non-compliance',                        [NonComplianceController::class, 'store'])->name('non-compliance.store');
+
+        // Confirm / Dismiss actions
+        Route::patch('/non-compliance/{record}/confirm',      [NonComplianceController::class, 'confirm'])->name('non-compliance.confirm');
+        Route::patch('/non-compliance/{record}/dismiss',      [NonComplianceController::class, 'dismiss'])->name('non-compliance.dismiss');
+        Route::post('/non-compliance/batch',                  [NonComplianceController::class, 'batchProcess'])->name('non-compliance.batch');
+
+        // Import (Google Forms / Excel)
+        Route::get('/non-compliance/import',                  [NonComplianceController::class, 'importForm'])->name('non-compliance.import');
+        Route::post('/non-compliance/import',                 [NonComplianceController::class, 'import'])->name('non-compliance.import.store');
+        Route::get('/non-compliance/import/template',         [NonComplianceController::class, 'importTemplate'])->name('non-compliance.import.template');
+
+        // Grant Summary & Computation
+        Route::get('/grant-summary',                          [GrantSummaryController::class, 'index'])->name('grant-summary.index');
+        Route::post('/grant-summary/compute',                 [GrantSummaryController::class, 'compute'])->name('grant-summary.compute');
+
+        // Compliance Verification (Excel workflow — send to midwife/school rep, import back)
+        Route::get('/compliance-verification',                [ComplianceVerificationController::class, 'index'])->name('compliance-verification.index');
+        Route::post('/compliance-verification/send',          [ComplianceVerificationController::class, 'generateAndSend'])->name('compliance-verification.send');
+        Route::get('/compliance-verification/template',       [ComplianceVerificationController::class, 'downloadTemplate'])->name('compliance-verification.template');
+        Route::post('/compliance-verification/import',        [ComplianceVerificationController::class, 'importResults'])->name('compliance-verification.import');
+        Route::get('/compliance-verification/report',         [ComplianceVerificationController::class, 'reportForSuperadmin'])->name('compliance-verification.report');
     });
 
-// ─── Field Officer ────────────────────────────────────────────────────────────
+// ─── Admin 4Ps (FDS Attendance Monitoring) ──────────────────────────────────
 
-Route::middleware(['auth', 'role:field_officer,admin,superadmin'])
-    ->prefix('officer')
-    ->name('officer.')
+Route::middleware(['auth', 'role:admin_4ps,superadmin'])
+    ->prefix('admin4ps')
+    ->name('admin4ps.')
     ->group(function () {
-        Route::get('/dashboard',                [OfficerDashboardController::class, 'index'])->name('dashboard');
+        Route::get('/dashboard',                        [FourPsDashboardController::class, 'index'])->name('dashboard');
 
-        // QR Scanner
-        Route::get('/scanner',                  [ScannerController::class, 'index'])->name('scanner');
-        Route::post('/scanner/scan',            [ScannerController::class, 'scan'])->name('scanner.scan');
+        // FDS Attendance
+        Route::get('/fds-attendance',                   [FdsAttendanceController::class, 'index'])->name('fds.index');
+        Route::get('/fds-attendance/scanner',            [FdsAttendanceController::class, 'scanner'])->name('fds.scanner');
+        Route::post('/fds-attendance/scan',              [FdsAttendanceController::class, 'scan'])->name('fds.scan');
+        Route::get('/fds-attendance/today-count',        [FdsAttendanceController::class, 'todayCount'])->name('fds.today-count');
+        Route::post('/fds-attendance/report',            [FdsAttendanceController::class, 'reportToSuperadmin'])->name('fds.report');
+    });
 
-        // Distribution (claiming)
-        Route::get('/distribution',             [DistributionController::class, 'index'])->name('distribution');
-        Route::post('/distribution/release',    [DistributionController::class, 'release'])->name('distribution.release');
-        Route::get('/distribution/{txn}',       [DistributionController::class, 'show'])->name('distribution.show');
+// ─── Barangay Assistant (FDS Scanner) ────────────────────────────────────────
 
-        // Claim History
-        Route::get('/claim-history',            [ClaimHistoryController::class, 'index'])->name('claim-history');
+Route::middleware(['auth', 'role:barangay_assistant'])
+    ->prefix('barangay')
+    ->name('barangay.')
+    ->group(function () {
+        Route::get('/dashboard',     [BarangayDashboardController::class, 'index'])->name('dashboard');
+        Route::get('/scanner',       [FdsAttendanceController::class, 'scanner'])->name('scanner');
+        Route::post('/scan',         [FdsAttendanceController::class, 'scan'])->name('scan');
+        Route::get('/today-count',   [FdsAttendanceController::class, 'todayCount'])->name('today-count');
+    });
+
+// ─── Beneficiary Portal ──────────────────────────────────────────────────────
+
+Route::middleware(['auth', 'role:beneficiary'])
+    ->prefix('portal')
+    ->name('beneficiary.')
+    ->group(function () {
+        Route::get('/dashboard',                [BeneficiaryDashboardController::class, 'index'])->name('dashboard');
+        Route::get('/profile',                  [BeneficiaryDashboardController::class, 'profile'])->name('profile');
+        Route::get('/documents',                [BeneficiaryDashboardController::class, 'documents'])->name('documents');
+        Route::post('/documents',               [BeneficiaryDashboardController::class, 'uploadDocument'])->name('documents.upload');
+        Route::delete('/documents/{doc}',       [BeneficiaryDashboardController::class, 'deleteDocument'])->name('documents.delete');
+        Route::get('/grants',                   [BeneficiaryDashboardController::class, 'grants'])->name('grants');
+        Route::get('/family',                   [BeneficiaryDashboardController::class, 'family'])->name('family');
+        Route::get('/notifications',            [BeneficiaryDashboardController::class, 'notifications'])->name('notifications');
+        Route::patch('/notifications/{id}/read', [BeneficiaryDashboardController::class, 'markNotificationRead'])->name('notifications.read');
+        Route::get('/compliance',               [BeneficiaryDashboardController::class, 'compliance'])->name('compliance');
     });

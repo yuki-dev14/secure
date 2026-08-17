@@ -6,6 +6,8 @@ use App\Http\Controllers\Controller;
 use App\Models\Beneficiary;
 use App\Models\BeneficiaryDocument;
 use App\Models\CashGrantDistribution;
+use App\Models\FdsAttendance;
+use App\Models\NonComplianceRecord;
 use App\Services\AuditLogService;
 use App\Services\CashGrantCalculatorService;
 use Illuminate\Http\RedirectResponse;
@@ -181,5 +183,71 @@ class DashboardController extends Controller
     {
         auth()->user()->notifications()->where('id', $id)->first()?->markAsRead();
         return back();
+    }
+
+    /**
+     * Compliance transparency page — shows non-compliance flags and FDS attendance.
+     */
+    public function compliance(): Response
+    {
+        $beneficiary = Beneficiary::where('user_id', auth()->id())
+            ->with(['familyMembers'])
+            ->firstOrFail();
+
+        // Non-compliance records (all statuses, for transparency)
+        $ncRecords = NonComplianceRecord::where('beneficiary_id', $beneficiary->id)
+            ->orderByDesc('created_at')
+            ->get()
+            ->map(fn($r) => [
+                'id'             => $r->id,
+                'category'       => $r->category,
+                'reason'         => $r->reason,
+                'details'        => $r->details,
+                'grant_affected' => $r->grant_affected,
+                'period'         => $r->period,
+                'status'         => $r->status,
+                'source'         => $r->source,
+                'processed_at'   => $r->processed_at?->format('M d, Y'),
+                'created_at'     => $r->created_at?->format('M d, Y'),
+                'family_member'  => $r->familyMember ? [
+                    'name' => $r->familyMember->full_name,
+                    'relationship' => $r->familyMember->relationship,
+                ] : null,
+            ]);
+
+        // FDS Attendance history
+        $fdsAttendance = FdsAttendance::where('beneficiary_id', $beneficiary->id)
+            ->orderByDesc('session_date')
+            ->limit(20)
+            ->get()
+            ->map(fn($a) => [
+                'id'            => $a->id,
+                'session_title' => $a->session_title,
+                'session_date'  => $a->session_date?->format('M d, Y'),
+                'period'        => $a->period,
+                'venue'         => $a->venue,
+                'qr_verified'   => $a->qr_verified,
+                'scanned_at'    => $a->scanned_at?->format('g:i A'),
+            ]);
+
+        // Compliance summary
+        $summary = [
+            'total_nc'          => $ncRecords->count(),
+            'confirmed_nc'      => $ncRecords->where('status', 'confirmed')->count(),
+            'pending_nc'        => $ncRecords->where('status', 'pending')->count(),
+            'dismissed_nc'      => $ncRecords->where('status', 'dismissed')->count(),
+            'fds_sessions'      => $fdsAttendance->count(),
+            'is_compliant'      => $beneficiary->is_compliant,
+        ];
+
+        $unreadCount = auth()->user()->unreadNotifications()->count();
+
+        return Inertia::render('Beneficiary/Compliance', [
+            'beneficiary'   => $beneficiary,
+            'ncRecords'     => $ncRecords,
+            'fdsAttendance' => $fdsAttendance,
+            'summary'       => $summary,
+            'unread_count'  => $unreadCount,
+        ]);
     }
 }

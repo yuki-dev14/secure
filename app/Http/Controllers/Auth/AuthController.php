@@ -260,8 +260,9 @@ class AuthController extends Controller
         return redirect()->intended(match ($role) {
             'superadmin'          => route('superadmin.dashboard'),
             'admin'               => route('admin.dashboard'),
-            'compliance_verifier' => route('verifier.dashboard'),
-            'field_officer'       => route('officer.dashboard'),
+            'admin_4ps'           => route('admin4ps.dashboard'),
+            'admin_swa'           => route('adminswa.dashboard'),
+            'barangay_assistant'  => route('fds.scanner'),
             default               => route('staff.login'),
         });
     }

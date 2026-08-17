@@ -26,42 +26,42 @@ class UserSeeder extends Seeder
             'is_active'   => true,
         ]);
 
-        // Admin
+        // Admin 4Ps (FDS / Attendance)
         User::create([
-            'name'        => 'Lipa City Admin',
-            'email'       => 'admin@secure4ps.dswd.gov.ph',
-            'username'    => 'lipaadmin',
+            'name'        => 'Lipa City Admin 4Ps',
+            'email'       => 'admin4ps@secure4ps.dswd.gov.ph',
+            'username'    => 'admin4ps',
             'password'    => Hash::make('Admin@1234!'),
-            'role'        => 'admin',
+            'role'        => 'admin_4ps',
             'office_id'   => $mainOffice?->id,
-            'employee_id' => 'EMP-ADM-001',
-            'position'    => 'Program Manager',
+            'employee_id' => 'EMP-4PS-001',
+            'position'    => '4Ps Program Officer',
             'is_active'   => true,
         ]);
 
-        // Compliance Verifier
+        // Admin SWA (Health & Education)
         User::create([
             'name'        => 'Maria Santos',
-            'email'       => 'verifier@secure4ps.dswd.gov.ph',
-            'username'    => 'verifier1',
-            'password'    => Hash::make('Verify@1234!'),
-            'role'        => 'compliance_verifier',
+            'email'       => 'adminswa@secure4ps.dswd.gov.ph',
+            'username'    => 'adminswa',
+            'password'    => Hash::make('Admin@1234!'),
+            'role'        => 'admin_swa',
             'office_id'   => $mainOffice?->id,
-            'employee_id' => 'EMP-CV-001',
-            'position'    => 'Compliance Verifier',
+            'employee_id' => 'EMP-SWA-001',
+            'position'    => 'SWA Compliance Officer',
             'is_active'   => true,
         ]);
 
-        // Field Officer
+        // Barangay Assistant (FDS Officer)
         User::create([
             'name'        => 'Juan dela Cruz',
-            'email'       => 'officer@secure4ps.dswd.gov.ph',
-            'username'    => 'officer1',
+            'email'       => 'barangay@secure4ps.dswd.gov.ph',
+            'username'    => 'barangay1',
             'password'    => Hash::make('Officer@1234!'),
-            'role'        => 'field_officer',
+            'role'        => 'barangay_assistant',
             'office_id'   => $mainOffice?->id,
-            'employee_id' => 'EMP-FO-001',
-            'position'    => 'Field Officer',
+            'employee_id' => 'EMP-BA-001',
+            'position'    => 'Barangay Assistant (FDS)',
             'is_active'   => true,
         ]);
     }

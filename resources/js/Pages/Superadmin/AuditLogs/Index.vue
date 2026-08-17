@@ -26,15 +26,14 @@
           <div class="absolute bottom-0 right-0 w-12 h-12 bg-success-50 rounded-tl-3xl opacity-50"></div>
         </div>
         <div class="card p-5 flex items-center gap-4 relative overflow-hidden">
-          <div class="w-11 h-11 rounded-xl bg-danger-50 flex items-center justify-center shrink-0">
-            <ShieldExclamationIcon class="w-5 h-5 text-danger-600" />
+          <div class="w-11 h-11 rounded-xl bg-blue-50 flex items-center justify-center shrink-0">
+            <ArrowUpTrayIcon class="w-5 h-5 text-blue-600" />
           </div>
           <div>
-            <p class="text-xs text-slate-400 uppercase tracking-wide font-medium">Fraud Attempts</p>
-            <p class="text-2xl font-bold text-slate-800">{{ summary.fraud }}</p>
-            <p v-if="summary.fraud > 0" class="text-xs text-danger-500 mt-0.5 font-medium">⚠ Requires review</p>
+            <p class="text-xs text-slate-400 uppercase tracking-wide font-medium">Import Events</p>
+            <p class="text-2xl font-bold text-slate-800">{{ summary.imports.toLocaleString() }}</p>
           </div>
-          <div class="absolute bottom-0 right-0 w-12 h-12 bg-danger-50 rounded-tl-3xl opacity-50"></div>
+          <div class="absolute bottom-0 right-0 w-12 h-12 bg-blue-50 rounded-tl-3xl opacity-50"></div>
         </div>
       </div>
 
@@ -85,26 +84,6 @@
         </div>
       </div>
 
-      <!-- ─── Fraud alert banner ──────────────────────────────────────────── -->
-      <div v-if="summary.fraud > 0"
-        class="flex items-start gap-3 p-4 rounded-2xl border border-danger-200 bg-danger-50">
-        <ShieldExclamationIcon class="w-5 h-5 text-danger-600 shrink-0 mt-0.5" />
-        <div>
-          <p class="text-sm font-bold text-danger-800">
-            {{ summary.fraud }} double-claim attempt{{ summary.fraud > 1 ? 's' : '' }} detected
-          </p>
-          <p class="text-xs text-danger-600 mt-0.5">
-            These events have been logged and flagged. Filter by "double_claim_attempt" to review.
-          </p>
-        </div>
-        <button
-          @click="filters.event = 'double_claim_attempt'; applyFilters()"
-          class="ml-auto btn btn-danger btn-sm shrink-0"
-        >
-          Review Now
-        </button>
-      </div>
-
       <!-- ─── Logs Table ────────────────────────────────────────────────────── -->
       <div class="card overflow-hidden">
         <div class="px-5 py-4 border-b border-slate-100 flex items-center justify-between">
@@ -139,10 +118,7 @@
               <tr
                 v-for="log in logs.data"
                 :key="log.id"
-                :class="[
-                  'hover:bg-slate-50/60 transition-colors group',
-                  isFraud(log.event) ? 'bg-danger-50/40' : '',
-                ]"
+                class="hover:bg-slate-50/60 transition-colors group"
               >
                 <!-- ID -->
                 <td class="px-5 py-3 text-[10px] text-slate-300 font-mono">{{ log.id }}</td>
@@ -221,10 +197,9 @@
 
       <!-- ─── Event type legend ─────────────────────────────────────────────── -->
       <div class="flex flex-wrap items-center gap-3 text-xs text-slate-400 px-1">
-        <span class="badge badge-danger badge-sm">Fraud / Security</span>
         <span class="badge badge-warning badge-sm">Delete / Fail</span>
         <span class="badge badge-info badge-sm">Login / Create / Grant</span>
-        <span class="badge badge-success badge-sm">Compliance</span>
+        <span class="badge badge-success badge-sm">Import / Attendance</span>
         <span class="badge badge-neutral badge-sm">Other</span>
       </div>
     </div>
@@ -235,7 +210,7 @@
 import { reactive, computed } from 'vue'
 import { Head, Link, router } from '@inertiajs/vue3'
 import {
-  CalendarDaysIcon, UserCircleIcon, ShieldExclamationIcon,
+  CalendarDaysIcon, UserCircleIcon, ArrowUpTrayIcon,
   MagnifyingGlassIcon, ArrowPathIcon, ArrowDownTrayIcon,
   EyeIcon, ClipboardDocumentListIcon,
 } from '@heroicons/vue/24/outline'
@@ -294,18 +269,14 @@ const exportLabel = computed(() => {
 })
 
 // ─── Event helpers ─────────────────────────────────────────────────────────────
-const FRAUD_EVENTS  = ['double_claim_attempt', 'qr_scan_failed', 'login_failed']
 const WARN_EVENTS   = ['deleted', 'destroy', 'failed']
 const INFO_EVENTS   = ['login', 'created', 'grant_released', 'qr_scanned']
-const COMP_EVENTS   = ['compliance_recorded', 'compliance_updated']
-
-const isFraud = (e) => FRAUD_EVENTS.some(f => e?.includes(f))
+const IMPORT_EVENTS = ['imported', 'fds_attendance', 'compliance']
 
 const eventBadgeClass = (e) => {
   if (!e) return 'badge-neutral'
-  if (FRAUD_EVENTS.some(f => e.includes(f)))  return 'badge-danger'
   if (WARN_EVENTS.some(f => e.includes(f)))   return 'badge-warning'
-  if (COMP_EVENTS.some(f => e.includes(f)))   return 'badge-success'
+  if (IMPORT_EVENTS.some(f => e.includes(f))) return 'badge-success'
   if (INFO_EVENTS.some(f => e.includes(f)))   return 'badge-info'
   return 'badge-neutral'
 }

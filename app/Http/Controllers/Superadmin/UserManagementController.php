@@ -52,8 +52,9 @@ class UserManagementController extends Controller
                                    + Beneficiary::count(),
             'superadmin'         => User::where('role', 'superadmin')->count(),
             'admin'              => User::where('role', 'admin')->count(),
-            'compliance_verifier'=> User::where('role', 'compliance_verifier')->count(),
-            'field_officer'      => User::where('role', 'field_officer')->count(),
+            'admin_4ps'          => User::where('role', 'admin_4ps')->count(),
+            'admin_swa'          => User::where('role', 'admin_swa')->count(),
+            'barangay_assistant' => User::where('role', 'barangay_assistant')->count(),
             'beneficiary'        => Beneficiary::count(),
         ];
 

@@ -15,7 +15,7 @@
       </div>
 
       <!-- Filters -->
-      <div class="card p-4 grid grid-cols-1 sm:grid-cols-3 gap-3">
+      <div class="card p-4 grid grid-cols-1 sm:grid-cols-2 gap-3">
         <select v-model="filters.barangay" class="form-select" @change="applyFilters">
           <option value="">All Barangays</option>
           <option v-for="b in barangays" :key="b" :value="b">{{ b }}</option>
@@ -28,18 +28,12 @@
           <option value="graduated">Graduated</option>
           <option value="delisted">Delisted</option>
         </select>
-        <select v-model="filters.compliant" class="form-select" @change="applyFilters">
-          <option value="">All Compliance</option>
-          <option value="1">Compliant Only</option>
-          <option value="0">Non-Compliant Only</option>
-        </select>
       </div>
 
       <!-- Stats row -->
-      <div class="grid grid-cols-3 gap-3">
+      <div class="grid grid-cols-2 gap-3">
         <StatMini label="Total Records" :value="beneficiaries.total" color="brand" />
         <StatMini label="Active" :value="beneficiaries.data.filter(b => b.status === 'active').length + ' of ' + beneficiaries.data.length" color="success" />
-        <StatMini label="Compliant" :value="beneficiaries.data.filter(b => b.is_compliant).length + ' of ' + beneficiaries.data.length" color="green" />
       </div>
 
       <!-- Table -->
@@ -53,14 +47,13 @@
                 <th class="text-left px-5 py-2.5 text-xs font-semibold text-slate-500 uppercase tracking-wide">Barangay</th>
                 <th class="text-left px-5 py-2.5 text-xs font-semibold text-slate-500 uppercase tracking-wide">Status</th>
                 <th class="text-left px-5 py-2.5 text-xs font-semibold text-slate-500 uppercase tracking-wide">Members</th>
-                <th class="text-left px-5 py-2.5 text-xs font-semibold text-slate-500 uppercase tracking-wide">Compliance</th>
                 <th class="text-left px-5 py-2.5 text-xs font-semibold text-slate-500 uppercase tracking-wide">Card</th>
                 <th class="text-left px-5 py-2.5 text-xs font-semibold text-slate-500 uppercase tracking-wide">Registered</th>
               </tr>
             </thead>
             <tbody class="divide-y divide-slate-50">
               <tr v-if="!beneficiaries.data.length">
-                <td colspan="8" class="text-center py-12 text-slate-400">No records match filters.</td>
+                <td colspan="7" class="text-center py-12 text-slate-400">No records match filters.</td>
               </tr>
               <tr v-for="b in beneficiaries.data" :key="b.id" class="hover:bg-slate-50/60 transition-colors">
                 <td class="px-5 py-3 font-mono text-xs text-brand-700">{{ b.unique_id }}</td>
@@ -70,11 +63,6 @@
                   <span :class="['badge badge-sm', statusClass(b.status)]">{{ b.status }}</span>
                 </td>
                 <td class="px-5 py-3 text-sm text-slate-500">{{ b.family_members_count }}</td>
-                <td class="px-5 py-3">
-                  <span :class="['badge badge-sm', b.is_compliant ? 'badge-success' : 'badge-danger']">
-                    {{ b.is_compliant ? '✓ Compliant' : '✗ Non-Compliant' }}
-                  </span>
-                </td>
                 <td class="px-5 py-3">
                   <span v-if="b.card" class="badge badge-sm badge-info">Issued</span>
                   <span v-else class="text-slate-300 text-xs">None</span>
@@ -110,14 +98,12 @@ const props = defineProps({ beneficiaries: Object, barangays: Array })
 const filters = reactive({
   barangay: new URLSearchParams(window.location.search).get('barangay') ?? '',
   status:   new URLSearchParams(window.location.search).get('status') ?? '',
-  compliant:new URLSearchParams(window.location.search).get('compliant') ?? '',
 })
 
 const applyFilters = () => {
   router.get(route('superadmin.reports.beneficiaries'), {
     barangay:  filters.barangay  || undefined,
     status:    filters.status    || undefined,
-    compliant: filters.compliant !== '' ? filters.compliant : undefined,
   }, { preserveState: true, preserveScroll: true, replace: true })
 }
 
@@ -126,7 +112,6 @@ const exportUrl = computed(() =>
   new URLSearchParams({
     ...(filters.barangay  && { barangay:  filters.barangay }),
     ...(filters.status    && { status:    filters.status }),
-    ...(filters.compliant !== '' && { compliant: filters.compliant }),
   }).toString()
 )
 

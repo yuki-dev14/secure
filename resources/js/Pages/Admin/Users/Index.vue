@@ -1,6 +1,6 @@
 <template>
   <Head title="Staff Management" />
-  <StaffLayout page-title="Staff Management" page-subtitle="Manage DSWD field officers, verifiers, and admins">
+  <StaffLayout page-title="Staff Management" page-subtitle="Manage DSWD staff accounts">
     <div class="space-y-4">
 
       <!-- Header row -->
@@ -22,8 +22,9 @@
           <select v-model="filters.role" @change="applyFilters" class="form-select w-44">
             <option value="">All Roles</option>
             <option value="admin">Admin</option>
-            <option value="compliance_verifier">Compliance Verifier</option>
-            <option value="field_officer">Field Officer</option>
+            <option value="admin_4ps">Admin 4Ps</option>
+            <option value="admin_swa">Admin SWA</option>
+            <option value="barangay_assistant">Barangay Assistant</option>
           </select>
 
           <!-- Status filter -->
@@ -247,14 +248,20 @@ const roleStats = computed(() => {
       icon: CogIcon,
     },
     {
-      role: 'compliance_verifier', label: 'Verifiers',
-      count: data.filter(u => u.role === 'compliance_verifier').length,
+      role: 'admin_4ps', label: 'Admin 4Ps',
+      count: data.filter(u => u.role === 'admin_4ps').length,
+      color: 'bg-blue-50 text-blue-700 border-blue-200',
+      icon: ClipboardDocumentCheckIcon,
+    },
+    {
+      role: 'admin_swa', label: 'Admin SWA',
+      count: data.filter(u => u.role === 'admin_swa').length,
       color: 'bg-warning-50 text-warning-700 border-yellow-200',
       icon: ClipboardDocumentCheckIcon,
     },
     {
-      role: 'field_officer', label: 'Field Officers',
-      count: data.filter(u => u.role === 'field_officer').length,
+      role: 'barangay_assistant', label: 'Barangay Asst.',
+      count: data.filter(u => u.role === 'barangay_assistant').length,
       color: 'bg-success-50 text-success-700 border-green-200',
       icon: UserGroupIcon,
     },
@@ -266,20 +273,23 @@ const initials = (name) =>
 
 const roleColor = (role) => ({
   admin:               'bg-brand-600',
-  compliance_verifier: 'bg-amber-500',
-  field_officer:       'bg-green-600',
+  admin_4ps:           'bg-blue-600',
+  admin_swa:           'bg-amber-500',
+  barangay_assistant:  'bg-green-600',
 }[role] ?? 'bg-slate-400')
 
 const roleBadge = (role) => ({
   admin:               'badge-info',
-  compliance_verifier: 'badge-warning',
-  field_officer:       'badge-success',
+  admin_4ps:           'badge-info',
+  admin_swa:           'badge-warning',
+  barangay_assistant:  'badge-success',
 }[role] ?? 'badge-neutral')
 
 const roleIcon = (role) => ({
   admin:               CogIcon,
-  compliance_verifier: ClipboardDocumentCheckIcon,
-  field_officer:       UserGroupIcon,
+  admin_4ps:           ClipboardDocumentCheckIcon,
+  admin_swa:           ClipboardDocumentCheckIcon,
+  barangay_assistant:  UserGroupIcon,
 }[role] ?? UsersIcon)
 
 const toggleActive = (user) => {

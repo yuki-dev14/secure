@@ -21,8 +21,8 @@ class DashboardController extends Controller
             'beneficiaries'        => Beneficiary::active()->count(),
             'compliant'            => Beneficiary::compliant()->count(),
             'pending_compliance'   => Beneficiary::active()->where('is_compliant', false)->count(),
-            'field_officers'       => User::byRole('field_officer')->active()->count(),
-            'verifiers'            => User::byRole('compliance_verifier')->active()->count(),
+            'field_officers'       => User::byRole('barangay_assistant')->active()->count(),
+            'verifiers'            => User::byRole('admin_swa')->active()->count(),
             'upcoming_events'      => DistributionEvent::upcoming()->count(),
             'ongoing_events'       => DistributionEvent::ongoing()->count(),
             'claimed_this_month'   => CashGrantDistribution::claimed()

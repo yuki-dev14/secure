@@ -17,8 +17,8 @@
         <div class="lg:col-span-2 card">
           <div class="card-header">
             <div>
-              <h3 class="font-semibold text-slate-800">Recent Audit Trail</h3>
-              <p class="text-xs text-slate-400 mt-0.5">Latest system activity</p>
+              <h3 class="font-semibold text-slate-800">Recent Activity</h3>
+              <p class="text-xs text-slate-400 mt-0.5">Latest system events</p>
             </div>
             <Link :href="route('superadmin.audit-logs.index')" class="btn btn-secondary btn-sm">
               View All
@@ -56,21 +56,21 @@
             <h3 class="font-semibold text-slate-800">Quick Actions</h3>
           </div>
           <div class="card-body space-y-3">
-            <Link :href="route('superadmin.beneficiaries.create')" class="btn btn-primary w-full justify-start gap-3">
-              <UserPlusIcon class="w-5 h-5" />
-              Register Beneficiary
+            <Link :href="route('superadmin.beneficiaries.import')" class="btn btn-primary w-full justify-start gap-3">
+              <ArrowUpTrayIcon class="w-5 h-5" />
+              Import Beneficiaries
+            </Link>
+            <Link :href="route('superadmin.grant-computation.index')" class="btn btn-secondary w-full justify-start gap-3">
+              <CurrencyDollarIcon class="w-5 h-5" />
+              Compute Grants
             </Link>
             <Link :href="route('superadmin.audit-logs.index')" class="btn btn-secondary w-full justify-start gap-3">
               <ShieldCheckIcon class="w-5 h-5" />
               View Audit Trail
             </Link>
-            <Link :href="route('admin.events.create')" class="btn btn-secondary w-full justify-start gap-3">
-              <CalendarDaysIcon class="w-5 h-5" />
-              Schedule Distribution
-            </Link>
-            <Link :href="route('admin.users.index')" class="btn btn-secondary w-full justify-start gap-3">
+            <Link :href="route('superadmin.users.index')" class="btn btn-secondary w-full justify-start gap-3">
               <UsersIcon class="w-5 h-5" />
-              Manage Staff
+              Manage Users
             </Link>
           </div>
 
@@ -80,6 +80,10 @@
             <div class="flex items-center gap-2">
               <MapPinIcon class="w-4 h-4 text-brand-500" />
               <span class="text-xs text-slate-500">{{ stats.barangay_coverage }} barangays active</span>
+            </div>
+            <div class="flex items-center gap-2 mt-1">
+              <CalendarDaysIcon class="w-4 h-4 text-brand-500" />
+              <span class="text-xs text-slate-500">Latest period: {{ stats.latest_period }}</span>
             </div>
           </div>
         </div>
@@ -93,8 +97,8 @@ import { computed } from 'vue'
 import { Head, Link } from '@inertiajs/vue3'
 import {
   UsersIcon, ShieldCheckIcon, CalendarDaysIcon,
-  UserPlusIcon, MapPinIcon, CheckBadgeIcon,
-  ExclamationTriangleIcon, ClipboardDocumentCheckIcon,
+  ArrowUpTrayIcon, MapPinIcon, CurrencyDollarIcon,
+  ClipboardDocumentCheckIcon,
 } from '@heroicons/vue/24/outline'
 import StaffLayout from '@/Layouts/StaffLayout.vue'
 import StatCard from '@/Components/StatCard.vue'
@@ -109,30 +113,30 @@ const kpis = computed(() => [
     color: 'bg-brand-50 text-brand-600',
   },
   {
-    label: 'Active & Compliant',
-    value: props.stats.compliant.toLocaleString(),
-    icon: CheckBadgeIcon,
+    label: 'Active Beneficiaries',
+    value: props.stats.active_beneficiaries.toLocaleString(),
+    icon: ClipboardDocumentCheckIcon,
     color: 'bg-success-50 text-success-600',
   },
   {
-    label: 'Non-Compliant',
-    value: props.stats.non_compliant.toLocaleString(),
-    icon: ExclamationTriangleIcon,
-    color: 'bg-warning-50 text-warning-600',
+    label: 'Grants Computed',
+    value: props.stats.grants_computed.toLocaleString(),
+    icon: CurrencyDollarIcon,
+    color: 'bg-emerald-50 text-emerald-600',
   },
   {
     label: 'Staff Members',
     value: props.stats.total_staff.toLocaleString(),
-    icon: ClipboardDocumentCheckIcon,
+    icon: UsersIcon,
     color: 'bg-slate-100 text-slate-600',
   },
 ])
 
 const eventBadge = (event) => {
-  if (event.includes('login'))  return 'badge-info'
-  if (event.includes('fraud') || event.includes('double')) return 'badge-danger'
-  if (event.includes('delete')) return 'badge-warning'
-  if (event.includes('create') || event.includes('grant')) return 'badge-success'
+  if (event?.includes('login'))    return 'badge-info'
+  if (event?.includes('import') || event?.includes('created')) return 'badge-success'
+  if (event?.includes('delete'))   return 'badge-warning'
+  if (event?.includes('grant'))    return 'badge-success'
   return 'badge-neutral'
 }
 

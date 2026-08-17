@@ -3,14 +3,12 @@
 namespace App\Http\Controllers\Superadmin;
 
 use App\Http\Controllers\Controller;
-use App\Models\AuditLog;
 use App\Models\Beneficiary;
-use App\Models\CashGrantDistribution;
-use App\Models\ComplianceRecord;
+use App\Models\CashGrantCalculation;
 use App\Models\DistributionEvent;
-use App\Models\User;
+use App\Models\FamilyMember;
+use App\Services\CashGrantCalculatorService;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 use Inertia\Response;
 use Symfony\Component\HttpFoundation\StreamedResponse;
@@ -21,40 +19,69 @@ class ReportController extends Controller
 
     public function index(): Response
     {
+        $activeBeneficiaries = Beneficiary::where('status', 'active')->count();
+        $totalBeneficiaries  = Beneficiary::count();
+
+        // School-age children eligible for education grant
+        $schoolAgeChildren = FamilyMember::where('is_school_age', true)
+            ->where('is_active', true)
+            ->whereHas('beneficiary', fn($q) => $q->where('status', 'active'))
+            ->count();
+
+        // Calculate expected grants for the next bimonthly period (2 months)
+        $months = 2;
+
+        // Health: ₱750 × 2 months × active households
+        $healthTotal = CashGrantCalculatorService::HEALTH_GRANT_PER_MONTH * $months * $activeBeneficiaries;
+
+        // Education: estimate by school-age children (capped at 3 per household)
+        // Use average grant rate as approximation
+        $eduChildren = FamilyMember::where('is_school_age', true)
+            ->where('is_active', true)
+            ->whereHas('beneficiary', fn($q) => $q->where('status', 'active'))
+            ->get();
+
+        $eduTotal = 0;
+        foreach ($eduChildren as $child) {
+            $rate = match($child->education_level) {
+                'senior_high' => CashGrantCalculatorService::SENIOR_HIGH_GRANT_PER_MONTH,
+                'junior_high' => CashGrantCalculatorService::JUNIOR_HIGH_GRANT_PER_MONTH,
+                'elementary'  => CashGrantCalculatorService::ELEMENTARY_GRANT_PER_MONTH,
+                default       => 0,
+            };
+            $eduTotal += $rate * $months;
+        }
+
+        // Rice: ₱600 × 2 months × active households
+        $riceTotal = CashGrantCalculatorService::RICE_SUBSIDY_PER_MONTH * $months * $activeBeneficiaries;
+
+        $expectedGrant = $healthTotal + $eduTotal + $riceTotal;
+
+        // Next period label
+        $nextPeriod = $this->getNextPeriodLabel();
+
+        // Barangay count
+        $barangayCount = Beneficiary::where('status', 'active')
+            ->distinct('barangay')
+            ->count('barangay');
+
         $summary = [
             'beneficiaries' => [
-                'total'      => Beneficiary::count(),
-                'active'     => Beneficiary::where('status', 'active')->count(),
-                'compliant'  => Beneficiary::where('is_compliant', true)->count(),
+                'total'  => $totalBeneficiaries,
+                'active' => $activeBeneficiaries,
             ],
-            'distributions' => [
-                'total'      => CashGrantDistribution::count(),
-                'claimed'    => CashGrantDistribution::where('status', 'claimed')->count(),
-                'total_released' => CashGrantDistribution::where('status', 'claimed')->sum('amount_released'),
-            ],
-            'compliance' => [
-                'total'          => ComplianceRecord::count(),
-                'fully_compliant' => ComplianceRecord::where('is_fully_compliant', true)->count(),
-            ],
-            'events' => [
-                'total'    => DistributionEvent::count(),
-                'ongoing'  => DistributionEvent::whereIn('status', ['ongoing', 'upcoming'])->count(),
-                'completed'=> DistributionEvent::where('status', 'completed')->count(),
-            ],
-            'audit' => [
-                'total'  => AuditLog::count(),
-                'today'  => AuditLog::whereDate('created_at', today())->count(),
-                'fraud'  => AuditLog::where('event', 'double_claim_attempt')->count(),
+            'expected_grant'     => $expectedGrant,
+            'next_period_label'  => $nextPeriod,
+            'school_age_children'=> $schoolAgeChildren,
+            'barangay_count'     => $barangayCount,
+            'breakdown' => [
+                'health'    => $healthTotal,
+                'education' => $eduTotal,
+                'rice'      => $riceTotal,
             ],
         ];
 
-        $recentDistributions = CashGrantDistribution::with(['beneficiary', 'distributionEvent'])
-            ->latest()->limit(5)->get();
-
-        $barangayBreakdown = Beneficiary::select('barangay', DB::raw('count(*) as total'), DB::raw('sum(case when is_compliant then 1 else 0 end) as compliant'))
-            ->groupBy('barangay')->orderByDesc('total')->limit(10)->get();
-
-        return Inertia::render('Superadmin/Reports/Index', compact('summary', 'recentDistributions', 'barangayBreakdown'));
+        return Inertia::render('Superadmin/Reports/Index', compact('summary'));
     }
 
     // ─── Beneficiaries report ─────────────────────────────────────────────────
@@ -65,8 +92,6 @@ class ReportController extends Controller
             ->withCount('familyMembers')
             ->when($request->barangay,  fn ($q) => $q->where('barangay', $request->barangay))
             ->when($request->status,    fn ($q) => $q->where('status', $request->status))
-            ->when($request->compliant !== null && $request->compliant !== '', fn ($q) =>
-                $q->where('is_compliant', (bool) $request->compliant))
             ->latest();
 
         $beneficiaries = $query->paginate(50)->withQueryString();
@@ -85,101 +110,14 @@ class ReportController extends Controller
 
         return $this->streamCsv('beneficiaries_report', [
             'Unique ID', 'Last Name', 'First Name', 'Middle Name',
-            'Barangay', 'Status', 'Compliant', 'Family Members',
+            'Barangay', 'Status', 'Family Members',
             'Listahanan ID', 'Contact', 'Registered',
         ], $rows->map(fn ($b) => [
             $b->unique_id, $b->last_name, $b->first_name, $b->middle_name ?? '',
-            $b->barangay, $b->status, $b->is_compliant ? 'Yes' : 'No',
+            $b->barangay, $b->status,
             $b->family_members_count,
             $b->listahanan_id ?? '', $b->contact_number ?? '',
             $b->created_at?->format('Y-m-d'),
-        ])->toArray());
-    }
-
-    // ─── Compliance report ────────────────────────────────────────────────────
-
-    public function compliance(Request $request): Response
-    {
-        $query = ComplianceRecord::with(['beneficiary', 'verifier'])
-            ->when($request->period,    fn ($q) => $q->where('period', $request->period))
-            ->when($request->compliant !== null && $request->compliant !== '', fn ($q) =>
-                $q->where('is_fully_compliant', (bool) $request->compliant))
-            ->latest('created_at');
-
-        $records = $query->paginate(50)->withQueryString();
-        $periods = ComplianceRecord::distinct()->orderByDesc('period')->pluck('period');
-
-        return Inertia::render('Superadmin/Reports/Compliance', compact('records', 'periods'));
-    }
-
-    public function exportCompliance(Request $request): StreamedResponse
-    {
-        $rows = ComplianceRecord::with(['beneficiary', 'verifier'])
-            ->when($request->period, fn ($q) => $q->where('period', $request->period))
-            ->latest('created_at')->get();
-
-        return $this->streamCsv('compliance_report', [
-            'Beneficiary ID', 'Period', 'Education %', 'Edu Compliant',
-            'Health Compliant', 'FDS Compliant', 'Overall Compliant',
-            'Override', 'Verified By', 'Remarks', 'Date',
-        ], $rows->map(fn ($r) => [
-            $r->beneficiary?->unique_id ?? $r->beneficiary_id,
-            $r->period,
-            $r->edu_attendance_rate ?? '—',
-            $r->edu_attendance_compliant ? 'Yes' : 'No',
-            $r->health_compliant ? 'Yes' : 'No',
-            $r->fds_compliant ? 'Yes' : 'No',
-            $r->is_fully_compliant ? 'Yes' : 'No',
-            $r->compliance_override ? 'Yes' : 'No',
-            $r->verifier?->name ?? '—',
-            $r->override_remarks ?? '',
-            $r->created_at?->format('Y-m-d'),
-        ])->toArray());
-    }
-
-    // ─── Distributions report ─────────────────────────────────────────────────
-
-    public function distributions(Request $request): Response
-    {
-        $query = CashGrantDistribution::with(['beneficiary', 'distributionEvent', 'releasedBy'])
-            ->when($request->event_id, fn ($q) => $q->where('distribution_event_id', $request->event_id))
-            ->when($request->status,   fn ($q) => $q->where('status', $request->status))
-            ->latest();
-
-        $distributions = $query->paginate(50)->withQueryString();
-        $events        = DistributionEvent::orderByDesc('created_at')->get(['id', 'title', 'period']);
-
-        $totals = [
-            'count'    => CashGrantDistribution::when($request->event_id, fn ($q) => $q->where('distribution_event_id', $request->event_id))->count(),
-            'claimed'  => CashGrantDistribution::when($request->event_id, fn ($q) => $q->where('distribution_event_id', $request->event_id))->where('status', 'claimed')->count(),
-            'released' => (float) CashGrantDistribution::when($request->event_id, fn ($q) => $q->where('distribution_event_id', $request->event_id))->where('status', 'claimed')->sum('amount_released'),
-        ];
-
-        return Inertia::render('Superadmin/Reports/Distributions', compact('distributions', 'events', 'totals'));
-    }
-
-    public function exportDistributions(Request $request): StreamedResponse
-    {
-        $rows = CashGrantDistribution::with(['beneficiary', 'distributionEvent', 'releasedBy'])
-            ->when($request->event_id, fn ($q) => $q->where('distribution_event_id', $request->event_id))
-            ->when($request->status,   fn ($q) => $q->where('status', $request->status))
-            ->latest()->get();
-
-        return $this->streamCsv('distributions_report', [
-            'Transaction ID', 'Beneficiary ID', 'Event', 'Period',
-            'Amount Released', 'Status', 'Claimed By', 'Proxy ID',
-            'Released By', 'Claim Date',
-        ], $rows->map(fn ($d) => [
-            $d->transaction_id ?? $d->id,
-            $d->beneficiary?->unique_id ?? '',
-            $d->distributionEvent?->title ?? '',
-            $d->distributionEvent?->period ?? '',
-            number_format($d->amount_released, 2),
-            $d->status,
-            $d->claimed_by_type,
-            $d->proxy_id ?? '',
-            $d->releasedBy?->name ?? '',
-            $d->claimed_at?->format('Y-m-d H:i') ?? '',
         ])->toArray());
     }
 
@@ -187,7 +125,7 @@ class ReportController extends Controller
 
     public function grants(Request $request): Response
     {
-        $query = \App\Models\CashGrantCalculation::with(['beneficiary', 'distributionEvent'])
+        $query = CashGrantCalculation::with(['beneficiary', 'distributionEvent'])
             ->when($request->event_id, fn ($q) => $q->where('distribution_event_id', $request->event_id))
             ->latest();
 
@@ -195,10 +133,10 @@ class ReportController extends Controller
         $events  = DistributionEvent::orderByDesc('created_at')->get(['id', 'title', 'period']);
 
         $totals = [
-            'total_health'    => \App\Models\CashGrantCalculation::when($request->event_id, fn ($q) => $q->where('distribution_event_id', $request->event_id))->sum('health_grant_amount'),
-            'total_education' => \App\Models\CashGrantCalculation::when($request->event_id, fn ($q) => $q->where('distribution_event_id', $request->event_id))->sum('education_grant_total'),
-            'total_rice'      => \App\Models\CashGrantCalculation::when($request->event_id, fn ($q) => $q->where('distribution_event_id', $request->event_id))->sum('rice_subsidy_amount'),
-            'grand_total'     => \App\Models\CashGrantCalculation::when($request->event_id, fn ($q) => $q->where('distribution_event_id', $request->event_id))->sum('total_grant_amount'),
+            'total_health'    => CashGrantCalculation::when($request->event_id, fn ($q) => $q->where('distribution_event_id', $request->event_id))->sum('health_grant_amount'),
+            'total_education' => CashGrantCalculation::when($request->event_id, fn ($q) => $q->where('distribution_event_id', $request->event_id))->sum('education_grant_total'),
+            'total_rice'      => CashGrantCalculation::when($request->event_id, fn ($q) => $q->where('distribution_event_id', $request->event_id))->sum('rice_subsidy_amount'),
+            'grand_total'     => CashGrantCalculation::when($request->event_id, fn ($q) => $q->where('distribution_event_id', $request->event_id))->sum('total_grant_amount'),
         ];
 
         return Inertia::render('Superadmin/Reports/Grants', compact('grants', 'events', 'totals'));
@@ -206,7 +144,7 @@ class ReportController extends Controller
 
     public function exportGrants(Request $request): StreamedResponse
     {
-        $rows = \App\Models\CashGrantCalculation::with(['beneficiary', 'distributionEvent'])
+        $rows = CashGrantCalculation::with(['beneficiary', 'distributionEvent'])
             ->when($request->event_id, fn ($q) => $q->where('distribution_event_id', $request->event_id))
             ->latest()->get();
 
@@ -230,7 +168,31 @@ class ReportController extends Controller
         ])->toArray());
     }
 
-    // ─── CSV helper ──────────────────────────────────────────────────────────
+    // ─── Helpers ──────────────────────────────────────────────────────────────
+
+    private function getNextPeriodLabel(): string
+    {
+        $month = (int) now()->format('m');
+        $year  = now()->year;
+
+        $bimonthly = [
+            1 => 'P1 (Jan–Feb)', 2 => 'P1 (Jan–Feb)',
+            3 => 'P2 (Mar–Apr)', 4 => 'P2 (Mar–Apr)',
+            5 => 'P3 (May–Jun)', 6 => 'P3 (May–Jun)',
+            7 => 'P4 (Jul–Aug)', 8 => 'P4 (Jul–Aug)',
+            9 => 'P5 (Sep–Oct)', 10 => 'P5 (Sep–Oct)',
+            11 => 'P6 (Nov–Dec)', 12 => 'P6 (Nov–Dec)',
+        ];
+
+        // Find the next period (not the current one)
+        $nextMonth = $month + 2;
+        if ($nextMonth > 12) {
+            $nextMonth -= 12;
+            $year++;
+        }
+
+        return "{$year} {$bimonthly[$nextMonth]}";
+    }
 
     private function streamCsv(string $name, array $headers, array $rows): StreamedResponse
     {
@@ -238,7 +200,6 @@ class ReportController extends Controller
 
         return response()->streamDownload(function () use ($headers, $rows) {
             $handle = fopen('php://output', 'w');
-            // BOM for Excel UTF-8 compatibility
             fwrite($handle, "\xEF\xBB\xBF");
             fputcsv($handle, $headers);
             foreach ($rows as $row) {

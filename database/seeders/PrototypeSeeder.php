@@ -21,8 +21,8 @@ class PrototypeSeeder extends Seeder
     public function run(): void
     {
         $superadmin = User::where('role', 'superadmin')->first();
-        $verifier   = User::where('role', 'compliance_verifier')->first();
-        $officer    = User::where('role', 'field_officer')->first();
+        $verifier   = User::where('role', 'admin_swa')->first();
+        $officer    = User::where('role', 'barangay_assistant')->first();
         $office     = Office::first();
 
         // ── 10 Realistic Lipa City Households ──────────────────────────────────

@@ -31,7 +31,8 @@ class AuditLogController extends Controller
         $summary   = [
             'today'    => AuditLog::whereDate('created_at', today())->count(),
             'logins'   => AuditLog::where('event', 'login')->count(),
-            'fraud'    => AuditLog::where('event', 'double_claim_attempt')->count(),
+            'imports'  => AuditLog::where('event', 'created')->whereNotNull('auditable_type')
+                            ->where('auditable_type', 'like', '%Beneficiary%')->count(),
         ];
 
         return Inertia::render('Superadmin/AuditLogs/Index', compact('logs', 'events', 'summary'));

@@ -54,7 +54,7 @@
       </div>
 
       <!-- Stats strip -->
-      <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+      <div class="grid grid-cols-2 sm:grid-cols-3 gap-3">
         <div class="card px-4 py-3 flex items-center gap-3">
           <div class="w-8 h-8 bg-brand-50 rounded-lg flex items-center justify-center">
             <UsersIcon class="w-4 h-4 text-brand-600" />
@@ -62,15 +62,6 @@
           <div>
             <p class="text-lg font-bold text-slate-800">{{ beneficiaries.total }}</p>
             <p class="text-xs text-slate-400">Total</p>
-          </div>
-        </div>
-        <div class="card px-4 py-3 flex items-center gap-3">
-          <div class="w-8 h-8 bg-success-50 rounded-lg flex items-center justify-center">
-            <CheckBadgeIcon class="w-4 h-4 text-success-600" />
-          </div>
-          <div>
-            <p class="text-lg font-bold text-slate-800">{{ beneficiaries.data.filter(b => b.is_compliant).length }}</p>
-            <p class="text-xs text-slate-400">Compliant (page)</p>
           </div>
         </div>
         <div class="card px-4 py-3 flex items-center gap-3">
@@ -110,14 +101,14 @@
                 <th>Unique ID</th>
                 <th>Barangay</th>
                 <th>Status</th>
-                <th>Compliance</th>
+
                 <th>Card</th>
                 <th>Actions</th>
               </tr>
             </thead>
             <tbody>
               <tr v-if="beneficiaries.data.length === 0">
-                <td colspan="8" class="text-center py-12 text-slate-400">
+                <td colspan="7" class="text-center py-12 text-slate-400">
                   <UserGroupIcon class="w-10 h-10 mx-auto mb-2 opacity-30" />
                   <p>No beneficiaries found</p>
                 </td>
@@ -152,11 +143,7 @@
                 <td>
                   <span :class="['badge', statusBadge(b.status)]">{{ b.status }}</span>
                 </td>
-                <td>
-                  <span :class="['badge', b.is_compliant ? 'badge-success' : 'badge-danger']">
-                    {{ b.is_compliant ? '✓ Compliant' : '✗ Non-Compliant' }}
-                  </span>
-                </td>
+
                 <td>
                   <span v-if="b.card" class="badge badge-success">Issued</span>
                   <span v-else class="badge badge-warning">No Card</span>
@@ -290,7 +277,7 @@ import { ref, reactive, computed } from 'vue'
 import { Head, Link, router } from '@inertiajs/vue3'
 import {
   MagnifyingGlassIcon, UserPlusIcon, UsersIcon,
-  CheckBadgeIcon, UserGroupIcon, UserIcon,
+  UserGroupIcon, UserIcon,
   EyeIcon, ArrowDownTrayIcon, ArrowUpTrayIcon, CreditCardIcon,
   XMarkIcon, CheckCircleIcon,
 } from '@heroicons/vue/24/outline'

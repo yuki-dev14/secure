@@ -127,7 +127,7 @@
                 <th class="text-left px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide">Beneficiary</th>
                 <th class="text-left px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide">Unique ID</th>
                 <th class="text-left px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide">Barangay</th>
-                <th class="text-left px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide">Compliance</th>
+
                 <th class="text-center px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide">Portal</th>
                 <th class="text-center px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide">Status</th>
                 <th class="text-center px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide">Action</th>
@@ -148,11 +148,7 @@
                 </td>
                 <td class="px-5 py-3 text-xs font-mono text-slate-600">{{ ben.unique_id }}</td>
                 <td class="px-5 py-3 text-xs text-slate-500">{{ ben.barangay }}</td>
-                <td class="px-5 py-3">
-                  <span :class="['badge badge-sm', ben.is_compliant ? 'badge-success' : 'badge-warning']">
-                    {{ ben.is_compliant ? 'Compliant' : 'Pending' }}
-                  </span>
-                </td>
+
                 <td class="px-5 py-3 text-center">
                   <span :class="['badge badge-sm', ben.user ? 'badge-info' : 'badge-neutral']">
                     {{ ben.user ? 'Active' : 'No Account' }}
@@ -217,8 +213,9 @@ const tabs = [
   { key: 'all',                 label: 'All Users' },
   { key: 'superadmin',         label: 'Superadmins' },
   { key: 'admin',              label: 'Admins' },
-  { key: 'compliance_verifier',label: 'Verifiers' },
-  { key: 'field_officer',      label: 'Field Officers' },
+  { key: 'admin_4ps',          label: 'Admin 4Ps' },
+  { key: 'admin_swa',          label: 'Admin SWA' },
+  { key: 'barangay_assistant', label: 'Barangay Asst.' },
   { key: 'beneficiary',        label: 'Beneficiaries' },
 ]
 
@@ -276,21 +273,24 @@ const formatDate = (d) =>
 const roleLabel = (role) => ({
   superadmin:           'Superadmin',
   admin:                'Admin',
-  compliance_verifier:  'Verifier',
-  field_officer:        'Field Officer',
+  admin_4ps:            'Admin 4Ps',
+  admin_swa:            'Admin SWA',
+  barangay_assistant:   'Barangay Asst.',
 }[role] ?? role)
 
 const roleBadgeClass = (role) => ({
   superadmin:           'badge-danger',
   admin:                'badge-info',
-  compliance_verifier:  'badge-warning',
-  field_officer:        'badge-success',
+  admin_4ps:            'badge-info',
+  admin_swa:            'badge-warning',
+  barangay_assistant:   'badge-success',
 }[role] ?? 'badge-neutral')
 
 const roleAvatarColor = (role) => ({
   superadmin:           'bg-red-500',
   admin:                'bg-brand-600',
-  compliance_verifier:  'bg-amber-500',
-  field_officer:        'bg-emerald-600',
+  admin_4ps:            'bg-blue-600',
+  admin_swa:            'bg-amber-500',
+  barangay_assistant:   'bg-emerald-600',
 }[role] ?? 'bg-slate-400')
 </script>

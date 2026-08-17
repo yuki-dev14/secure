@@ -88,7 +88,7 @@ import { computed } from 'vue'
 import { Link, usePage } from '@inertiajs/vue3'
 import {
   HomeIcon, UserIcon, DocumentTextIcon,
-  CurrencyDollarIcon, UsersIcon, BellIcon,
+  CurrencyDollarIcon, UsersIcon, BellIcon, ShieldCheckIcon,
 } from '@heroicons/vue/24/outline'
 import FlashMessage from '@/Components/FlashMessage.vue'
 
@@ -97,12 +97,13 @@ defineProps({ unreadCount: { type: Number, default: 0 } })
 const page = usePage()
 
 const navItems = [
-  { route: 'beneficiary.dashboard',     label: 'Dashboard',  icon: HomeIcon,            routePrefix: '/portal/dashboard' },
-  { route: 'beneficiary.profile',       label: 'Profile',    icon: UserIcon,            routePrefix: '/portal/profile' },
-  { route: 'beneficiary.documents',     label: 'Documents',  icon: DocumentTextIcon,    routePrefix: '/portal/documents' },
-  { route: 'beneficiary.grants',        label: 'Grants',     icon: CurrencyDollarIcon,  routePrefix: '/portal/grants' },
-  { route: 'beneficiary.family',        label: 'Family',     icon: UsersIcon,           routePrefix: '/portal/family' },
-  { route: 'beneficiary.notifications', label: 'Alerts',     icon: BellIcon,            routePrefix: '/portal/notifications' },
+  { route: 'beneficiary.dashboard',     label: 'Dashboard',   icon: HomeIcon,            routePrefix: '/portal/dashboard' },
+  { route: 'beneficiary.profile',       label: 'Profile',     icon: UserIcon,            routePrefix: '/portal/profile' },
+  { route: 'beneficiary.documents',     label: 'Documents',   icon: DocumentTextIcon,    routePrefix: '/portal/documents' },
+  { route: 'beneficiary.grants',        label: 'Grants',      icon: CurrencyDollarIcon,  routePrefix: '/portal/grants' },
+  { route: 'beneficiary.compliance',    label: 'Compliance',  icon: ShieldCheckIcon,     routePrefix: '/portal/compliance' },
+  { route: 'beneficiary.family',        label: 'Family',      icon: UsersIcon,           routePrefix: '/portal/family' },
+  { route: 'beneficiary.notifications', label: 'Alerts',      icon: BellIcon,            routePrefix: '/portal/notifications' },
 ]
 
 const isActive = (prefix) => page.url.startsWith(prefix)

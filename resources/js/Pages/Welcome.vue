@@ -186,7 +186,7 @@
             </div>
             <h3 class="text-lg font-bold text-slate-800 mb-2">DSWD Staff Login</h3>
             <p class="text-sm text-slate-500 leading-relaxed mb-6">
-              For DSWD personnel — administrators, compliance verifiers, and field officers assigned to Lipa City.
+              For DSWD personnel — administrators, SWA officers, 4Ps officers, and barangay assistants assigned to Lipa City.
             </p>
             <template v-if="authUser && authUser.role !== 'beneficiary'">
               <Link :href="dashboardRoute" class="btn btn-secondary w-full gap-2">
@@ -244,8 +244,9 @@ const dashboardRoute = computed(() => {
   return {
     superadmin:          route('superadmin.dashboard'),
     admin:               route('admin.dashboard'),
-    compliance_verifier: route('verifier.dashboard'),
-    field_officer:       route('officer.dashboard'),
+    admin_4ps:           route('admin4ps.dashboard'),
+    admin_swa:           route('adminswa.dashboard'),
+    barangay_assistant:  route('fds.scanner'),
     beneficiary:         route('beneficiary.dashboard'),
   }[role] ?? route('home')
 })
@@ -281,7 +282,7 @@ const steps = [
   {
     icon: ClipboardDocumentCheckIcon,
     title: 'Compliance Verified',
-    desc: 'DSWD verifiers record school attendance and health check compliance.',
+    desc: 'Admin SWA reviews health and education compliance records from school reps and midwives.',
     bg: 'bg-brand-500',
   },
   {
@@ -293,7 +294,7 @@ const steps = [
   {
     icon: QrCodeIcon,
     title: 'QR Card Scanned',
-    desc: 'Field officers scan the beneficiary\'s QR ID card at the claiming venue.',
+    desc: 'Barangay assistants scan the beneficiary\'s QR ID card at FDS sessions and claiming venues.',
     bg: 'bg-emerald-500',
   },
   {

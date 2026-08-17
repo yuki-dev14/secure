@@ -115,7 +115,8 @@ import {
   HomeIcon, UsersIcon, UserGroupIcon, ClipboardDocumentCheckIcon,
   QrCodeIcon, DocumentChartBarIcon, ShieldCheckIcon,
   ChevronLeftIcon, ChevronRightIcon, ArrowRightOnRectangleIcon,
-  BellIcon, CogIcon, CalendarDaysIcon,
+  BellIcon, CogIcon, CalendarDaysIcon, ExclamationTriangleIcon,
+  ArrowUpTrayIcon, CurrencyDollarIcon,
 } from '@heroicons/vue/24/outline'
 import FlashMessage from '@/Components/FlashMessage.vue'
 
@@ -133,26 +134,31 @@ const role = computed(() => page.props.auth?.user?.role)
 const roleRoutePrefix = computed(() => ({
   superadmin: 'superadmin',
   admin: 'admin',
-  compliance_verifier: 'verifier',
-  field_officer: 'officer',
+  admin_4ps: 'admin4ps',
+  admin_swa: 'adminswa',
+  barangay_assistant: 'fds',
 }[role.value] ?? role.value))
 
 const navItems = computed(() => {
-  const base = [
-    { route: `${roleRoutePrefix.value}.dashboard`, label: 'Dashboard', icon: HomeIcon, routePrefix: `/${roleRoutePrefix.value}/dashboard` },
-  ]
+  const base = []
+
+  // Dashboard — each role has its own (barangay_assistant handled in its own block)
+  if (role.value !== 'barangay_assistant') {
+    base.push({ route: `${roleRoutePrefix.value}.dashboard`, label: 'Dashboard', icon: HomeIcon, routePrefix: `/${roleRoutePrefix.value}/dashboard` })
+  }
 
   if (role.value === 'superadmin') {
     base.push(
-      { route: 'superadmin.beneficiaries.index', label: 'Beneficiaries',    icon: UsersIcon,               routePrefix: '/superadmin/beneficiaries' },
-      { route: 'superadmin.users.index',         label: 'User Management',  icon: UserGroupIcon,           routePrefix: '/superadmin/users' },
-      { route: 'superadmin.audit-logs.index',    label: 'Audit Trail',      icon: ShieldCheckIcon,          routePrefix: '/superadmin/audit' },
-      { route: 'superadmin.reports.index',       label: 'Reports',          icon: DocumentChartBarIcon,     routePrefix: '/superadmin/reports' },
-      { route: 'superadmin.settings.index',      label: 'Settings',         icon: CogIcon,                  routePrefix: '/superadmin/settings' },
+      { route: 'superadmin.beneficiaries.index',     label: 'Beneficiaries',      icon: UsersIcon,               routePrefix: '/superadmin/beneficiaries' },
+      { route: 'superadmin.users.index',             label: 'User Management',    icon: UserGroupIcon,           routePrefix: '/superadmin/users' },
+      { route: 'superadmin.grant-computation.index', label: 'Grant Computation',  icon: CurrencyDollarIcon,      routePrefix: '/superadmin/grant-computation' },
+      { route: 'superadmin.audit-logs.index',        label: 'Audit Trail',        icon: ShieldCheckIcon,          routePrefix: '/superadmin/audit' },
+      { route: 'superadmin.reports.index',           label: 'Reports',            icon: DocumentChartBarIcon,     routePrefix: '/superadmin/reports' },
+      { route: 'superadmin.settings.index',          label: 'Settings',           icon: CogIcon,                  routePrefix: '/superadmin/settings' },
     )
   }
 
-  if (role.value === 'admin') {
+  if (['admin', 'admin_4ps', 'admin_swa'].includes(role.value)) {
     base.push(
       { route: 'admin.users.index',   label: 'Staff Management',    icon: UsersIcon,       routePrefix: '/admin/users' },
       { route: 'admin.events.index',  label: 'Distribution Events', icon: CalendarDaysIcon, routePrefix: '/admin/distribution' },
@@ -160,17 +166,29 @@ const navItems = computed(() => {
     )
   }
 
-  if (role.value === 'compliance_verifier') {
+  // Admin SWA dedicated items
+  if (role.value === 'admin_swa') {
     base.push(
-      { route: 'verifier.beneficiaries', label: 'Record Completion', icon: ClipboardDocumentCheckIcon, routePrefix: '/verifier/beneficiaries' },
+      { route: 'adminswa.non-compliance.index',              label: 'Non-Compliance',             icon: ExclamationTriangleIcon,       routePrefix: '/adminswa/non-compliance' },
+      { route: 'adminswa.non-compliance.import',             label: 'Import Records',             icon: ArrowUpTrayIcon,               routePrefix: '/adminswa/non-compliance/import' },
+      { route: 'adminswa.compliance-verification.index',     label: 'Compliance Verification',    icon: ClipboardDocumentCheckIcon,    routePrefix: '/adminswa/compliance-verification' },
+      { route: 'adminswa.grant-summary.index',               label: 'Grant Summary',              icon: CurrencyDollarIcon,            routePrefix: '/adminswa/grant-summary' },
     )
   }
 
-  if (role.value === 'field_officer') {
+  // Admin 4Ps dedicated items
+  if (role.value === 'admin_4ps') {
     base.push(
-      { route: 'officer.scanner',       label: 'QR Scanner',    icon: QrCodeIcon,               routePrefix: '/officer/scanner' },
-      { route: 'officer.distribution',  label: 'Distribution',  icon: DocumentChartBarIcon,     routePrefix: '/officer/distribution' },
-      { route: 'officer.claim-history', label: 'Claim History', icon: ClipboardDocumentCheckIcon, routePrefix: '/officer/claim-history' },
+      { route: 'admin4ps.fds.index',   label: 'FDS Attendance',  icon: ClipboardDocumentCheckIcon, routePrefix: '/admin4ps/fds-attendance' },
+      { route: 'admin4ps.fds.scanner', label: 'FDS Scanner',     icon: QrCodeIcon,                 routePrefix: '/admin4ps/fds-attendance/scanner' },
+    )
+  }
+
+  // Barangay Assistant — Dashboard + FDS Scanner
+  if (role.value === 'barangay_assistant') {
+    base.push(
+      { route: 'barangay.dashboard', label: 'Dashboard',    icon: HomeIcon,   routePrefix: '/barangay/dashboard' },
+      { route: 'barangay.scanner',   label: 'FDS Scanner',  icon: QrCodeIcon, routePrefix: '/barangay/scanner' },
     )
   }
 
@@ -185,8 +203,9 @@ const initials = computed(() => {
 const roleColor = computed(() => ({
   superadmin:          'bg-red-500',
   admin:               'bg-brand-600',
-  compliance_verifier: 'bg-amber-500',
-  field_officer:       'bg-green-600',
+  admin_4ps:           'bg-blue-600',
+  admin_swa:           'bg-amber-500',
+  barangay_assistant:  'bg-green-600',
 }[role.value] ?? 'bg-slate-500'))
 </script>
 

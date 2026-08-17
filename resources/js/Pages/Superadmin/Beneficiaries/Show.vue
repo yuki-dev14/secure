@@ -18,9 +18,7 @@
       <!-- Top bar: status + actions -->
       <div class="flex flex-wrap items-center gap-3">
         <span :class="['badge', statusBadge(beneficiary.status)]">{{ beneficiary.status }}</span>
-        <span :class="['badge', beneficiary.is_compliant ? 'badge-success' : 'badge-danger']">
-          {{ beneficiary.is_compliant ? '✓ Compliant' : '✗ Non-Compliant' }}
-        </span>
+
         <div class="ml-auto flex gap-2">
           <!-- Activate button: shown only for inactive/pending beneficiaries -->
           <button
@@ -246,38 +244,7 @@
             </div>
           </div>
 
-          <!-- Compliance History -->
-          <div class="card">
-            <div class="card-header">
-              <h3 class="font-semibold text-slate-800">Compliance Records</h3>
-            </div>
-            <div class="table-wrapper">
-              <table class="table">
-                <thead>
-                  <tr>
-                    <th>Period</th><th>Education</th><th>Health</th><th>FDS</th><th>Overall</th><th>Verified By</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr v-if="!beneficiary.compliance_records?.length">
-                    <td colspan="6" class="text-center text-slate-400 py-8">No compliance records yet.</td>
-                  </tr>
-                  <tr v-for="cr in beneficiary.compliance_records" :key="cr.id">
-                    <td class="text-sm font-medium text-slate-700">{{ cr.period }}</td>
-                    <td><ComplianceDot :value="cr.edu_attendance_compliant" /></td>
-                    <td><ComplianceDot :value="cr.health_compliant" /></td>
-                    <td><ComplianceDot :value="cr.fds_compliant" /></td>
-                    <td>
-                      <span :class="['badge badge-sm', cr.is_fully_compliant ? 'badge-success' : 'badge-danger']">
-                        {{ cr.is_fully_compliant ? 'Compliant' : 'Non-Compliant' }}
-                      </span>
-                    </td>
-                    <td class="text-sm text-slate-500">{{ cr.verifier?.name ?? '—' }}</td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-          </div>
+
         </div>
 
         <!-- RIGHT: Card + Grants + Claims -->
@@ -655,14 +622,7 @@ const InfoRow = {
   `
 }
 
-const ComplianceDot = {
-  props: ['value'],
-  template: `
-    <span :class="value === true ? 'text-success-600' : value === false ? 'text-danger-600' : 'text-slate-300'">
-      {{ value === true ? '✓' : value === false ? '✗' : '—' }}
-    </span>
-  `
-}
+
 </script>
 
 <style scoped>

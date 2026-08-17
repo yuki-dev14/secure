@@ -106,7 +106,8 @@ class BeneficiaryImport implements ToCollection, WithHeadingRow, SkipsOnError
                 'zip_code'            => '4217',
                 'enrollment_date'     => $this->parseDate($row['enrollment_date'] ?? null),
                 'remarks'             => trim($row['remarks'] ?? '') ?: null,
-                'status'              => 'inactive',
+                'status'              => 'active',
+                'is_compliant'        => true,
                 'created_by'          => $this->createdBy,
             ]);
 
@@ -117,13 +118,13 @@ class BeneficiaryImport implements ToCollection, WithHeadingRow, SkipsOnError
                 'email'                => null,
                 'password'             => Hash::make('temp'),
                 'role'                 => 'beneficiary',
-                'is_active'            => false,
+                'is_active'            => true,
                 'must_change_password' => true,
             ]);
             $beneficiary->update(['user_id' => $user->id]);
 
-            // Optional family members (member_1_* through member_5_*)
-            for ($i = 1; $i <= 5; $i++) {
+            // Family members — max 3 children per household (RA 11310)
+            for ($i = 1; $i <= 3; $i++) {
                 $prefix = "member_{$i}_";
                 $mFirst = trim($row["{$prefix}first_name"] ?? '');
                 $mLast  = trim($row["{$prefix}last_name"]  ?? '');

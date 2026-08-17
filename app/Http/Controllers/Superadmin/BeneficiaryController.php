@@ -92,8 +92,8 @@ class BeneficiaryController extends Controller
             'remarks'            => 'nullable|string',
             'photo'              => 'nullable|image|max:3072',
 
-            // Family members
-            'family_members'     => 'nullable|array|max:20',
+            // Family members (max 3 children per household per RA 11310)
+            'family_members'     => 'nullable|array|max:3',
             'family_members.*.first_name'      => 'required|string',
             'family_members.*.last_name'       => 'required|string',
             'family_members.*.birthdate'       => 'required|date',
