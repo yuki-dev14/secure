@@ -8,12 +8,12 @@ use Illuminate\Support\Facades\Storage;
 
 class ClearBeneficiaryData extends Command
 {
-    protected $signature   = 'demo:clear-beneficiaries';
+    protected $signature   = 'demo:clear-beneficiaries {--force : Force operation without confirmation}';
     protected $description = 'Wipe all beneficiary data for a clean demo (keeps staff accounts)';
 
     public function handle(): void
     {
-        if (!$this->confirm('⚠ This will DELETE ALL beneficiary records permanently. Continue?')) {
+        if (!$this->option('force') && !$this->confirm('⚠ This will DELETE ALL beneficiary records permanently. Continue?')) {
             $this->info('Cancelled.');
             return;
         }
