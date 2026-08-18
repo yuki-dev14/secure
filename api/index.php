@@ -25,7 +25,11 @@ foreach ($storageDirs as $dir) {
     }
 }
 
-// Override cache directories to /tmp
+// Override cache directories and log channel to /tmp and stderr
+putenv('LOG_CHANNEL=stderr');
+$_ENV['LOG_CHANNEL'] = 'stderr';
+$_SERVER['LOG_CHANNEL'] = 'stderr';
+
 putenv('APP_SERVICES_CACHE=/tmp/bootstrap/cache/services.php');
 putenv('APP_PACKAGES_CACHE=/tmp/bootstrap/cache/packages.php');
 putenv('APP_CONFIG_CACHE=/tmp/bootstrap/cache/config.php');
