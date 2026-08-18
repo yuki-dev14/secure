@@ -9,6 +9,11 @@ import { Ziggy } from './ziggy';
 
 const appName = import.meta.env.VITE_APP_NAME || 'SECURE 4Ps';
 
+// Dynamically set Ziggy URL to current browser origin (prevents http://localhost errors on Vercel)
+if (typeof window !== 'undefined') {
+    Ziggy.url = window.location.origin;
+}
+
 createInertiaApp({
     title: (title) => title ? `${title} — ${appName}` : appName,
     resolve: (name) =>
