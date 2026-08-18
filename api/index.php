@@ -8,6 +8,12 @@
 ini_set('display_errors', '1');
 error_reporting(E_ALL);
 
+// Force HTTPS scheme for Vercel edge proxy
+$_SERVER['HTTPS'] = 'on';
+$_SERVER['HTTP_X_FORWARDED_PROTO'] = 'https';
+putenv('HTTPS=on');
+putenv('HTTP_X_FORWARDED_PROTO=https');
+
 $appDir = dirname(__DIR__);
 
 // Ensure writable directories in /tmp for Vercel's read-only environment
