@@ -63,6 +63,7 @@ $envDefaults = [
     'MAIL_MAILER'          => 'log',
     'LOG_CHANNEL'          => 'stderr',
     'BROADCAST_CONNECTION' => 'log',
+    'BCRYPT_ROUNDS'        => '10',
 ];
 
 foreach ($envDefaults as $key => $val) {

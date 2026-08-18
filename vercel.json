@@ -47,6 +47,7 @@
     "DB_DATABASE": "postgres",
     "DB_USERNAME": "postgres.rqhtxlffjoqhbukblrwd",
     "DB_PASSWORD": "secure_euclid0314",
-    "DB_SSLMODE": "require"
+    "DB_SSLMODE": "require",
+    "BCRYPT_ROUNDS": "10"
   }
 }
