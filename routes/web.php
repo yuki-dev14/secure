@@ -13,7 +13,6 @@ use App\Http\Controllers\Superadmin\GrantComputationController;
 use App\Http\Controllers\Admin\DashboardController as AdminDashboardController;
 use App\Http\Controllers\Admin\BeneficiaryController as AdminBeneficiaryController;
 use App\Http\Controllers\Admin\UserManagementController;
-use App\Http\Controllers\Admin\DistributionEventController;
 use App\Http\Controllers\Admin\AdminReportController;
 use App\Http\Controllers\AdminSwa\DashboardController as SwaDashboardController;
 use App\Http\Controllers\AdminSwa\NonComplianceController;
@@ -142,7 +141,6 @@ Route::middleware(['auth', 'role:admin,admin_4ps,admin_swa,superadmin'])
     ->group(function () {
         Route::get('/dashboard',                [AdminDashboardController::class, 'index'])->name('dashboard');
         Route::get('/reports/dashboard-pdf',    [AdminReportController::class, 'dashboardPdf'])->name('reports.dashboard-pdf');
-        Route::get('/distribution-events/{distributionEvent}/report', [AdminReportController::class, 'eventReport'])->name('events.report');
 
         // User / Staff Management
         Route::resource('users',                UserManagementController::class);
@@ -156,11 +154,6 @@ Route::middleware(['auth', 'role:admin,admin_4ps,admin_swa,superadmin'])
         Route::post('beneficiaries/{id}/documents',                  [AdminBeneficiaryController::class, 'uploadDocument'])->name('beneficiaries.documents.upload');
         Route::delete('beneficiaries/{id}/documents/{docId}',        [AdminBeneficiaryController::class, 'deleteDocument'])->name('beneficiaries.documents.delete');
         Route::patch('beneficiaries/{id}/documents/{docId}/verify',  [AdminBeneficiaryController::class, 'verifyDocument'])->name('beneficiaries.documents.verify');
-
-        // Distribution Events
-        Route::resource('distribution-events',  DistributionEventController::class)->names('events');
-        Route::post('distribution-events/{event}/notify', [DistributionEventController::class, 'notifyBeneficiaries'])->name('events.notify');
-        Route::post('distribution-events/{event}/compute', [DistributionEventController::class, 'batchComputeGrants'])->name('events.compute');
     });
 
 // ─── Admin SWA (Health & Education Non-Compliance) ───────────────────────────

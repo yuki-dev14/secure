@@ -6,7 +6,6 @@ use App\Http\Controllers\Controller;
 use App\Models\AuditLog;
 use App\Models\Beneficiary;
 use App\Models\CashGrantDistribution;
-use App\Models\DistributionEvent;
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
@@ -23,18 +22,13 @@ class DashboardController extends Controller
             'pending_compliance'   => Beneficiary::active()->where('is_compliant', false)->count(),
             'field_officers'       => User::byRole('barangay_assistant')->active()->count(),
             'verifiers'            => User::byRole('admin_swa')->active()->count(),
-            'upcoming_events'      => DistributionEvent::upcoming()->count(),
-            'ongoing_events'       => DistributionEvent::ongoing()->count(),
             'claimed_this_month'   => CashGrantDistribution::claimed()
                 ->whereMonth('claimed_at', now()->month)->count(),
             'total_released_month' => CashGrantDistribution::claimed()
                 ->whereMonth('claimed_at', now()->month)
                 ->sum('amount_released'),
-            'latest_event'         => DistributionEvent::with('office')
-                ->orderByDesc('distribution_date_start')
-                ->first(),
             'recent_distributions' => CashGrantDistribution::with([
-                'beneficiary', 'distributionEvent', 'releasedBy',
+                'beneficiary', 'releasedBy',
             ])->claimed()->latest('claimed_at')->limit(7)->get(),
 
             // ── Double-claim total ────────────────────────────────────────────
@@ -97,30 +91,12 @@ class DashboardController extends Controller
                 'claimers' => (int) $r->claimers,
             ]);
 
-        // ── Double claims per event (mini bar in card) ────────────────────────
-        $doubleClaimsByEvent = AuditLog::where('event', 'double_claim_attempt')
-            ->selectRaw("new_values->>'distribution_event_id' as event_id, COUNT(*) as attempts")
-            ->groupByRaw("new_values->>'distribution_event_id'")
-            ->orderByDesc('attempts')
-            ->limit(10)
-            ->get()
-            ->map(function ($row) {
-                $event = DistributionEvent::find($row->event_id, ['id', 'title', 'period']);
-                return [
-                    'event_id'    => $row->event_id,
-                    'event_title' => $event?->title ?? 'Unknown Event',
-                    'period'      => $event?->period,
-                    'attempts'    => (int) $row->attempts,
-                ];
-            });
-
         return Inertia::render('Admin/Dashboard', [
             'stats'                  => $stats,
             'claimsByMonth'          => $claimsByMonth,
             'claimsByBarangay'       => $claimsByBarangay,
             'beneficiariesByBarangay'=> $beneficiariesByBarangay,
             'claimingByBarangay'     => $claimingByBarangay,
-            'doubleClaimsByEvent'    => $doubleClaimsByEvent,
         ]);
     }
 

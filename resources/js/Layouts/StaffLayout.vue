@@ -161,7 +161,6 @@ const navItems = computed(() => {
   if (['admin', 'admin_4ps', 'admin_swa'].includes(role.value)) {
     base.push(
       { route: 'admin.users.index',   label: 'Staff Management',    icon: UsersIcon,       routePrefix: '/admin/users' },
-      { route: 'admin.events.index',  label: 'Distribution Events', icon: CalendarDaysIcon, routePrefix: '/admin/distribution' },
       { route: 'admin.beneficiaries.index', label: 'Beneficiaries', icon: UsersIcon,       routePrefix: '/admin/beneficiaries' },
     )
   }

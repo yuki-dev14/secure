@@ -15,10 +15,6 @@
             <ArrowDownTrayIcon class="w-4 h-4" />
             Download PDF Report
           </a>
-          <Link :href="route('admin.events.create')" class="btn btn-primary gap-2 self-start">
-            <PlusIcon class="w-4 h-4" />
-            New Distribution Event
-          </Link>
         </div>
       </div>
 
@@ -85,11 +81,11 @@
         </div>
       </div>
 
-      <!-- CHART ROW 1: Line chart (claims over time) + Double claims bar -->
-      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <!-- CHART ROW 1: Line chart (claims over time) -->
+      <div class="grid grid-cols-1 gap-6">
 
         <!-- Line Chart: Claims over time -->
-        <div class="card p-5 lg:col-span-2">
+        <div class="card p-5">
           <div class="flex items-center justify-between mb-4">
             <div>
               <p class="font-semibold text-slate-800 text-sm">Claims Over Time</p>
@@ -99,33 +95,6 @@
           </div>
           <div style="height:220px">
             <Line :data="lineChartData" :options="lineChartOptions" />
-          </div>
-        </div>
-
-        <!-- Double-claim attempts per event -->
-        <div class="card p-5">
-          <div class="flex items-center justify-between mb-1">
-            <p class="font-semibold text-slate-800 text-sm">Double-Claim Flags</p>
-            <ExclamationTriangleIcon class="w-5 h-5 text-red-400" />
-          </div>
-          <p class="text-xs text-slate-400 mb-4">Fraud attempts per distribution event</p>
-
-          <div v-if="!doubleClaimsByEvent?.length" class="py-8 text-center text-slate-400">
-            <ShieldCheckIcon class="w-10 h-10 opacity-20 mx-auto mb-2" />
-            <p class="text-xs">No fraud flags detected.</p>
-          </div>
-
-          <div v-else class="space-y-3">
-            <div v-for="dc in doubleClaimsByEvent" :key="dc.event_id" class="space-y-1">
-              <div class="flex items-center justify-between">
-                <p class="text-xs text-slate-600 truncate max-w-[160px]" :title="dc.event_title">{{ dc.event_title }}</p>
-                <span class="text-xs font-bold text-red-600 shrink-0 ml-2">{{ dc.attempts }}</span>
-              </div>
-              <div class="w-full h-1.5 bg-red-50 rounded-full overflow-hidden">
-                <div class="h-full rounded-full bg-linear-to-r from-red-500 to-red-300 transition-all"
-                  :style="`width:${maxDC > 0 ? Math.round((dc.attempts / maxDC) * 100) : 0}%`" />
-              </div>
-            </div>
           </div>
         </div>
 
@@ -172,44 +141,11 @@
 
       </div>
 
-      <!-- Recent Claims + Events side by side -->
-      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-
-        <!-- Distribution Events Status -->
-        <div class="card overflow-hidden">
-          <div class="px-5 py-4 border-b border-slate-100 flex items-center justify-between">
-            <div class="flex items-center gap-2">
-              <CalendarDaysIcon class="w-5 h-5 text-brand-600" />
-              <h2 class="font-semibold text-slate-800 text-sm">Distribution Events</h2>
-            </div>
-            <Link :href="route('admin.events.index')" class="text-xs text-brand-600 hover:underline">View All →</Link>
-          </div>
-          <div class="p-5 space-y-3">
-            <div :class="['flex items-center gap-3 p-3 rounded-xl border', stats.ongoing_events > 0 ? 'bg-success-50 border-green-200' : 'bg-slate-50 border-slate-200']">
-              <div :class="['w-9 h-9 rounded-lg flex items-center justify-center shrink-0', stats.ongoing_events > 0 ? 'bg-success-100' : 'bg-slate-100']">
-                <BoltIcon :class="['w-4 h-4', stats.ongoing_events > 0 ? 'text-success-600' : 'text-slate-400']" />
-              </div>
-              <div class="flex-1">
-                <p :class="['text-sm font-semibold', stats.ongoing_events > 0 ? 'text-success-700' : 'text-slate-500']">Ongoing</p>
-                <p class="text-xs text-slate-400">Currently active</p>
-              </div>
-              <span :class="['text-xl font-bold', stats.ongoing_events > 0 ? 'text-success-600' : 'text-slate-400']">{{ stats.ongoing_events }}</span>
-            </div>
-            <div :class="['flex items-center gap-3 p-3 rounded-xl border', stats.upcoming_events > 0 ? 'bg-brand-50 border-brand-200' : 'bg-slate-50 border-slate-200']">
-              <div :class="['w-9 h-9 rounded-lg flex items-center justify-center shrink-0', stats.upcoming_events > 0 ? 'bg-brand-100' : 'bg-slate-100']">
-                <ClockIcon :class="['w-4 h-4', stats.upcoming_events > 0 ? 'text-brand-600' : 'text-slate-400']" />
-              </div>
-              <div class="flex-1">
-                <p :class="['text-sm font-semibold', stats.upcoming_events > 0 ? 'text-brand-700' : 'text-slate-500']">Upcoming</p>
-                <p class="text-xs text-slate-400">Scheduled events</p>
-              </div>
-              <span :class="['text-xl font-bold', stats.upcoming_events > 0 ? 'text-brand-600' : 'text-slate-400']">{{ stats.upcoming_events }}</span>
-            </div>
-          </div>
-        </div>
+      <!-- Recent Claims -->
+      <div class="grid grid-cols-1 gap-6">
 
         <!-- Recent Claims -->
-        <div class="card overflow-hidden lg:col-span-2">
+        <div class="card overflow-hidden">
           <div class="px-5 py-4 border-b border-slate-100 flex items-center justify-between">
             <div class="flex items-center gap-2">
               <BanknotesIcon class="w-5 h-5 text-success-600" />
@@ -226,7 +162,6 @@
               <thead class="bg-slate-50 border-b border-slate-100">
                 <tr>
                   <th class="text-left px-5 py-2.5 text-xs font-semibold text-slate-500 uppercase tracking-wide">Beneficiary</th>
-                  <th class="text-left px-5 py-2.5 text-xs font-semibold text-slate-500 uppercase tracking-wide">Event</th>
                   <th class="text-left px-5 py-2.5 text-xs font-semibold text-slate-500 uppercase tracking-wide">Claimed By</th>
                   <th class="text-left px-5 py-2.5 text-xs font-semibold text-slate-500 uppercase tracking-wide">Time</th>
                   <th class="text-right px-5 py-2.5 text-xs font-semibold text-slate-500 uppercase tracking-wide">Amount</th>
@@ -245,7 +180,6 @@
                       </div>
                     </div>
                   </td>
-                  <td class="px-5 py-3 text-xs text-slate-500 max-w-[130px] truncate">{{ dist.distribution_event?.title ?? '—' }}</td>
                   <td class="px-5 py-3">
                     <span :class="['badge badge-sm', dist.claimed_by_type === 'proxy' ? 'badge-warning' : 'badge-success']">
                       {{ dist.claimed_by_type === 'proxy' ? 'Via Proxy' : 'Self' }}
@@ -272,8 +206,8 @@ import { computed } from 'vue'
 import { Head, Link, usePage } from '@inertiajs/vue3'
 import {
   UsersIcon, CheckCircleIcon, UserGroupIcon, BanknotesIcon,
-  CalendarDaysIcon, BoltIcon, ClockIcon, PlusIcon, MapPinIcon,
-  ExclamationTriangleIcon, ShieldCheckIcon, ArrowDownTrayIcon, ChartBarIcon,
+  MapPinIcon, ExclamationTriangleIcon, ShieldCheckIcon,
+  ArrowDownTrayIcon, ChartBarIcon,
 } from '@heroicons/vue/24/outline'
 import StaffLayout from '@/Layouts/StaffLayout.vue'
 import { Line, Bar } from 'vue-chartjs'
@@ -291,7 +225,6 @@ const props = defineProps({
   claimsByBarangay:        Array,
   beneficiariesByBarangay: Array,
   claimingByBarangay:      Array,
-  doubleClaimsByEvent:     Array,
 })
 
 // ── Greeting ──────────────────────────────────────────────────────────────────
@@ -308,9 +241,6 @@ const complianceRate = computed(() => {
   if (!props.stats.beneficiaries) return 0
   return Math.round((props.stats.compliant / props.stats.beneficiaries) * 100)
 })
-
-// ── Double-claim max for bar width ────────────────────────────────────────────
-const maxDC = computed(() => Math.max(...(props.doubleClaimsByEvent?.map(d => d.attempts) ?? [0]), 1))
 
 // ── LINE CHART: Claims over time ──────────────────────────────────────────────
 const lineChartData = computed(() => ({
