@@ -26,10 +26,6 @@ foreach ($storageDirs as $dir) {
 }
 
 // Override cache directories and log channel to /tmp and stderr
-putenv('LOG_CHANNEL=stderr');
-$_ENV['LOG_CHANNEL'] = 'stderr';
-$_SERVER['LOG_CHANNEL'] = 'stderr';
-
 putenv('APP_SERVICES_CACHE=/tmp/bootstrap/cache/services.php');
 putenv('APP_PACKAGES_CACHE=/tmp/bootstrap/cache/packages.php');
 putenv('APP_CONFIG_CACHE=/tmp/bootstrap/cache/config.php');
@@ -42,36 +38,33 @@ $_ENV['APP_CONFIG_CACHE']   = '/tmp/bootstrap/cache/config.php';
 $_ENV['APP_ROUTES_CACHE']   = '/tmp/bootstrap/cache/routes.php';
 $_ENV['VIEW_COMPILED_PATH'] = '/tmp/storage/framework/views';
 
-// Fallback APP_KEY
-if (!getenv('APP_KEY') && empty($_ENV['APP_KEY'])) {
-    $key = 'base64:FQhK4mYbGtUC1BRyAH+N67oYQvJC+vxwQbfKnxOqKs4=';
-    putenv("APP_KEY={$key}");
-    $_ENV['APP_KEY'] = $key;
-    $_SERVER['APP_KEY'] = $key;
-}
+// Environment variable defaults for Vercel serverless
+$envDefaults = [
+    'APP_ENV'              => 'production',
+    'APP_DEBUG'            => 'true',
+    'APP_KEY'              => 'base64:FQhK4mYbGtUC1BRyAH+N67oYQvJC+vxwQbfKnxOqKs4=',
+    'DB_CONNECTION'        => 'pgsql',
+    'DB_HOST'              => 'aws-0-ap-southeast-2.pooler.supabase.com',
+    'DB_PORT'              => '6543',
+    'DB_DATABASE'          => 'postgres',
+    'DB_USERNAME'          => 'postgres.rqhtxlffjoqhbukblrwd',
+    'DB_PASSWORD'          => 'secure_euclid0314',
+    'DB_SSLMODE'           => 'require',
+    'SESSION_DRIVER'       => 'cookie',
+    'CACHE_STORE'          => 'array',
+    'FILESYSTEM_DISK'      => 'public',
+    'QUEUE_CONNECTION'     => 'sync',
+    'MAIL_MAILER'          => 'log',
+    'LOG_CHANNEL'          => 'stderr',
+    'BROADCAST_CONNECTION' => 'log',
+];
 
-// Fallback Supabase Database parameters if missing in environment
-if (!getenv('DB_HOST') && empty($_ENV['DB_HOST'])) {
-    putenv('DB_CONNECTION=pgsql');
-    putenv('DB_HOST=aws-0-ap-southeast-2.pooler.supabase.com');
-    putenv('DB_PORT=6543');
-    putenv('DB_DATABASE=postgres');
-    putenv('DB_USERNAME=postgres.rqhtxlffjoqhbukblrwd');
-    putenv('DB_PASSWORD=secure_euclid0314');
-    putenv('DB_SSLMODE=require');
-
-    $_ENV['DB_CONNECTION'] = 'pgsql';
-    $_ENV['DB_HOST']       = 'aws-0-ap-southeast-2.pooler.supabase.com';
-    $_ENV['DB_PORT']       = '6543';
-    $_ENV['DB_DATABASE']   = 'postgres';
-    $_ENV['DB_USERNAME']   = 'postgres.rqhtxlffjoqhbukblrwd';
-    $_ENV['DB_PASSWORD']   = 'secure_euclid0314';
-    $_ENV['DB_SSLMODE']    = 'require';
-}
-
-if (!getenv('SESSION_DRIVER')) {
-    putenv('SESSION_DRIVER=cookie');
-    $_ENV['SESSION_DRIVER'] = 'cookie';
+foreach ($envDefaults as $key => $val) {
+    if (empty(getenv($key)) && empty($_ENV[$key])) {
+        putenv("{$key}={$val}");
+        $_ENV[$key]    = $val;
+        $_SERVER[$key] = $val;
+    }
 }
 
 require $appDir . '/public/index.php';
