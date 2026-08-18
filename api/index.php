@@ -26,6 +26,12 @@ if (getenv('VERCEL') || getenv('NOW_REGION')) {
     putenv('APP_CONFIG_CACHE=/tmp/bootstrap/cache/config.php');
     putenv('APP_ROUTES_CACHE=/tmp/bootstrap/cache/routes.php');
     putenv('VIEW_COMPILED_PATH=/tmp/storage/framework/views');
+
+    $_ENV['APP_SERVICES_CACHE'] = '/tmp/bootstrap/cache/services.php';
+    $_ENV['APP_PACKAGES_CACHE'] = '/tmp/bootstrap/cache/packages.php';
+    $_ENV['APP_CONFIG_CACHE']   = '/tmp/bootstrap/cache/config.php';
+    $_ENV['APP_ROUTES_CACHE']   = '/tmp/bootstrap/cache/routes.php';
+    $_ENV['VIEW_COMPILED_PATH'] = '/tmp/storage/framework/views';
 }
 
 require $appDir . '/public/index.php';
