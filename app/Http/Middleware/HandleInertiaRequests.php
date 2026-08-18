@@ -32,8 +32,7 @@ class HandleInertiaRequests extends Middleware
                     'role_display'        => $user->role_display,
                     'must_change_password'=> $user->must_change_password,
             'beneficiary' => $user->isBeneficiary() ? (function () use ($user) {
-                    // Eager-load to avoid lazy-load race conditions per request
-                    $b = $user->beneficiary()->first();
+                    $b = $user->beneficiary;
                     return $b ? [
                         'id'        => $b->id,
                         'unique_id' => $b->unique_id,
