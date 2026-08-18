@@ -246,7 +246,7 @@ const dashboardRoute = computed(() => {
     admin:               route('admin.dashboard'),
     admin_4ps:           route('admin4ps.dashboard'),
     admin_swa:           route('adminswa.dashboard'),
-    barangay_assistant:  route('fds.scanner'),
+    barangay_assistant:  route('barangay.scanner'),
     beneficiary:         route('beneficiary.dashboard'),
   }[role] ?? route('home')
 })
