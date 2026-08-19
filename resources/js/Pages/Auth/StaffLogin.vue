@@ -141,7 +141,7 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
 import { useForm, Link } from '@inertiajs/vue3'
 import {
   LockClosedIcon, ExclamationCircleIcon,
@@ -154,6 +154,15 @@ const form = useForm({
   email:    '',
   password: '',
   remember: false,
+})
+
+onMounted(() => {
+  if (typeof window !== 'undefined') {
+    window.history.pushState(null, null, window.location.href);
+    window.onpopstate = function () {
+      window.history.pushState(null, null, window.location.href);
+    };
+  }
 })
 
 const submit = () => {

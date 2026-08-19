@@ -12,6 +12,13 @@ const appName = import.meta.env.VITE_APP_NAME || 'SECURE 4Ps';
 // Dynamically set Ziggy URL to current browser origin (prevents http://localhost errors on Vercel)
 if (typeof window !== 'undefined') {
     Ziggy.url = window.location.origin;
+
+    // Security feature: prevent back button caching (bfcache) after logout
+    window.addEventListener('pageshow', (event) => {
+        if (event.persisted) {
+            window.location.reload();
+        }
+    });
 }
 
 createInertiaApp({

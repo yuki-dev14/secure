@@ -82,15 +82,14 @@
           <FlashMessage />
 
           <!-- Logout -->
-          <Link
-            :href="route('logout')"
-            method="post"
-            as="button"
-            class="btn btn-ghost btn-sm gap-1.5 text-slate-500"
+          <button
+            type="button"
+            @click="showLogoutModal = true"
+            class="btn btn-ghost btn-sm gap-1.5 text-slate-500 hover:text-red-600 transition-colors"
           >
             <ArrowRightOnRectangleIcon class="w-4 h-4" />
             <span>Logout</span>
-          </Link>
+          </button>
         </div>
       </header>
 
@@ -104,13 +103,21 @@
         <span>SECURE 4Ps v1.0 — DSWD Lipa City, Batangas</span>
         <span>{{ new Date().getFullYear() }} Data Privacy Act Compliant</span>
       </footer>
+
+      <!-- Logout Modal -->
+      <LogoutModal
+        :show="showLogoutModal"
+        :loading="loggingOut"
+        @close="showLogoutModal = false"
+        @confirm="handleLogout"
+      />
     </div>
   </div>
 </template>
 
 <script setup>
 import { ref, computed } from 'vue'
-import { Link, usePage } from '@inertiajs/vue3'
+import { Link, usePage, router } from '@inertiajs/vue3'
 import {
   HomeIcon, UsersIcon, UserGroupIcon, ClipboardDocumentCheckIcon,
   QrCodeIcon, DocumentChartBarIcon, ShieldCheckIcon,
@@ -119,14 +126,27 @@ import {
   ArrowUpTrayIcon, CurrencyDollarIcon,
 } from '@heroicons/vue/24/outline'
 import FlashMessage from '@/Components/FlashMessage.vue'
+import LogoutModal from '@/Components/LogoutModal.vue'
 
 const props = defineProps({
   pageTitle:    { type: String, default: 'Dashboard' },
   pageSubtitle: { type: String, default: '' },
 })
 
-const page        = usePage()
-const sidebarOpen = ref(true)
+const page            = usePage()
+const sidebarOpen     = ref(true)
+const showLogoutModal = ref(false)
+const loggingOut      = ref(false)
+
+const handleLogout = () => {
+  loggingOut.value = true
+  router.post(route('logout'), {}, {
+    onFinish: () => {
+      loggingOut.value = false
+      showLogoutModal.value = false
+    }
+  })
+}
 const currentRoute = computed(() => page.url)
 const role = computed(() => page.props.auth?.user?.role)
 

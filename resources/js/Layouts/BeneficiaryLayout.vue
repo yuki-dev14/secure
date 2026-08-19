@@ -42,12 +42,13 @@
         </div>
 
         <!-- Logout -->
-        <Link
-          :href="route('logout')" method="post" as="button"
-          class="px-3 py-1.5 bg-white/10 hover:bg-white/20 text-white text-xs rounded-lg transition-colors border border-white/20"
+        <button
+          type="button"
+          @click="showLogoutModal = true"
+          class="px-3 py-1.5 bg-white/10 hover:bg-red-500/80 text-white text-xs rounded-lg transition-colors border border-white/20 flex items-center gap-1.5"
         >
           Logout
-        </Link>
+        </button>
       </div>
     </header>
 
@@ -80,21 +81,42 @@
     <footer class="relative z-10 text-center py-4 text-white/40 text-xs pb-8">
       SECURE 4Ps — DSWD Lipa City, Batangas | Data Privacy Act of 2012 Compliant
     </footer>
+
+    <!-- Logout Modal -->
+    <LogoutModal
+      :show="showLogoutModal"
+      :loading="loggingOut"
+      @close="showLogoutModal = false"
+      @confirm="handleLogout"
+    />
   </div>
 </template>
 
 <script setup>
-import { computed } from 'vue'
-import { Link, usePage } from '@inertiajs/vue3'
+import { ref, computed } from 'vue'
+import { Link, usePage, router } from '@inertiajs/vue3'
 import {
   HomeIcon, UserIcon, DocumentTextIcon,
   CurrencyDollarIcon, UsersIcon, BellIcon, ShieldCheckIcon,
 } from '@heroicons/vue/24/outline'
 import FlashMessage from '@/Components/FlashMessage.vue'
+import LogoutModal from '@/Components/LogoutModal.vue'
 
 defineProps({ unreadCount: { type: Number, default: 0 } })
 
-const page = usePage()
+const page            = usePage()
+const showLogoutModal = ref(false)
+const loggingOut      = ref(false)
+
+const handleLogout = () => {
+  loggingOut.value = true
+  router.post(route('logout'), {}, {
+    onFinish: () => {
+      loggingOut.value = false
+      showLogoutModal.value = false
+    }
+  })
+}
 
 const navItems = [
   { route: 'beneficiary.dashboard',     label: 'Dashboard',   icon: HomeIcon,            routePrefix: '/portal/dashboard' },

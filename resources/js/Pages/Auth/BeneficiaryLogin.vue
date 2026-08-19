@@ -224,6 +224,13 @@ const form = useForm({
 
 // FRESH PAGE LOAD: onMounted fires when page loads with ?qr_id= in URL (e.g. after browser refresh)
 onMounted(() => {
+  if (typeof window !== 'undefined') {
+    window.history.pushState(null, null, window.location.href);
+    window.onpopstate = function () {
+      window.history.pushState(null, null, window.location.href);
+    };
+  }
+
   if (props.qr_id) {
     form.identifier        = props.qr_id
     activeTab.value        = 'id'
