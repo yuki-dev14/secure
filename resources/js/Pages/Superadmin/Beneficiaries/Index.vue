@@ -42,13 +42,9 @@
         </div>
 
         <div class="flex items-center gap-2">
-          <Link :href="route('superadmin.beneficiaries.import')" class="btn btn-secondary">
+          <Link :href="route('superadmin.beneficiaries.import')" class="btn btn-primary">
             <ArrowUpTrayIcon class="w-4 h-4" />
-            Bulk Import
-          </Link>
-          <Link :href="route('superadmin.beneficiaries.create')" class="btn btn-primary">
-            <UserPlusIcon class="w-4 h-4" />
-            Register Beneficiary
+            Bulk Import Beneficiaries
           </Link>
         </div>
       </div>

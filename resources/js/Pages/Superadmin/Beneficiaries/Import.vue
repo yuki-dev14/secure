@@ -33,11 +33,18 @@
           <p class="text-sm text-slate-500 mb-4">
             Use the official template to ensure correct column structure. The file includes a sample row and an Instructions sheet with valid values for each field.
           </p>
-          <a :href="route('superadmin.beneficiaries.import.template')"
-            class="btn btn-success inline-flex items-center gap-2">
-            <ArrowDownTrayIcon class="w-4 h-4" />
-            Download Excel Template
-          </a>
+          <div class="flex flex-wrap gap-3">
+            <a :href="route('superadmin.beneficiaries.import.template')"
+              class="btn btn-success inline-flex items-center gap-2">
+              <ArrowDownTrayIcon class="w-4 h-4" />
+              Download Excel Template
+            </a>
+            <a href="/uat_beneficiaries_sample.csv" download="uat_beneficiaries_sample.csv"
+              class="btn btn-secondary inline-flex items-center gap-2">
+              <ArrowDownTrayIcon class="w-4 h-4 text-brand-600" />
+              Download UAT Sample Data (.csv)
+            </a>
+          </div>
         </div>
       </div>
 
