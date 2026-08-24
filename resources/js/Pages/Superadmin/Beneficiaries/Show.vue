@@ -156,9 +156,55 @@
 
 
 
+          <!-- Compliance History -->
+          <div class="card">
+            <div class="card-header">
+              <h3 class="font-semibold text-slate-800">Compliance Records</h3>
+            </div>
+            <div class="table-wrapper">
+              <table class="table">
+                <thead>
+                  <tr>
+                    <th>Period</th>
+                    <th>Education</th>
+                    <th>Health</th>
+                    <th>FDS</th>
+                    <th>Overall</th>
+                    <th>Verified By</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr v-if="!beneficiary.compliance_records?.length">
+                    <td colspan="6" class="text-center text-slate-400 py-8">No compliance records yet.</td>
+                  </tr>
+                  <tr v-for="cr in beneficiary.compliance_records" :key="cr.id">
+                    <td class="text-sm font-medium text-slate-700">{{ cr.period }}</td>
+                    <td>
+                      <span v-if="cr.edu_attendance_compliant === false" class="text-red-600 font-bold text-xs">✗ Incomplete</span>
+                      <span v-else class="text-emerald-600 font-bold text-xs">✓ Compliant</span>
+                    </td>
+                    <td>
+                      <span v-if="cr.health_compliant === false" class="text-red-600 font-bold text-xs">✗ Incomplete</span>
+                      <span v-else class="text-emerald-600 font-bold text-xs">✓ Compliant</span>
+                    </td>
+                    <td>
+                      <span v-if="cr.fds_compliant === false" class="text-red-600 font-bold text-xs">✗ Incomplete</span>
+                      <span v-else class="text-emerald-600 font-bold text-xs">✓ Compliant</span>
+                    </td>
+                    <td>
+                      <span :class="['badge badge-sm', cr.is_fully_compliant ? 'badge-success' : 'badge-danger']">
+                        {{ cr.is_fully_compliant ? 'Complete' : 'Incomplete' }}
+                      </span>
+                    </td>
+                    <td class="text-sm text-slate-500">{{ cr.verifier?.name ?? '—' }}</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
         </div>
 
-        <!-- RIGHT: Card + Grants + Claims -->
+        <!-- RIGHT: Card + Grants -->
         <div class="space-y-5">
           <!-- Card info -->
           <div class="card">
@@ -198,26 +244,6 @@
                   <span>Rice: ₱{{ Number(g.rice_subsidy_amount).toLocaleString() }}</span>
                 </div>
                 <p class="text-xs text-slate-300 mt-1">{{ g.months_covered }} months covered</p>
-              </div>
-            </div>
-          </div>
-
-          <!-- Distribution records -->
-          <div class="card">
-            <div class="card-header">
-              <h3 class="font-semibold text-slate-800">Cash Grant Claims</h3>
-            </div>
-            <div class="card-body space-y-2">
-              <div v-if="!beneficiary.distributions?.length" class="text-center text-slate-400 text-sm py-4">
-                No claims recorded.
-              </div>
-              <div v-for="d in beneficiary.distributions" :key="d.id"
-                class="flex items-center justify-between text-sm py-2 border-b border-slate-100 last:border-0">
-                <div>
-                  <p class="text-slate-700 font-medium">{{ d.distribution_event?.period ?? '—' }}</p>
-                  <p class="text-xs text-slate-400">{{ d.claimed_by_type === 'proxy' ? '👤 Via Proxy' : '✓ Self' }}</p>
-                </div>
-                <p class="font-bold text-success-600">₱{{ Number(d.amount_released).toLocaleString() }}</p>
               </div>
             </div>
           </div>

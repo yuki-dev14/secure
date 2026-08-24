@@ -183,9 +183,18 @@
                   </tr>
                   <tr v-for="cr in beneficiary.compliance_records" :key="cr.id">
                     <td class="text-sm font-medium text-slate-700">{{ cr.period }}</td>
-                    <td><ComplianceDot :value="cr.edu_attendance_compliant !== null ? cr.edu_attendance_compliant : (cr.is_fully_compliant ? true : null)" /></td>
-                    <td><ComplianceDot :value="cr.health_compliant !== null ? cr.health_compliant : (cr.is_fully_compliant ? true : null)" /></td>
-                    <td><ComplianceDot :value="cr.fds_compliant !== null ? cr.fds_compliant : (cr.is_fully_compliant ? true : null)" /></td>
+                    <td>
+                      <span v-if="cr.edu_attendance_compliant === false" class="text-red-600 font-bold text-xs">✗ Incomplete</span>
+                      <span v-else class="text-emerald-600 font-bold text-xs">✓ Compliant</span>
+                    </td>
+                    <td>
+                      <span v-if="cr.health_compliant === false" class="text-red-600 font-bold text-xs">✗ Incomplete</span>
+                      <span v-else class="text-emerald-600 font-bold text-xs">✓ Compliant</span>
+                    </td>
+                    <td>
+                      <span v-if="cr.fds_compliant === false" class="text-red-600 font-bold text-xs">✗ Incomplete</span>
+                      <span v-else class="text-emerald-600 font-bold text-xs">✓ Compliant</span>
+                    </td>
                     <td>
                       <span :class="['badge badge-sm', cr.is_fully_compliant ? 'badge-success' : 'badge-danger']">
                         {{ cr.is_fully_compliant ? 'Complete' : 'Incomplete' }}
@@ -199,7 +208,7 @@
           </div>
         </div>
 
-        <!-- RIGHT: Grant summary + distributions -->
+        <!-- RIGHT: Grant summary -->
         <div class="space-y-5">
 
           <!-- Grant calculations -->
@@ -220,26 +229,6 @@
                   </p>
                 </div>
                 <p class="text-xs text-slate-400 mt-0.5">{{ g.months_covered }} months</p>
-              </div>
-            </div>
-          </div>
-
-          <!-- Distribution records -->
-          <div class="card">
-            <div class="card-header">
-              <h3 class="font-semibold text-slate-800">Cash Grant Claims</h3>
-            </div>
-            <div class="card-body space-y-2">
-              <div v-if="!beneficiary.distributions?.length" class="text-center text-slate-400 text-sm py-4">
-                No claims recorded.
-              </div>
-              <div v-for="d in beneficiary.distributions" :key="d.id"
-                class="flex items-center justify-between text-sm py-2 border-b border-slate-100 last:border-0">
-                <div>
-                  <p class="text-slate-700 font-medium">{{ d.distribution_event?.period ?? '—' }}</p>
-                  <p class="text-xs text-slate-400">{{ d.claimed_by_type === 'proxy' ? '👤 Via Proxy' : '✓ Self' }}</p>
-                </div>
-                <p class="font-bold text-success-600">₱{{ Number(d.amount_released).toLocaleString() }}</p>
               </div>
             </div>
           </div>
