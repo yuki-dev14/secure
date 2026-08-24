@@ -93,8 +93,7 @@
               <tr v-for="record in records.data" :key="record.id"
                   class="hover:bg-slate-25 transition-colors">
                 <td class="px-4 py-3">
-                  <input type="checkbox" :value="record.id" v-model="selectedIds"
-                         :disabled="record.status !== 'pending'" class="rounded border-slate-300" />
+                  <input type="checkbox" :value="record.id" v-model="selectedIds" class="rounded border-slate-300" />
                 </td>
                 <td class="px-4 py-3">
                   <p class="font-medium text-slate-700">{{ record.beneficiary?.full_name }}</p>
@@ -241,16 +240,15 @@ const debouncedFilter = () => {
 // Selection
 const selectedIds = ref([])
 const allSelected = computed(() => {
-  const pending = props.records.data.filter(r => r.status === 'pending')
-  return pending.length > 0 && pending.every(r => selectedIds.value.includes(r.id))
+  return props.records.data.length > 0 && props.records.data.every(r => selectedIds.value.includes(r.id))
 })
 
 const toggleAll = () => {
-  const pending = props.records.data.filter(r => r.status === 'pending').map(r => r.id)
+  const ids = props.records.data.map(r => r.id)
   if (allSelected.value) {
     selectedIds.value = []
   } else {
-    selectedIds.value = [...pending]
+    selectedIds.value = [...ids]
   }
 }
 
