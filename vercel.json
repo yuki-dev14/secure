@@ -21,6 +21,14 @@
       "dest": "/public/images/$1"
     },
     {
+      "src": "/uat_beneficiaries_sample.csv",
+      "dest": "/public/uat_beneficiaries_sample.csv"
+    },
+    {
+      "src": "/downloads/(.*)",
+      "dest": "/public/downloads/$1"
+    },
+    {
       "src": "/favicon.ico",
       "dest": "/public/favicon.ico"
     },
