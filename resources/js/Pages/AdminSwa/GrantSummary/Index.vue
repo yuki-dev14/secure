@@ -209,16 +209,11 @@
               This will calculate grants for <strong>all active beneficiaries</strong> using the non-compliance
               zero-out logic. Each component (Health, Education, Rice) is independently evaluated.
             </p>
-            <div>
-              <label class="label">Distribution Event</label>
-              <select v-model="computeEventId" class="input w-full">
-                <option value="">Auto-create / Use active event for {{ selectedPeriod }}</option>
-                <option v-for="e in events" :key="e.id" :value="e.id">
-                  {{ e.title }} ({{ e.period }}) — {{ e.distribution_date_start }}
-                </option>
-              </select>
-              <p class="text-xs text-slate-400 mt-1">
-                Will calculate grants for period <strong>{{ selectedPeriod }}</strong>
+            <div class="p-3.5 bg-brand-50/50 border border-brand-100 rounded-xl space-y-1">
+              <p class="text-xs text-brand-600 uppercase tracking-wide font-bold">Selected Period</p>
+              <p class="text-lg font-bold text-slate-800">{{ selectedPeriod }}</p>
+              <p class="text-xs text-slate-500">
+                Grants will be calculated for all active 4Ps households using bimonthly RA 11310 rates.
               </p>
             </div>
             <div v-if="computeResult" class="p-3 rounded-xl" :class="computeResult.success ? 'bg-emerald-50' : 'bg-red-50'">
