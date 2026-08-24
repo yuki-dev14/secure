@@ -172,8 +172,8 @@ class BeneficiaryController extends Controller
         $beneficiary = Beneficiary::with([
             'office', 'user', 'card', 'cards',
             'familyMembers', 'proxies', 'documents',
-            'complianceRecords.verifier',
-            'grantCalculations.distributionEvent',
+            'complianceRecords' => fn($q) => $q->with('verifier')->orderBy('period', 'desc')->orderBy('id', 'desc'),
+            'grantCalculations' => fn($q) => $q->with('distributionEvent')->orderBy('id', 'desc'),
             'distributions.distributionEvent',
         ])->findOrFail($id);
 

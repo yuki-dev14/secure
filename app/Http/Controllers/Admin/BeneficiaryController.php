@@ -66,8 +66,8 @@ class BeneficiaryController extends Controller
             'office', 'user', 'card',
             'familyMembers', 'proxies',
             'documents.uploadedBy',
-            'complianceRecords.verifier',
-            'grantCalculations.distributionEvent',
+            'complianceRecords' => fn($q) => $q->with('verifier')->orderBy('period', 'desc')->orderBy('id', 'desc'),
+            'grantCalculations' => fn($q) => $q->with('distributionEvent')->orderBy('id', 'desc'),
             'distributions.distributionEvent',
         ])->findOrFail($id);
 

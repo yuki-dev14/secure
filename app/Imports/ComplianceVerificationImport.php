@@ -48,6 +48,35 @@ class ComplianceVerificationImport implements ToArray, WithHeadingRow
                 continue;
             }
 
+            // Sync / Create ComplianceRecord for this period
+            $compRecord = \App\Models\ComplianceRecord::firstOrNew([
+                'beneficiary_id' => $beneficiary->id,
+                'period'         => $this->period,
+            ]);
+            $compRecord->period_start = $this->periodStart;
+            $compRecord->period_end   = $this->periodEnd;
+            $compRecord->verified_by  = auth()->id() ?? 1;
+
+            if ($status === 'NON_COMPLIANT') {
+                if ($this->category === 'education') {
+                    $compRecord->edu_attendance_compliant = false;
+                } elseif ($this->category === 'health') {
+                    $compRecord->health_compliant = false;
+                }
+                $compRecord->is_fully_compliant = false;
+                $compRecord->save();
+            } else {
+                if (!$compRecord->exists) {
+                    $compRecord->edu_attendance_compliant = true;
+                    $compRecord->health_compliant         = true;
+                    $compRecord->fds_compliant            = true;
+                    $compRecord->is_fully_compliant       = true;
+                    $compRecord->save();
+                }
+                $this->compliant++;
+                continue;
+            }
+
             // Resolve family member by name if provided
             $familyMemberId = null;
             $memberName = trim($row['family_member_name'] ?? '');
