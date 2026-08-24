@@ -271,7 +271,13 @@
         <table class="header-table" cellspacing="0" cellpadding="0">
             <tr>
                 <td class="logo-td">
-                    <div class="logo-circle">DSWD</div>
+                    <div class="logo-circle">
+                        @if($logoBase64)
+                            <img src="{{ $logoBase64 }}" alt="Logo" style="width:100%; height:100%; object-fit:contain; border-radius:50%;">
+                        @else
+                            DSWD
+                        @endif
+                    </div>
                 </td>
                 <td class="header-text-td">
                     <div class="agency">Republic of the Philippines &mdash; DSWD</div>

@@ -59,7 +59,9 @@
             <div class="card-face card-face--front" id="card-print-front">
               <!-- Header band -->
               <div class="cf-header">
-                <div class="cf-logo">DSWD</div>
+                <div class="cf-logo">
+                  <img src="/logo.png" alt="Logo" class="w-full h-full object-contain p-0.5 rounded-full" />
+                </div>
                 <div class="cf-headtext">
                   <div class="cf-agency">Republic of the Philippines — DSWD</div>
                   <div class="cf-program">Pantawid Pamilyang Pilipino Program (4Ps)</div>

@@ -350,12 +350,19 @@ class BeneficiaryController extends Controller
             $photoBase64 = "data:image/{$ext};base64," . base64_encode($photoRaw);
         }
 
+        $logoBase64 = '';
+        if (file_exists(public_path('logo.png'))) {
+            $logoRaw    = file_get_contents(public_path('logo.png'));
+            $logoBase64 = 'data:image/png;base64,' . base64_encode($logoRaw);
+        }
+
         $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('pdf.beneficiary-card', [
             'beneficiary'     => $beneficiary,
             'card'            => $card,
             'defaultPassword' => $defaultPassword,
             'qrImageBase64'   => $qrImageBase64,
             'photoBase64'     => $photoBase64,
+            'logoBase64'      => $logoBase64,
         ])->setPaper([0, 0, 241.89, 153.07]);
 
         AuditLogService::log('card_downloaded', $beneficiary, [], [], 'Card PDF downloaded');
