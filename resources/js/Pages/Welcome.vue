@@ -10,9 +10,7 @@
     <header class="sticky top-0 z-50 bg-white/90 backdrop-blur-xl border-b border-slate-200">
       <div class="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
         <div class="flex items-center gap-3">
-          <div class="w-9 h-9 rounded-xl flex items-center justify-center shrink-0" style="background: linear-gradient(135deg, #6366f1, #8b5cf6)">
-            <span class="text-white font-bold text-sm">4P</span>
-          </div>
+          <img src="/logo.png" alt="SECURE 4Ps Logo" class="w-10 h-10 object-contain shrink-0" />
           <div>
             <p class="text-sm font-bold text-slate-800 leading-tight">SECURE 4Ps</p>
             <p class="text-[10px] text-slate-400 leading-tight">Lipa City, Batangas</p>
@@ -42,7 +40,7 @@
     <!-- ─── Hero Section ───────────────────────────────────────────────────── -->
     <section class="relative overflow-hidden flex-1 flex items-center" style="min-height: 88vh">
       <!-- Background gradient -->
-      <div class="absolute inset-0" style="background: linear-gradient(135deg, #1e1b4b 0%, #312e81 40%, #4338ca 70%, #6366f1 100%)"></div>
+      <div class="absolute inset-0" style="background: linear-gradient(135deg, #330000 0%, #4d0000 40%, #800000 70%, #990000 100%)"></div>
 
       <!-- Decorative blobs -->
       <div class="absolute top-1/4 right-0 w-96 h-96 rounded-full opacity-10 pointer-events-none" style="background: radial-gradient(circle, #a78bfa, transparent); transform: translate(30%, -20%)"></div>
@@ -209,9 +207,7 @@
     <footer class="bg-slate-900 text-slate-400 py-10">
       <div class="max-w-6xl mx-auto px-6 flex flex-col sm:flex-row items-center justify-between gap-4">
         <div class="flex items-center gap-3">
-          <div class="w-8 h-8 rounded-lg flex items-center justify-center" style="background: linear-gradient(135deg, #6366f1, #8b5cf6)">
-            <span class="text-white font-bold text-xs">4P</span>
-          </div>
+          <img src="/logo.png" alt="SECURE 4Ps Logo" class="w-9 h-9 object-contain shrink-0" />
           <div>
             <p class="text-sm font-bold text-white">SECURE 4Ps Verification System</p>
             <p class="text-[11px]">DSWD Field Office IV-A — Lipa City, Batangas</p>

@@ -3,21 +3,21 @@
 @theme {
     --font-display: 'Inter', sans-serif;
 
-    --color-brand-50: #eef2ff;
-    --color-brand-100: #e0e7ff;
-    --color-brand-200: #c7d2fe;
-    --color-brand-300: #a5b4fc;
-    --color-brand-400: #818cf8;
-    --color-brand-500: #6366f1;
-    --color-brand-600: #4f46e5;
-    --color-brand-700: #4338ca;
-    --color-brand-800: #3730a3;
-    --color-brand-900: #312e81;
-    --color-brand-950: #1e1b4b;
+    --color-brand-50: #fdf2f2;
+    --color-brand-100: #fde8e8;
+    --color-brand-200: #fbd5d5;
+    --color-brand-300: #f8b4b4;
+    --color-brand-400: #f98080;
+    --color-brand-500: #e02424;
+    --color-brand-600: #990000;
+    --color-brand-700: #800000;
+    --color-brand-800: #660000;
+    --color-brand-900: #4d0000;
+    --color-brand-950: #330000;
 
-    --color-dswd-blue: #003087;
-    --color-dswd-red: #ce1126;
-    --color-dswd-gold: #fcd116;
+    --color-dswd-blue: #800000;
+    --color-dswd-red: #990000;
+    --color-dswd-gold: #f59e0b;
 
     --color-success-50: #f0fdf4;
     --color-success-500: #22c55e;
@@ -323,11 +323,11 @@
     }
 
     .gradient-dswd {
-        background: linear-gradient(135deg, #003087 0%, #0051a8 50%, #1a69c8 100%);
+        background: linear-gradient(135deg, #4d0000 0%, #800000 50%, #990000 100%);
     }
 
     .gradient-brand {
-        background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+        background: linear-gradient(135deg, #800000 0%, #990000 50%, #c81e1e 100%);
     }
 
     .no-scrollbar::-webkit-scrollbar { display: none; }

@@ -1,9 +1,9 @@
 <template>
   <div class="min-h-screen flex items-center justify-center p-4"
-       style="background: linear-gradient(135deg, #003087 0%, #0051a8 50%, #1e40af 100%);">
+       style="background: linear-gradient(135deg, #330000 0%, #4d0000 50%, #800000 100%);">
     <div class="absolute inset-0 pointer-events-none overflow-hidden">
       <div class="absolute top-20 right-20 w-64 h-64 bg-white/5 rounded-full blur-3xl"></div>
-      <div class="absolute bottom-20 left-20 w-80 h-80 bg-blue-300/10 rounded-full blur-3xl"></div>
+      <div class="absolute bottom-20 left-20 w-80 h-80 bg-red-300/10 rounded-full blur-3xl"></div>
     </div>
 
     <div class="relative z-10 w-full max-w-lg">
@@ -16,9 +16,7 @@
       </div>
       <!-- Header -->
       <div class="text-center mb-8">
-        <div class="w-16 h-16 bg-white/20 backdrop-blur-sm rounded-2xl flex items-center justify-center mx-auto mb-4">
-          <QrCodeIcon class="w-8 h-8 text-white" />
-        </div>
+        <img src="/logo.png" alt="SECURE 4Ps Logo" class="w-16 h-16 object-contain mx-auto mb-4" />
         <h1 class="text-2xl font-bold text-white">Beneficiary Portal</h1>
         <p class="text-white/70 text-sm mt-1">Pantawid Pamilyang Pilipino Program (4Ps)</p>
         <p class="text-white/50 text-xs mt-0.5">Lipa City, Batangas</p>

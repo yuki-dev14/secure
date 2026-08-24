@@ -9,9 +9,7 @@
     >
       <!-- Logo -->
       <div class="flex items-center gap-3 px-4 py-5 border-b border-slate-100">
-        <div class="w-8 h-8 rounded-xl gradient-dswd flex items-center justify-center flex-shrink-0">
-          <span class="text-white font-bold text-xs">4P</span>
-        </div>
+        <img src="/logo.png" alt="SECURE 4Ps Logo" class="w-8 h-8 object-contain shrink-0" />
         <Transition name="fade">
           <div v-if="sidebarOpen" class="min-w-0">
             <p class="text-xs font-bold text-slate-800 truncate">SECURE 4Ps</p>

@@ -1,17 +1,15 @@
 <template>
-  <div class="min-h-screen" style="background: linear-gradient(135deg, #003087 0%, #0051a8 40%, #1e40af 100%);">
+  <div class="min-h-screen" style="background: linear-gradient(135deg, #330000 0%, #4d0000 50%, #800000 100%);">
     <!-- Animated background pattern -->
     <div class="fixed inset-0 overflow-hidden pointer-events-none">
       <div class="absolute -top-40 -right-40 w-96 h-96 bg-white/5 rounded-full blur-3xl"></div>
-      <div class="absolute -bottom-40 -left-40 w-96 h-96 bg-blue-300/10 rounded-full blur-3xl"></div>
+      <div class="absolute -bottom-40 -left-40 w-96 h-96 bg-red-300/10 rounded-full blur-3xl"></div>
     </div>
 
     <!-- Header -->
     <header class="relative z-10 px-6 py-4 flex items-center justify-between border-b border-white/10">
       <div class="flex items-center gap-3">
-        <div class="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center backdrop-blur-sm">
-          <span class="text-white font-bold text-sm">4P</span>
-        </div>
+        <img src="/logo.png" alt="SECURE 4Ps Logo" class="w-10 h-10 object-contain shrink-0" />
         <div>
           <p class="text-white font-bold text-sm">SECURE 4Ps</p>
           <p class="text-white/60 text-xs">Beneficiary Portal</p>

@@ -1,17 +1,15 @@
 <template>
-  <div class="min-h-screen flex" style="background: linear-gradient(135deg, #003087 0%, #0051a8 50%, #1e40af 100%);">
+  <div class="min-h-screen flex" style="background: linear-gradient(135deg, #330000 0%, #4d0000 50%, #800000 100%);">
     <!-- Left panel — branding -->
     <div class="hidden lg:flex lg:w-1/2 flex-col justify-between p-12 relative overflow-hidden">
       <div class="absolute inset-0 pointer-events-none">
         <div class="absolute top-0 right-0 w-72 h-72 bg-white/5 rounded-full -translate-y-1/2 translate-x-1/2"></div>
-        <div class="absolute bottom-0 left-0 w-96 h-96 bg-blue-300/10 rounded-full translate-y-1/2 -translate-x-1/2"></div>
+        <div class="absolute bottom-0 left-0 w-96 h-96 bg-red-300/10 rounded-full translate-y-1/2 -translate-x-1/2"></div>
       </div>
 
       <div class="relative">
         <div class="flex items-center gap-3 mb-12">
-          <div class="w-12 h-12 bg-white/20 backdrop-blur-sm rounded-2xl flex items-center justify-center">
-            <span class="text-white font-bold text-base">4P</span>
-          </div>
+          <img src="/logo.png" alt="SECURE 4Ps Logo" class="w-12 h-12 object-contain" />
           <div>
             <p class="text-white font-bold text-lg leading-tight">SECURE 4Ps</p>
             <p class="text-white/60 text-xs">DSWD — Lipa City, Batangas</p>
@@ -20,7 +18,7 @@
 
         <h1 class="text-4xl font-bold text-white leading-tight mb-4">
           System for<br>
-          <span style="color: #fcd116;">Eligibility Checking,</span><br>
+          <span style="color: #fca5a5;">Eligibility Checking,</span><br>
           Unified Records &<br>Evaluation
         </h1>
         <p class="text-white/70 text-sm leading-relaxed max-w-sm">
@@ -53,9 +51,7 @@
           <!-- Card header -->
           <div class="px-8 pt-8 pb-6 border-b border-slate-100">
             <div class="flex items-center gap-3 mb-2 lg:hidden">
-              <div class="w-8 h-8 rounded-xl gradient-dswd flex items-center justify-center">
-                <span class="text-white font-bold text-xs">4P</span>
-              </div>
+              <img src="/logo.png" alt="SECURE 4Ps Logo" class="w-8 h-8 object-contain" />
               <span class="font-bold text-slate-800">SECURE 4Ps</span>
             </div>
             <h2 class="text-2xl font-bold text-slate-800">Staff Login</h2>
