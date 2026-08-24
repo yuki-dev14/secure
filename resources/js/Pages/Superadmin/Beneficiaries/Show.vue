@@ -236,17 +236,16 @@
               <div v-for="g in beneficiary.grant_calculations" :key="g.id"
                 class="p-3 bg-slate-50 rounded-xl border border-slate-200">
                 <div class="flex items-center justify-between">
-                  <p class="text-xs text-slate-500">{{ g.distribution_event?.period ?? 'Period unknown' }}</p>
-                  <p class="font-bold text-success-600 text-sm">
+                  <span class="badge badge-neutral text-xs font-semibold">{{ g.distribution_event?.period ?? 'Period unknown' }}</span>
+                  <p class="font-bold text-emerald-600 text-sm">
                     ₱{{ Number(g.total_grant_amount).toLocaleString('en-PH', { minimumFractionDigits: 2 }) }}
                   </p>
                 </div>
-                <div class="mt-1.5 text-xs text-slate-400 grid grid-cols-3 gap-1">
-                  <span>Health: ₱{{ Number(g.health_grant_amount).toLocaleString() }}</span>
-                  <span>Edu: ₱{{ Number(g.education_grant_total).toLocaleString() }}</span>
-                  <span>Rice: ₱{{ Number(g.rice_subsidy_amount).toLocaleString() }}</span>
+                <div class="mt-2 text-xs text-slate-500 grid grid-cols-3 gap-1 pt-2 border-t border-slate-100">
+                  <span>Health: ₱{{ Number(g.health_grant_amount ?? 0).toLocaleString() }}</span>
+                  <span>Edu: ₱{{ Number(g.education_grant_total ?? 0).toLocaleString() }}</span>
+                  <span>Rice: ₱{{ Number(g.rice_subsidy_amount ?? 0).toLocaleString() }}</span>
                 </div>
-                <p class="text-xs text-slate-300 mt-1">{{ g.months_covered }} months covered</p>
               </div>
             </div>
           </div>
