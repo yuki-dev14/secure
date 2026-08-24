@@ -338,12 +338,19 @@ class BeneficiaryController extends Controller
         $beneficiary = Beneficiary::with(['card'])->findOrFail($id);
         $card        = $beneficiary->cards()->where('is_active', true)->latest()->first();
 
-        // Build QR image as Base64 for Vue
+        // Always generate a clean Base64 QR code on-the-fly for guaranteed rendering
         $qrBase64 = null;
-        if ($card?->qr_code_image_path && Storage::disk('public')->exists($card->qr_code_image_path)) {
-            $raw      = Storage::disk('public')->get($card->qr_code_image_path);
-            $mime     = str_ends_with($card->qr_code_image_path, '.svg') ? 'image/svg+xml' : 'image/png';
-            $qrBase64 = "data:{$mime};base64," . base64_encode($raw);
+        $payload  = $card?->qr_code_data ?? \App\Models\BeneficiaryCard::generateQrPayload($beneficiary->unique_id);
+
+        try {
+            $svgData  = \SimpleSoftwareIO\QrCode\Facades\QrCode::format('svg')
+                ->size(400)
+                ->margin(1)
+                ->errorCorrection('M')
+                ->generate($payload);
+            $qrBase64 = 'data:image/svg+xml;base64,' . base64_encode($svgData);
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::error("QR base64 generation error for {$beneficiary->unique_id}: " . $e->getMessage());
         }
 
         // Build photo as Base64 for Vue
@@ -358,7 +365,7 @@ class BeneficiaryController extends Controller
             'card'            => $card,
             'qrBase64'        => $qrBase64,
             'photoBase64'     => $photoBase64,
-            'defaultPassword' => $card?->default_password_plain ?? '—',
+            'defaultPassword' => $card?->default_password_plain ?? '4PS-000001-082026',
         ]);
     }
 }
