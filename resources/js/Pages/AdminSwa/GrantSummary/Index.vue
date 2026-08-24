@@ -210,13 +210,15 @@
               zero-out logic. Each component (Health, Education, Rice) is independently evaluated.
             </p>
             <div>
-              <label class="label">Distribution Event <span class="text-red-500">*</span></label>
+              <label class="label">Distribution Event</label>
               <select v-model="computeEventId" class="input w-full">
-                <option value="">Select event...</option>
-                <!-- This would be populated from events; for now manual input -->
+                <option value="">Auto-create / Use active event for {{ selectedPeriod }}</option>
+                <option v-for="e in events" :key="e.id" :value="e.id">
+                  {{ e.title }} ({{ e.period }}) — {{ e.scheduled_date }}
+                </option>
               </select>
               <p class="text-xs text-slate-400 mt-1">
-                Select the distribution event covering period <strong>{{ selectedPeriod }}</strong>
+                Will calculate grants for period <strong>{{ selectedPeriod }}</strong>
               </p>
             </div>
             <div v-if="computeResult" class="p-3 rounded-xl" :class="computeResult.success ? 'bg-emerald-50' : 'bg-red-50'">
@@ -235,7 +237,7 @@
             </div>
             <div class="flex justify-end gap-2">
               <button @click="showComputeModal = false" class="btn btn-secondary">Close</button>
-              <button @click="runCompute" :disabled="!computeEventId || computing"
+              <button @click="runCompute" :disabled="computing"
                       class="btn btn-primary gap-2">
                 <CalculatorIcon class="w-4 h-4" />
                 {{ computing ? 'Computing...' : 'Run Computation' }}
@@ -265,6 +267,7 @@ const props = defineProps({
   ncImpact:      Object,
   barangays:     Array,
   periods:       Array,
+  events:        Array,
   filters:       Object,
   currentPeriod: String,
 })
@@ -308,7 +311,10 @@ const runCompute = async () => {
         'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content,
         'Accept': 'application/json',
       },
-      body: JSON.stringify({ event_id: computeEventId.value }),
+      body: JSON.stringify({
+        event_id: computeEventId.value || null,
+        period: selectedPeriod.value,
+      }),
     })
     computeResult.value = await res.json()
     if (computeResult.value.success) {

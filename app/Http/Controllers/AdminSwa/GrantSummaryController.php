@@ -89,32 +89,50 @@ class GrantSummaryController extends Controller
 
         $barangays = Beneficiary::active()->distinct()->pluck('barangay')->sort()->values();
 
+        $events = DistributionEvent::orderBy('scheduled_date', 'desc')->get();
+
         return Inertia::render('AdminSwa/GrantSummary/Index', [
-            'grants'     => $grants,
-            'summary'    => $summary,
-            'ncImpact'   => $ncImpact,
-            'barangays'  => $barangays,
-            'periods'    => $periods,
-            'filters'    => $request->only(['search', 'period', 'eligible', 'barangay']),
+            'grants'        => $grants,
+            'summary'       => $summary,
+            'ncImpact'      => $ncImpact,
+            'barangays'     => $barangays,
+            'periods'       => $periods,
+            'events'        => $events,
+            'filters'       => $request->only(['search', 'period', 'eligible', 'barangay']),
             'currentPeriod' => $period,
         ]);
     }
 
     /**
-     * Trigger batch bimonthly grant computation for a distribution event.
+     * Trigger batch bimonthly grant computation for a distribution event or period.
      */
     public function compute(Request $request): JsonResponse
     {
         $request->validate([
-            'event_id' => 'required|exists:distribution_events,id',
+            'event_id' => 'nullable|exists:distribution_events,id',
+            'period'   => 'nullable|string',
         ]);
 
-        $event = DistributionEvent::findOrFail($request->event_id);
+        if ($request->filled('event_id')) {
+            $event = DistributionEvent::findOrFail($request->event_id);
+        } else {
+            $period = $request->get('period', $this->getCurrentPeriod()['value']);
+            $event  = DistributionEvent::firstOrCreate(
+                ['period' => $period],
+                [
+                    'title'          => "4Ps Cash Grant Disbursement — {$period}",
+                    'scheduled_date' => now()->toDateString(),
+                    'venue'          => 'City Gymnasium / Barangay Halls',
+                    'status'         => 'ongoing',
+                ]
+            );
+        }
+
         $results = $this->calculator->batchCalculateBimonthly($event);
 
         return response()->json([
             'success' => true,
-            'message' => "Grants computed for {$results['computed']} beneficiaries.",
+            'message' => "Grants computed successfully for {$results['computed']} households.",
             'results' => $results,
         ]);
     }
