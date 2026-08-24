@@ -344,16 +344,16 @@ class BeneficiaryController extends Controller
         }
 
         $photoBase64 = '';
-        if ($beneficiary->photo_path && Storage::disk('public')->exists($beneficiary->photo_path)) {
+        if (extension_loaded('gd') && $beneficiary->photo_path && Storage::disk('public')->exists($beneficiary->photo_path)) {
             $photoRaw    = Storage::disk('public')->get($beneficiary->photo_path);
             $ext         = pathinfo($beneficiary->photo_path, PATHINFO_EXTENSION);
             $photoBase64 = "data:image/{$ext};base64," . base64_encode($photoRaw);
         }
 
         $logoBase64 = '';
-        if (file_exists(public_path('logo.png'))) {
-            $logoRaw    = file_get_contents(public_path('logo.png'));
-            $logoBase64 = 'data:image/png;base64,' . base64_encode($logoRaw);
+        if (file_exists(public_path('logo.svg'))) {
+            $logoRaw    = file_get_contents(public_path('logo.svg'));
+            $logoBase64 = 'data:image/svg+xml;base64,' . base64_encode($logoRaw);
         }
 
         $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('pdf.beneficiary-card', [
