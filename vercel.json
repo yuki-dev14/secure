@@ -49,10 +49,10 @@
     "LOG_CHANNEL": "stderr",
     "QUEUE_CONNECTION": "sync",
     "DB_CONNECTION": "pgsql",
-    "DB_HOST": "aws-0-ap-southeast-2.pooler.supabase.com",
+    "DB_HOST": "aws-0-ap-southeast-1.pooler.supabase.com",
     "DB_PORT": "6543",
     "DB_DATABASE": "postgres",
-    "DB_USERNAME": "postgres.rqhtxlffjoqhbukblrwd",
+    "DB_USERNAME": "postgres.squqgcyzgtkconlambui",
     "DB_PASSWORD": "secure_euclid0314",
     "DB_SSLMODE": "require",
     "BCRYPT_ROUNDS": "10"
