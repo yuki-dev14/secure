@@ -180,20 +180,23 @@
                   <tr v-for="cr in beneficiary.compliance_records" :key="cr.id">
                     <td class="text-sm font-medium text-slate-700">{{ cr.period }}</td>
                     <td>
-                      <span v-if="cr.edu_attendance_compliant === false" class="text-red-600 font-bold text-xs">✗ Incomplete</span>
-                      <span v-else class="text-emerald-600 font-bold text-xs">✓ Compliant</span>
+                      <span v-if="cr.edu_attendance_compliant === false" class="badge badge-danger badge-sm">✗ Non-Compliant</span>
+                      <span v-else-if="cr.edu_attendance_compliant === true" class="badge badge-success badge-sm">✓ Compliant</span>
+                      <span v-else class="badge badge-neutral badge-sm">— N/A</span>
                     </td>
                     <td>
-                      <span v-if="cr.health_compliant === false" class="text-red-600 font-bold text-xs">✗ Incomplete</span>
-                      <span v-else class="text-emerald-600 font-bold text-xs">✓ Compliant</span>
+                      <span v-if="cr.health_compliant === false" class="badge badge-danger badge-sm">✗ Non-Compliant</span>
+                      <span v-else-if="cr.health_compliant === true" class="badge badge-success badge-sm">✓ Compliant</span>
+                      <span v-else class="badge badge-neutral badge-sm">— N/A</span>
                     </td>
                     <td>
-                      <span v-if="cr.fds_compliant === false" class="text-red-600 font-bold text-xs">✗ Incomplete</span>
-                      <span v-else class="text-emerald-600 font-bold text-xs">✓ Compliant</span>
+                      <span v-if="cr.fds_compliant === false" class="badge badge-danger badge-sm">✗ Non-Compliant</span>
+                      <span v-else-if="cr.fds_compliant === true" class="badge badge-success badge-sm">✓ Compliant</span>
+                      <span v-else class="badge badge-neutral badge-sm">— N/A</span>
                     </td>
                     <td>
                       <span :class="['badge badge-sm', cr.is_fully_compliant ? 'badge-success' : 'badge-danger']">
-                        {{ cr.is_fully_compliant ? 'Complete' : 'Incomplete' }}
+                        {{ cr.is_fully_compliant ? '✓ Compliant' : '✗ Non-Compliant' }}
                       </span>
                     </td>
                     <td class="text-sm text-slate-500">{{ cr.verifier?.name ?? '—' }}</td>
