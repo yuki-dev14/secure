@@ -6,14 +6,14 @@
 
   <div class="min-h-screen bg-slate-50 flex flex-col font-sans">
 
-    <!-- ─── Header (WHITE TOP BAR) ─────────────────────────────────────────── -->
+    <!-- ─── Header (White Navigation Bar) ─────────────────────────────────── -->
     <header class="sticky top-0 z-50 bg-white/95 backdrop-blur-xl border-b border-slate-200/80 shadow-xs">
       <div class="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
         <div class="flex items-center gap-3">
           <img src="/logo.png" alt="SECURE 4Ps Logo" class="w-10 h-10 object-contain shrink-0" />
           <div>
-            <p class="text-sm font-bold text-slate-800 leading-tight">SECURE 4Ps</p>
-            <p class="text-[10px] text-slate-400 font-medium leading-tight">Lipa City, Batangas</p>
+            <p class="text-sm font-bold text-slate-900 leading-tight">SECURE 4Ps</p>
+            <p class="text-[10px] text-slate-500 font-medium leading-tight">Lipa City, Batangas</p>
           </div>
         </div>
 
@@ -26,7 +26,7 @@
           </template>
           <template v-else>
             <Link :href="route('beneficiary.login')" class="btn btn-secondary btn-sm gap-1.5">
-              <QrCodeIcon class="w-4 h-4 text-slate-700" />
+              <QrCodeIcon class="w-4 h-4 text-brand-600" />
               Beneficiary Portal
             </Link>
             <Link :href="route('staff.login')" class="btn btn-primary btn-sm shadow-xs">
@@ -37,11 +37,11 @@
       </div>
     </header>
 
-    <!-- ─── Hero Section (Crimson Red & Ruby Shield Gradient) ───────────────── -->
+    <!-- ─── Hero Section (Red & White Theme) ───────────────────────────────── -->
     <section class="relative overflow-hidden flex-1 flex items-center" style="min-height: 88vh; background: linear-gradient(135deg, #330000 0%, #4d0000 40%, #800000 70%, #990000 100%);">
-      <!-- Decorative Crimson & Glow blobs -->
-      <div class="absolute top-1/4 right-0 w-96 h-96 rounded-full opacity-10 pointer-events-none" style="background: radial-gradient(circle, #a78bfa, transparent); transform: translate(30%, -20%)"></div>
-      <div class="absolute bottom-0 left-0 w-72 h-72 rounded-full opacity-10 pointer-events-none" style="background: radial-gradient(circle, #818cf8, transparent); transform: translate(-30%, 30%)"></div>
+      <!-- Decorative background accent glow -->
+      <div class="absolute top-1/4 right-0 w-96 h-96 rounded-full opacity-10 pointer-events-none" style="background: radial-gradient(circle, #fca5a5, transparent); transform: translate(30%, -20%)"></div>
+      <div class="absolute bottom-0 left-0 w-72 h-72 rounded-full opacity-10 pointer-events-none" style="background: radial-gradient(circle, #f87171, transparent); transform: translate(-30%, 30%)"></div>
 
       <!-- Grid pattern overlay -->
       <div class="absolute inset-0 opacity-5 pointer-events-none"
@@ -53,18 +53,18 @@
         <div>
           <!-- DSWD badge -->
           <div class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-white/20 bg-white/10 backdrop-blur-sm mb-6">
-            <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
-            <span class="text-xs text-white/80 font-medium">DSWD — Lipa City, Batangas</span>
+            <span class="w-1.5 h-1.5 rounded-full bg-red-300 animate-pulse"></span>
+            <span class="text-xs text-white/90 font-medium">DSWD — Lipa City, Batangas</span>
           </div>
 
           <h1 class="text-4xl sm:text-5xl font-extrabold text-white leading-tight mb-4">
             Pantawid Pamilyang<br />
-            <span style="background: linear-gradient(90deg, #a5f3fc, #a78bfa); -webkit-background-clip: text; -webkit-text-fill-color: transparent">
+            <span style="background: linear-gradient(90deg, #ffffff, #fecdd3); -webkit-background-clip: text; -webkit-text-fill-color: transparent">
               Pilipino Program
             </span>
           </h1>
 
-          <p class="text-lg text-white/70 leading-relaxed mb-8 max-w-lg">
+          <p class="text-lg text-white/80 leading-relaxed mb-8 max-w-lg">
             SECURE — <em>System for Eligibility Checking, Unified Records, and Evaluation</em>.
             A digital verification system for 4Ps beneficiaries in Lipa City, Batangas ensuring transparent, fraud-free cash grant distribution.
           </p>
@@ -72,27 +72,25 @@
           <div class="flex flex-wrap gap-3">
             <template v-if="authUser">
               <Link :href="dashboardRoute"
-                class="inline-flex items-center gap-2 px-6 py-3 rounded-xl font-semibold text-slate-900 hover:opacity-90 transition-opacity"
-                style="background: linear-gradient(135deg, #a5f3fc, #6ee7f7)"
+                class="inline-flex items-center gap-2 px-6 py-3.5 rounded-xl font-semibold text-brand-800 bg-white hover:bg-red-50 transition-all shadow-lg"
               >
-                <ShieldCheckIcon class="w-5 h-5" />
+                <ShieldCheckIcon class="w-5 h-5 text-brand-700" />
                 Go to Your Dashboard
               </Link>
             </template>
             <template v-else>
               <Link :href="route('beneficiary.login')"
-                class="inline-flex items-center gap-2 px-6 py-3 rounded-xl font-semibold text-slate-900 hover:opacity-90 transition-opacity"
-                style="background: linear-gradient(135deg, #a5f3fc, #6ee7f7)"
+                class="inline-flex items-center gap-2 px-6 py-3.5 rounded-xl font-semibold text-brand-800 bg-white hover:bg-red-50 transition-all shadow-lg"
               >
-                <QrCodeIcon class="w-5 h-5" />
+                <QrCodeIcon class="w-5 h-5 text-brand-700" />
                 Access Beneficiary Portal
               </Link>
             </template>
             <a href="#how-it-works"
-              class="inline-flex items-center gap-2 px-6 py-3 rounded-xl font-semibold text-white border border-white/30 hover:bg-white/10 transition-colors"
+              class="inline-flex items-center gap-2 px-6 py-3.5 rounded-xl font-semibold text-white border border-white/30 hover:bg-white/10 transition-colors"
             >
               Learn More
-              <ArrowDownIcon class="w-4 h-4" />
+              <ArrowDownIcon class="w-4 h-4 text-white/80" />
             </a>
           </div>
         </div>
@@ -103,11 +101,11 @@
             class="p-4 rounded-2xl border border-white/15"
             style="background: rgba(255,255,255,0.07); backdrop-filter: blur(12px)"
           >
-            <div :class="['w-10 h-10 rounded-xl flex items-center justify-center mb-3', feat.bg]">
-              <component :is="feat.icon" class="w-5 h-5 text-white" />
+            <div class="w-10 h-10 rounded-xl flex items-center justify-center mb-3 bg-white/15 text-white border border-white/20">
+              <component :is="feat.icon" class="w-5 h-5" />
             </div>
             <p class="text-sm font-semibold text-white">{{ feat.label }}</p>
-            <p class="text-xs text-white/60 mt-1 leading-relaxed">{{ feat.desc }}</p>
+            <p class="text-xs text-white/70 mt-1 leading-relaxed">{{ feat.desc }}</p>
           </div>
         </div>
       </div>
@@ -126,11 +124,11 @@
 
         <div class="grid grid-cols-1 md:grid-cols-4 gap-6 relative">
           <!-- Connector line (desktop) -->
-          <div class="hidden md:block absolute top-10 left-[12.5%] right-[12.5%] h-0.5 bg-gradient-to-r from-brand-200 via-brand-400 to-emerald-400"></div>
+          <div class="hidden md:block absolute top-10 left-[12.5%] right-[12.5%] h-0.5 bg-red-200"></div>
 
           <div v-for="(step, i) in steps" :key="i" class="flex flex-col items-center text-center">
-            <div :class="['w-20 h-20 rounded-2xl flex items-center justify-center mb-4 relative z-10 shadow-lg', step.bg]">
-              <component :is="step.icon" class="w-9 h-9 text-white" />
+            <div class="w-20 h-20 rounded-2xl flex items-center justify-center mb-4 relative z-10 bg-brand-600 text-white shadow-lg">
+              <component :is="step.icon" class="w-9 h-9" />
             </div>
             <span class="text-xs font-bold text-brand-600 uppercase tracking-widest mb-1">Step {{ i + 1 }}</span>
             <p class="font-bold text-slate-800 text-sm">{{ step.title }}</p>
@@ -151,9 +149,8 @@
 
           <!-- Beneficiary Portal -->
           <div class="card p-8 flex flex-col items-center text-center group hover:shadow-xl transition-shadow">
-            <div class="w-16 h-16 rounded-2xl mb-5 flex items-center justify-center"
-              style="background: linear-gradient(135deg, #818cf8, #6366f1)">
-              <QrCodeIcon class="w-8 h-8 text-white" />
+            <div class="w-16 h-16 rounded-2xl mb-5 flex items-center justify-center bg-brand-600 text-white shadow-md">
+              <QrCodeIcon class="w-8 h-8" />
             </div>
             <h3 class="text-lg font-bold text-slate-800 mb-2">Beneficiary Portal</h3>
             <p class="text-sm text-slate-500 leading-relaxed mb-6">
@@ -175,9 +172,8 @@
 
           <!-- Staff Login -->
           <div class="card p-8 flex flex-col items-center text-center group hover:shadow-xl transition-shadow">
-            <div class="w-16 h-16 rounded-2xl mb-5 flex items-center justify-center"
-              style="background: linear-gradient(135deg, #475569, #1e293b)">
-              <ShieldCheckIcon class="w-8 h-8 text-white" />
+            <div class="w-16 h-16 rounded-2xl mb-5 flex items-center justify-center bg-brand-800 text-white shadow-md">
+              <ShieldCheckIcon class="w-8 h-8" />
             </div>
             <h3 class="text-lg font-bold text-slate-800 mb-2">Staff Login</h3>
             <p class="text-sm text-slate-500 leading-relaxed mb-6">
@@ -249,25 +245,21 @@ const features = [
     icon: IdentificationIcon,
     label: 'QR-Based ID Cards',
     desc: 'Household representatives carry secure QR-coded ID cards for quick verification.',
-    bg: 'bg-brand-600',
   },
   {
     icon: ClipboardDocumentCheckIcon,
     label: 'Compliance Tracking',
     desc: 'School attendance and health check-ups monitored per disbursement period.',
-    bg: 'bg-purple-500',
   },
   {
     icon: ShieldCheckIcon,
     label: 'Automated Verification',
     desc: 'Automated eligibility checking, unified records, and audit trail logging.',
-    bg: 'bg-emerald-500',
   },
   {
     icon: BanknotesIcon,
     label: 'Cash Grant Records',
     desc: 'Full transparency on grant computations, releases, and claiming history.',
-    bg: 'bg-amber-500',
   },
 ]
 
@@ -276,25 +268,21 @@ const steps = [
     icon: ClipboardDocumentCheckIcon,
     title: 'Compliance Verified',
     desc: 'Admin SWA reviews health and education compliance records from school reps and midwives.',
-    bg: 'bg-brand-600',
   },
   {
     icon: DocumentCheckIcon,
     title: 'Grants Computed',
     desc: 'Admins batch-compute individual grant amounts based on household data.',
-    bg: 'bg-purple-500',
   },
   {
     icon: QrCodeIcon,
     title: 'QR Card Scanned',
     desc: 'Barangay assistants scan the beneficiary\'s QR ID card at FDS sessions.',
-    bg: 'bg-emerald-500',
   },
   {
     icon: BanknotesIcon,
     title: 'Grant Released',
     desc: 'Compliant beneficiaries receive their cash grant. The transaction is logged.',
-    bg: 'bg-amber-500',
   },
 ]
 </script>
