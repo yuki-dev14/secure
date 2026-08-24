@@ -3,357 +3,366 @@
 <head>
 <meta charset="UTF-8">
 <style>
+    @page {
+        margin: 0;
+        size: 241.89pt 153.07pt;
+    }
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body {
-        font-family: Arial, sans-serif;
-        width: 3.375in;
-        height: 2.125in;
-        background: #fff;
-        overflow: hidden;
+        font-family: Helvetica, Arial, sans-serif;
+        width: 241.89pt;
+        height: 153.07pt;
+        background-color: #ffffff;
     }
 
     /* FRONT CARD */
-    .card-front {
-        width: 3.375in;
-        height: 2.125in;
-        position: relative;
-        background: linear-gradient(135deg, #330000 0%, #660000 50%, #990000 100%);
-        color: white;
-        display: flex;
-        flex-direction: column;
+    .card-page {
+        width: 241.89pt;
+        height: 153.07pt;
         page-break-after: always;
+        position: relative;
     }
 
-    .card-front .card-header {
-        display: flex;
-        align-items: center;
-        padding: 6pt 8pt 4pt;
-        border-bottom: 1.5pt solid rgba(255,255,255,0.3);
-        background: rgba(0,0,0,0.2);
+    .card-front {
+        width: 241.89pt;
+        height: 153.07pt;
+        background-color: #660000;
+        color: #ffffff;
     }
 
-    .card-front .card-header .logo-circle {
-        width: 22pt;
-        height: 22pt;
-        border-radius: 50%;
-        background: #ffffff;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-weight: bold;
-        font-size: 7pt;
+    .header-table {
+        width: 100%;
+        background-color: #4d0000;
+        padding: 4pt 6pt;
+        border-bottom: 1pt solid #990000;
+    }
+
+    .logo-td {
+        width: 24pt;
+        vertical-align: middle;
+    }
+
+    .logo-circle {
+        width: 20pt;
+        height: 20pt;
+        background-color: #ffffff;
         color: #800000;
-        flex-shrink: 0;
+        font-weight: bold;
+        font-size: 6.5pt;
+        text-align: center;
+        line-height: 20pt;
+        border-radius: 10pt;
     }
 
-    .card-front .card-header .header-text {
-        margin-left: 5pt;
+    .header-text-td {
+        vertical-align: middle;
+        padding-left: 4pt;
     }
 
-    .card-front .card-header .header-text .agency {
-        font-size: 5.5pt;
-        opacity: 0.85;
+    .agency {
+        font-size: 5pt;
+        color: #fca5a5;
         letter-spacing: 0.3pt;
     }
 
-    .card-front .card-header .header-text .program {
-        font-size: 7.5pt;
+    .program {
+        font-size: 7pt;
         font-weight: bold;
-        letter-spacing: 0.5pt;
+        color: #ffffff;
     }
 
-    .card-front .card-header .card-type {
-        margin-left: auto;
+    .badge-td {
+        vertical-align: middle;
+        text-align: right;
+    }
+
+    .badge {
         font-size: 5pt;
-        background: #ffffff;
+        background-color: #ffffff;
         color: #800000;
         padding: 2pt 4pt;
-        border-radius: 2pt;
         font-weight: bold;
+        border-radius: 2pt;
     }
 
-    .card-front .card-body {
-        display: flex;
-        flex: 1;
-        padding: 6pt 8pt;
-        gap: 8pt;
-    }
-
-    .card-front .photo-section {
-        flex-shrink: 0;
-    }
-
-    .card-front .photo-box {
-        width: 50pt;
-        height: 55pt;
-        border: 2pt solid rgba(255,255,255,0.5);
-        border-radius: 3pt;
-        overflow: hidden;
-        background: rgba(0,0,0,0.2);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-    }
-
-    .card-front .photo-box img {
+    .body-table {
         width: 100%;
-        height: 100%;
-        object-fit: cover;
+        padding: 6pt;
     }
 
-    .card-front .photo-placeholder {
-        font-size: 6pt;
-        opacity: 0.6;
+    .photo-td {
+        width: 50pt;
+        vertical-align: top;
+    }
+
+    .photo-box {
+        width: 48pt;
+        height: 58pt;
+        border: 1.5pt solid #fca5a5;
+        background-color: #330000;
         text-align: center;
     }
 
-    .card-front .info-section {
-        flex: 1;
-        display: flex;
-        flex-direction: column;
-        justify-content: space-between;
+    .photo-box img {
+        width: 48pt;
+        height: 58pt;
     }
 
-    .card-front .info-section .name {
-        font-size: 9pt;
-        font-weight: bold;
+    .photo-placeholder {
+        font-size: 6pt;
+        color: #fca5a5;
+        padding-top: 20pt;
         line-height: 1.2;
+    }
+
+    .info-td {
+        vertical-align: top;
+        padding-left: 6pt;
+    }
+
+    .name {
+        font-size: 8.5pt;
+        font-weight: bold;
+        color: #ffffff;
         text-transform: uppercase;
     }
 
-    .card-front .info-section .label {
-        font-size: 5pt;
-        opacity: 0.7;
-        text-transform: uppercase;
-        letter-spacing: 0.4pt;
-        margin-top: 4pt;
-        margin-bottom: 1pt;
+    .middle-name {
+        font-size: 6.5pt;
+        color: #fca5a5;
     }
 
-    .card-front .info-section .value {
-        font-size: 7pt;
+    .label {
+        font-size: 4.5pt;
+        color: #fca5a5;
+        text-transform: uppercase;
+        margin-top: 3pt;
+    }
+
+    .val {
+        font-size: 6.5pt;
+        color: #ffffff;
         font-weight: 500;
     }
 
-    .card-front .card-footer {
-        padding: 4pt 8pt;
-        background: rgba(0,0,0,0.2);
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
+    .footer-table {
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        width: 100%;
+        background-color: #330000;
+        padding: 3pt 6pt;
     }
 
-    .card-front .card-footer .uid {
+    .uid-label {
+        font-size: 4.5pt;
+        color: #fca5a5;
+    }
+
+    .uid-val {
         font-size: 7.5pt;
         font-weight: bold;
-        letter-spacing: 1pt;
+        color: #ffffff;
         font-family: 'Courier New', monospace;
     }
 
-    .card-front .card-footer .city-label {
-        font-size: 5.5pt;
-        opacity: 0.8;
+    .city-val {
+        font-size: 6pt;
+        font-weight: bold;
+        color: #ffffff;
+        text-align: right;
     }
 
     /* BACK CARD */
     .card-back {
-        width: 3.375in;
-        height: 2.125in;
-        position: relative;
-        background: #ffffff;
-        display: flex;
-        flex-direction: column;
+        width: 241.89pt;
+        height: 153.07pt;
+        background-color: #ffffff;
+        color: #333333;
     }
 
-    .card-back .back-header {
-        background: #4d0000;
-        color: white;
-        padding: 5pt 8pt;
-        font-size: 6pt;
+    .back-header {
+        background-color: #4d0000;
+        color: #ffffff;
+        font-size: 5.5pt;
         text-align: center;
-        letter-spacing: 0.5pt;
+        padding: 3pt;
+        font-weight: bold;
     }
 
-    .card-back .back-body {
-        display: flex;
-        flex: 1;
-        padding: 6pt 8pt;
-        gap: 10pt;
+    .qr-td {
+        width: 80pt;
+        vertical-align: top;
+        text-align: center;
     }
 
-    .card-back .qr-section {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        gap: 3pt;
-    }
-
-    .card-back .qr-box {
-        width: 78pt;
-        height: 78pt;
+    .qr-box {
+        width: 72pt;
+        height: 72pt;
         border: 1.5pt solid #800000;
-        border-radius: 3pt;
-        overflow: hidden;
-        background: white;
-        display: flex;
-        align-items: center;
-        justify-content: center;
+        background-color: #ffffff;
+        margin: 0 auto;
         padding: 2pt;
     }
 
-    .card-back .qr-box img {
-        width: 100%;
-        height: 100%;
+    .qr-box img {
+        width: 68pt;
+        height: 68pt;
     }
 
-    .card-back .qr-label {
+    .qr-text {
         font-size: 5.5pt;
         color: #800000;
         font-weight: bold;
-        text-align: center;
+        margin-top: 2pt;
     }
 
-    .card-back .credentials {
-        flex: 1;
-        display: flex;
-        flex-direction: column;
-        gap: 4pt;
+    .creds-td {
+        vertical-align: top;
+        padding-left: 6pt;
     }
 
-    .card-back .cred-label {
-        font-size: 5pt;
-        color: #666;
+    .cred-lbl {
+        font-size: 4.5pt;
+        color: #666666;
         text-transform: uppercase;
-        letter-spacing: 0.4pt;
     }
 
-    .card-back .cred-value {
-        font-size: 7.5pt;
+    .cred-box {
+        font-size: 7pt;
         font-weight: bold;
         color: #800000;
         font-family: 'Courier New', monospace;
-        background: #fff1f2;
+        background-color: #fff1f2;
         border: 0.5pt solid #fecdd3;
-        padding: 2pt 4pt;
-        border-radius: 2pt;
-        letter-spacing: 1pt;
+        padding: 1.5pt 3pt;
+        margin-bottom: 3pt;
     }
 
-    .card-back .notice {
+    .cred-pass {
+        color: #990000;
+    }
+
+    .notice {
+        font-size: 4pt;
+        color: #777777;
+        line-height: 1.2;
+        margin-top: 4pt;
+    }
+
+    .back-footer {
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        width: 100%;
+        background-color: #800000;
+        color: #ffffff;
         font-size: 4.5pt;
-        color: #888;
-        line-height: 1.4;
-        margin-top: auto;
-    }
-
-    .card-back .back-footer {
-        background: #800000;
-        color: white;
-        padding: 3pt 8pt;
-        font-size: 5pt;
         text-align: center;
+        padding: 2.5pt;
     }
 </style>
 </head>
 <body>
 
 <!-- FRONT SIDE -->
-<div class="card-front">
-    <div class="card-header">
-        <div class="logo-circle">DSWD</div>
-        <div class="header-text">
-            <div class="agency">Republic of the Philippines — DSWD</div>
-            <div class="program">Pantawid Pamilyang Pilipino Program (4Ps)</div>
-        </div>
-        <div class="card-type">BENEFICIARY ID</div>
-    </div>
+<div class="card-page">
+    <div class="card-front">
+        <table class="header-table" cellspacing="0" cellpadding="0">
+            <tr>
+                <td class="logo-td">
+                    <div class="logo-circle">DSWD</div>
+                </td>
+                <td class="header-text-td">
+                    <div class="agency">Republic of the Philippines &mdash; DSWD</div>
+                    <div class="program">Pantawid Pamilyang Pilipino Program (4Ps)</div>
+                </td>
+                <td class="badge-td">
+                    <span class="badge">BENEFICIARY ID</span>
+                </td>
+            </tr>
+        </table>
 
-    <div class="card-body">
-        <div class="photo-section">
-            <div class="photo-box">
-                @if($photoBase64)
-                    <img src="{{ $photoBase64 }}" alt="Photo">
-                @else
-                    <div class="photo-placeholder">NO<br>PHOTO</div>
-                @endif
-            </div>
-        </div>
+        <table class="body-table" cellspacing="0" cellpadding="0">
+            <tr>
+                <td class="photo-td">
+                    <div class="photo-box">
+                        @if($photoBase64)
+                            <img src="{{ $photoBase64 }}" alt="Photo">
+                        @else
+                            <div class="photo-placeholder">NO<br>PHOTO</div>
+                        @endif
+                    </div>
+                </td>
+                <td class="info-td">
+                    <div class="name">{{ strtoupper($beneficiary->last_name) }}, {{ $beneficiary->first_name }}</div>
+                    @if($beneficiary->middle_name)
+                        <div class="middle-name">{{ $beneficiary->middle_name }} {{ $beneficiary->suffix }}</div>
+                    @endif
 
-        <div class="info-section">
-            <div>
-                <div class="name">{{ strtoupper($beneficiary->last_name) }}, {{ $beneficiary->first_name }}</div>
-                @if($beneficiary->middle_name)
-                    <div style="font-size:6.5pt; opacity:0.85;">{{ $beneficiary->middle_name }} {{ $beneficiary->suffix }}</div>
-                @endif
-            </div>
+                    <div class="label">Birthdate</div>
+                    <div class="val">{{ $beneficiary->birthdate ? date('F d, Y', strtotime($beneficiary->birthdate)) : '—' }}</div>
 
-            <div>
-                <div class="label">Birthdate</div>
-                <div class="value">{{ $beneficiary->birthdate->format('F d, Y') }}</div>
-            </div>
+                    <div class="label">Address</div>
+                    <div class="val">Brgy. {{ $beneficiary->barangay }}, {{ $beneficiary->city ?? 'Lipa City' }}, Batangas</div>
+                </td>
+            </tr>
+        </table>
 
-            <div>
-                <div class="label">Address</div>
-                <div class="value" style="font-size:6pt; line-height:1.3;">
-                    Brgy. {{ $beneficiary->barangay }}, {{ $beneficiary->city }}, {{ $beneficiary->province }}
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div class="card-footer">
-        <div>
-            <div style="font-size:5pt; opacity:0.7; margin-bottom:1pt;">UNIQUE ID</div>
-            <div class="uid">{{ $beneficiary->unique_id }}</div>
-        </div>
-        <div class="city-label" style="text-align:right;">
-            <div style="font-weight:bold;">LIPA CITY</div>
-            <div>Batangas</div>
-        </div>
+        <table class="footer-table" cellspacing="0" cellpadding="0">
+            <tr>
+                <td>
+                    <div class="uid-label">UNIQUE ID</div>
+                    <div class="uid-val">{{ $beneficiary->unique_id }}</div>
+                </td>
+                <td class="city-val">
+                    <div>LIPA CITY</div>
+                    <div style="font-size:4.5pt; opacity:0.8; font-weight:normal;">Batangas</div>
+                </td>
+            </tr>
+        </table>
     </div>
 </div>
 
 <!-- BACK SIDE -->
-<div class="card-back">
-    <div class="back-header">
-        SECURE 4Ps — System for Eligibility Checking, Unified Records, and Evaluation
-    </div>
-
-    <div class="back-body">
-        <div class="qr-section">
-            <div class="qr-box">
-                @if($qrImageBase64)
-                    <img src="{{ $qrImageBase64 }}" alt="QR Code">
-                @else
-                    <div style="font-size:5pt; color:#003087; text-align:center; padding:4pt;">QR CODE</div>
-                @endif
-            </div>
-            <div class="qr-label">SCAN TO VERIFY</div>
+<div class="card-page" style="page-break-after: avoid;">
+    <div class="card-back">
+        <div class="back-header">
+            SECURE 4Ps &mdash; System for Eligibility Checking, Unified Records, and Evaluation
         </div>
 
-        <div class="credentials">
-            <div>
-                <div class="cred-label">Card Number</div>
-                <div class="cred-value" style="font-size:6.5pt;">{{ $card->card_number }}</div>
-            </div>
-            <div>
-                <div class="cred-label">Unique ID</div>
-                <div class="cred-value">{{ $beneficiary->unique_id }}</div>
-            </div>
-            <div>
-                <div class="cred-label">Default Password (Change on first login)</div>
-                <div class="cred-value" style="color:#ce1126;">{{ $defaultPassword }}</div>
-            </div>
-            <div class="notice">
-                This card is government property. If found, please return to the nearest
-                DSWD office in Lipa City, Batangas. Unauthorized use is punishable by law.
-                Portal: secure4ps.dswd.gov.ph
-            </div>
-        </div>
-    </div>
+        <table class="body-table" cellspacing="0" cellpadding="0">
+            <tr>
+                <td class="qr-td">
+                    <div class="qr-box">
+                        @if($qrImageBase64)
+                            <img src="{{ $qrImageBase64 }}" alt="QR Code">
+                        @else
+                            <div style="font-size:5pt; color:#800000; padding-top:20pt;">QR CODE</div>
+                        @endif
+                    </div>
+                    <div class="qr-text">SCAN TO VERIFY</div>
+                </td>
+                <td class="creds-td">
+                    <div class="cred-lbl">Card Number</div>
+                    <div class="cred-box">{{ $card->card_number ?? 'CARD-LPA-00001' }}</div>
 
-    <div class="back-footer">
-        Issued by: DSWD Lipa City SWDO • Card No: {{ $card->card_number }} • Issued: {{ $card->issued_at?->format('m/d/Y') ?? now()->format('m/d/Y') }}
+                    <div class="cred-lbl">Unique ID</div>
+                    <div class="cred-box">{{ $beneficiary->unique_id }}</div>
+
+                    <div class="cred-lbl">Default Password (First Login)</div>
+                    <div class="cred-box cred-pass">{{ $defaultPassword }}</div>
+
+                    <div class="notice">
+                        This card is government property. If found, please return to DSWD Lipa City, Batangas. Portal: secure4ps.dswd.gov.ph
+                    </div>
+                </td>
+            </tr>
+        </table>
+
+        <div class="back-footer">
+            Issued by: DSWD Lipa City SWDO &bull; Card No: {{ $card->card_number ?? '—' }} &bull; Issued: {{ date('m/d/Y') }}
+        </div>
     </div>
 </div>
 

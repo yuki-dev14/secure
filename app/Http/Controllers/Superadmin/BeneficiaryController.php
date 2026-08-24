@@ -356,7 +356,7 @@ class BeneficiaryController extends Controller
             'defaultPassword' => $defaultPassword,
             'qrImageBase64'   => $qrImageBase64,
             'photoBase64'     => $photoBase64,
-        ])->setPaper([0, 0, 241.89, 153.07], 'landscape');
+        ])->setPaper([0, 0, 241.89, 153.07]);
 
         AuditLogService::log('card_downloaded', $beneficiary, [], [], 'Card PDF downloaded');
 
