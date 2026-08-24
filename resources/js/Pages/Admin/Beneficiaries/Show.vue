@@ -160,149 +160,6 @@
             </div>
           </div>
 
-          <!-- ── Physical Documents Submitted to Office ── -->
-          <div class="card">
-            <div class="card-header">
-              <div>
-                <h3 class="font-semibold text-slate-800">Physical Documents</h3>
-                <p class="text-xs text-slate-400 mt-0.5">Documents physically submitted by beneficiary at the DSWD office</p>
-              </div>
-              <!-- Progress pill -->
-              <span :class="[
-                'badge badge-sm',
-                allRequiredPresent ? 'badge-success' : 'badge-warning'
-              ]">
-                {{ docChecklist.filter(d => d.submitted).length }}/{{ docChecklist.length }} Submitted
-              </span>
-            </div>
-            <div class="card-body space-y-4">
-
-              <!-- Document Slots -->
-              <div class="space-y-3">
-                <div
-                  v-for="slot in docChecklist"
-                  :key="slot.type"
-                  :class="[
-                    'rounded-xl border p-4 transition-all',
-                    slot.submitted
-                      ? (slot.doc.is_verified ? 'bg-success-50 border-success-200' : 'bg-amber-50 border-amber-200')
-                      : 'bg-slate-50 border-dashed border-slate-300'
-                  ]"
-                >
-                  <div class="flex items-start gap-4">
-                    <!-- Status icon -->
-                    <div :class="[
-                      'flex-shrink-0 w-10 h-10 rounded-lg flex items-center justify-center',
-                      slot.submitted
-                        ? (slot.doc.is_verified ? 'bg-success-100' : 'bg-amber-100')
-                        : 'bg-slate-200'
-                    ]">
-                      <CheckCircleIcon v-if="slot.submitted && slot.doc.is_verified" class="w-5 h-5 text-success-600" />
-                      <ClockIcon v-else-if="slot.submitted && !slot.doc.is_verified" class="w-5 h-5 text-amber-600" />
-                      <DocumentPlusIcon v-else class="w-5 h-5 text-slate-400" />
-                    </div>
-
-                    <!-- Content -->
-                    <div class="flex-1 min-w-0">
-                      <div class="flex items-center gap-2 flex-wrap">
-                        <p class="text-sm font-semibold text-slate-800">{{ slot.label }}</p>
-                        <span v-if="slot.submitted && slot.doc.is_verified" class="badge badge-success badge-sm">✓ Verified</span>
-                        <span v-else-if="slot.submitted" class="badge badge-warning badge-sm">Pending Verification</span>
-                        <span v-else class="badge badge-neutral badge-sm">Not Submitted</span>
-                      </div>
-
-                      <!-- Uploaded file info -->
-                      <div v-if="slot.submitted" class="mt-1 flex items-center gap-3 flex-wrap">
-                        <p class="text-xs text-slate-500">
-                          Uploaded {{ slot.doc.uploaded_at }}
-                          <span v-if="slot.doc.uploaded_by"> by <span class="font-medium">{{ slot.doc.uploaded_by }}</span></span>
-                        </p>
-                      </div>
-
-                      <!-- Upload form (for this slot) -->
-                      <div v-if="uploadingSlot === slot.type" class="mt-3 space-y-2">
-                        <input
-                          type="file"
-                          class="form-input text-sm"
-                          accept=".pdf,.jpg,.jpeg,.png"
-                          @change="e => slotFile = e.target.files[0]"
-                        />
-                        <p class="text-xs text-slate-400">Accepted: PDF, JPG, PNG — max 10 MB</p>
-                        <div class="flex gap-2">
-                          <button
-                            @click="uploadSlot(slot.type)"
-                            :disabled="!slotFile || uploadingDoc"
-                            class="btn btn-primary btn-sm"
-                          >
-                            <ArrowUpTrayIcon class="w-3.5 h-3.5" />
-                            {{ uploadingDoc ? 'Uploading…' : (slot.submitted ? 'Replace File' : 'Upload') }}
-                          </button>
-                          <button @click="cancelUpload" class="btn btn-ghost btn-sm">Cancel</button>
-                        </div>
-                      </div>
-                    </div>
-
-                    <!-- Action buttons -->
-                    <div v-if="uploadingSlot !== slot.type" class="flex items-center gap-1 flex-shrink-0">
-                      <!-- View -->
-                      <a v-if="slot.submitted"
-                        :href="`/storage/${slot.doc.file_path}`"
-                        target="_blank"
-                        class="btn btn-ghost btn-sm text-brand-600"
-                        title="View file"
-                      >
-                        <EyeIcon class="w-4 h-4" />
-                      </a>
-                      <!-- Verify toggle -->
-                      <button
-                        v-if="slot.submitted"
-                        @click="toggleVerify(slot.doc.id)"
-                        :class="['btn btn-ghost btn-sm', slot.doc.is_verified ? 'text-amber-600' : 'text-success-600']"
-                        :title="slot.doc.is_verified ? 'Mark as unverified' : 'Mark as verified'"
-                      >
-                        <ShieldCheckIcon class="w-4 h-4" />
-                      </button>
-                      <!-- Upload / Replace -->
-                      <button
-                        @click="startUpload(slot.type)"
-                        class="btn btn-ghost btn-sm text-slate-600"
-                        :title="slot.submitted ? 'Replace document' : 'Upload document'"
-                      >
-                        <ArrowUpTrayIcon class="w-4 h-4" />
-                      </button>
-                      <!-- Delete -->
-                      <button
-                        v-if="slot.submitted"
-                        @click="removeDoc(slot.doc.id)"
-                        class="btn btn-ghost btn-sm text-danger-600"
-                        title="Remove"
-                      >
-                        <TrashIcon class="w-4 h-4" />
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <!-- Activation readiness summary -->
-              <div :class="[
-                'flex items-center gap-3 p-3 rounded-lg text-sm',
-                allRequiredPresent ? 'bg-success-50 text-success-800' : 'bg-amber-50 text-amber-800'
-              ]">
-                <component
-                  :is="allRequiredPresent ? CheckCircleIcon : ExclamationCircleIcon"
-                  class="w-4 h-4 flex-shrink-0"
-                />
-                <span v-if="allRequiredPresent">
-                  All required documents submitted. You may now activate this beneficiary.
-                </span>
-                <span v-else>
-                  {{ docChecklist.filter(d => !d.submitted).length }} document(s) still required before activation.
-                </span>
-              </div>
-            </div>
-          </div>
-
           <!-- Compliance History -->
           <div class="card">
             <div class="card-header">
@@ -326,9 +183,9 @@
                   </tr>
                   <tr v-for="cr in beneficiary.compliance_records" :key="cr.id">
                     <td class="text-sm font-medium text-slate-700">{{ cr.period }}</td>
-                    <td><ComplianceDot :value="cr.edu_attendance_compliant" /></td>
-                    <td><ComplianceDot :value="cr.health_compliant" /></td>
-                    <td><ComplianceDot :value="cr.fds_compliant" /></td>
+                    <td><ComplianceDot :value="cr.edu_attendance_compliant !== null ? cr.edu_attendance_compliant : (cr.is_fully_compliant ? true : null)" /></td>
+                    <td><ComplianceDot :value="cr.health_compliant !== null ? cr.health_compliant : (cr.is_fully_compliant ? true : null)" /></td>
+                    <td><ComplianceDot :value="cr.fds_compliant !== null ? cr.fds_compliant : (cr.is_fully_compliant ? true : null)" /></td>
                     <td>
                       <span :class="['badge badge-sm', cr.is_fully_compliant ? 'badge-success' : 'badge-danger']">
                         {{ cr.is_fully_compliant ? 'Complete' : 'Incomplete' }}
@@ -512,8 +369,8 @@ const InfoRow = {
 const ComplianceDot = {
   props: ['value'],
   template: `
-    <span :class="value === true ? 'text-success-600' : value === false ? 'text-danger-600' : 'text-slate-300'">
-      {{ value === true ? '✓' : value === false ? '✗' : '—' }}
+    <span :class="value === false || value === 0 || value === '0' ? 'text-red-600 font-bold text-sm' : 'text-emerald-600 font-bold text-sm'">
+      {{ value === false || value === 0 || value === '0' ? '✗' : '✓' }}
     </span>
   `
 }
