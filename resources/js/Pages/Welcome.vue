@@ -279,7 +279,7 @@ const steps = [
   {
     icon: QrCodeIcon,
     title: 'QR Card Scanned',
-    desc: 'Barangay assistants scan the beneficiary\'s QR ID card at FDS sessions and claiming venues.',
+    desc: 'Barangay assistants scan the beneficiary\'s QR ID card at FDS sessions.',
   },
   {
     icon: BanknotesIcon,
