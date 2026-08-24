@@ -187,7 +187,6 @@ const navItems = computed(() => {
   if (role.value === 'admin_swa') {
     base.push(
       { route: 'adminswa.non-compliance.index',              label: 'Non-Compliance',             icon: ExclamationTriangleIcon,       routePrefix: '/adminswa/non-compliance' },
-      { route: 'adminswa.non-compliance.import',             label: 'Import Records',             icon: ArrowUpTrayIcon,               routePrefix: '/adminswa/non-compliance/import' },
       { route: 'adminswa.compliance-verification.index',     label: 'Compliance Verification',    icon: ClipboardDocumentCheckIcon,    routePrefix: '/adminswa/compliance-verification' },
       { route: 'adminswa.grant-summary.index',               label: 'Grant Summary',              icon: CurrencyDollarIcon,            routePrefix: '/adminswa/grant-summary' },
     )
