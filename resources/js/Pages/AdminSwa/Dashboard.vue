@@ -153,6 +153,7 @@ import StaffLayout from '@/Layouts/StaffLayout.vue'
 import {
   UsersIcon, ExclamationTriangleIcon, XCircleIcon,
   AcademicCapIcon, HeartIcon, PlusIcon, ArrowUpTrayIcon,
+  ClipboardDocumentCheckIcon,
 } from '@heroicons/vue/24/outline'
 
 const props = defineProps({
