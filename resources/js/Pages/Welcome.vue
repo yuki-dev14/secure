@@ -4,16 +4,16 @@
     <meta name="description" content="System for Eligibility Checking, Unified Records, and Evaluation for the 4Ps program in Lipa City, Batangas. Verify your compliance, check your grants, and manage your household records." />
   </Head>
 
-  <div class="min-h-screen bg-slate-50 flex flex-col font-sans text-slate-800">
+  <div class="min-h-screen bg-slate-900 flex flex-col font-sans">
 
     <!-- ─── Header ─────────────────────────────────────────────────────────── -->
-    <header class="sticky top-0 z-50 bg-white/90 backdrop-blur-xl border-b border-slate-200/80 shadow-xs">
+    <header class="sticky top-0 z-50 bg-slate-900/90 backdrop-blur-xl border-b border-red-950/80 shadow-md">
       <div class="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
         <div class="flex items-center gap-3">
           <img src="/logo.png" alt="SECURE 4Ps Logo" class="w-10 h-10 object-contain shrink-0" />
           <div>
-            <p class="text-sm font-bold text-slate-900 leading-tight tracking-tight">SECURE 4Ps</p>
-            <p class="text-[10px] text-slate-500 font-medium leading-tight">Lipa City, Batangas</p>
+            <p class="text-sm font-bold text-white leading-tight tracking-tight">SECURE 4Ps</p>
+            <p class="text-[10px] text-red-200/70 font-medium leading-tight">Lipa City, Batangas</p>
           </div>
         </div>
 
@@ -38,52 +38,61 @@
     </header>
 
     <!-- ─── Hero Section ───────────────────────────────────────────────────── -->
-    <section class="relative overflow-hidden flex-1 flex items-center py-16 bg-gradient-to-b from-brand-50/50 via-white to-slate-50" style="min-height: 82vh">
-      <!-- Decorative background accents in brand palette -->
-      <div class="absolute top-10 right-10 w-96 h-96 rounded-full bg-brand-100/40 blur-3xl pointer-events-none"></div>
-      <div class="absolute bottom-10 left-10 w-80 h-80 rounded-full bg-red-100/30 blur-3xl pointer-events-none"></div>
+    <section class="relative overflow-hidden flex-1 flex items-center py-20" style="min-height: 88vh; background: linear-gradient(135deg, #330000 0%, #4d0000 40%, #800000 70%, #990000 100%);">
+      <!-- Decorative Crimson & Gold glow blobs -->
+      <div class="absolute top-1/4 right-0 w-96 h-96 rounded-full opacity-20 pointer-events-none" style="background: radial-gradient(circle, #f87171, transparent); transform: translate(30%, -20%)"></div>
+      <div class="absolute bottom-0 left-0 w-80 h-80 rounded-full opacity-15 pointer-events-none" style="background: radial-gradient(circle, #ef4444, transparent); transform: translate(-30%, 30%)"></div>
 
-      <div class="relative z-10 max-w-6xl mx-auto px-6 py-12 grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+      <!-- Subtle Grid Overlay -->
+      <div class="absolute inset-0 opacity-5 pointer-events-none"
+        style="background-image: repeating-linear-gradient(0deg, transparent, transparent 40px, #fff 40px, #fff 41px), repeating-linear-gradient(90deg, transparent, transparent 40px, #fff 40px, #fff 41px)">
+      </div>
+
+      <div class="relative z-10 max-w-6xl mx-auto px-6 py-12 grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
         <!-- Left: Copy -->
         <div>
           <!-- DSWD badge -->
-          <div class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full border border-brand-200 bg-white/90 shadow-xs mb-6">
-            <span class="w-2 h-2 rounded-full bg-brand-600 animate-pulse"></span>
-            <span class="text-xs text-brand-900 font-semibold tracking-wide">DSWD — Lipa City, Batangas</span>
+          <div class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full border border-red-500/30 bg-black/20 backdrop-blur-md mb-6">
+            <span class="w-2 h-2 rounded-full bg-red-400 animate-pulse"></span>
+            <span class="text-xs text-red-100 font-semibold tracking-wide">DSWD — Lipa City, Batangas</span>
           </div>
 
-          <h1 class="text-4xl sm:text-5xl font-extrabold text-slate-900 leading-tight mb-5 tracking-tight">
+          <h1 class="text-4xl sm:text-5xl font-extrabold text-white leading-tight mb-5 tracking-tight">
             Pantawid Pamilyang<br />
-            <span class="text-brand-600">Pilipino Program</span>
+            <span style="background: linear-gradient(90deg, #fca5a5, #fecdd3); -webkit-background-clip: text; -webkit-text-fill-color: transparent">
+              Pilipino Program
+            </span>
           </h1>
 
-          <p class="text-base sm:text-lg text-slate-600 leading-relaxed mb-8 max-w-lg">
+          <p class="text-base sm:text-lg text-red-100/80 leading-relaxed mb-8 max-w-lg">
             SECURE — <em>System for Eligibility Checking, Unified Records, and Evaluation</em>.
-            A modern verification platform for 4Ps beneficiaries in Lipa City, Batangas ensuring accurate, transparent, and verified cash grant distributions.
+            A digital verification system for 4Ps beneficiaries in Lipa City, Batangas ensuring transparent, fraud-free cash grant distribution.
           </p>
 
           <div class="flex flex-wrap gap-3">
             <template v-if="authUser">
               <Link :href="dashboardRoute"
-                class="inline-flex items-center gap-2 px-6 py-3.5 rounded-xl font-semibold text-white bg-brand-600 hover:bg-brand-700 shadow-md shadow-brand-600/20 transition-all"
+                class="inline-flex items-center gap-2 px-6 py-3.5 rounded-xl font-semibold text-slate-900 shadow-lg hover:opacity-95 transition-opacity"
+                style="background: linear-gradient(135deg, #fca5a5, #fecdd3)"
               >
-                <ShieldCheckIcon class="w-5 h-5" />
+                <ShieldCheckIcon class="w-5 h-5 text-slate-900" />
                 Go to Your Dashboard
               </Link>
             </template>
             <template v-else>
               <Link :href="route('beneficiary.login')"
-                class="inline-flex items-center gap-2 px-6 py-3.5 rounded-xl font-semibold text-white bg-brand-600 hover:bg-brand-700 shadow-md shadow-brand-600/20 transition-all"
+                class="inline-flex items-center gap-2 px-6 py-3.5 rounded-xl font-semibold text-slate-900 shadow-lg hover:opacity-95 transition-opacity"
+                style="background: linear-gradient(135deg, #fca5a5, #fecdd3)"
               >
-                <QrCodeIcon class="w-5 h-5" />
+                <QrCodeIcon class="w-5 h-5 text-slate-900" />
                 Access Beneficiary Portal
               </Link>
             </template>
             <a href="#how-it-works"
-              class="inline-flex items-center gap-2 px-6 py-3.5 rounded-xl font-semibold text-slate-700 bg-white border border-slate-200 hover:bg-slate-50 transition-colors shadow-xs"
+              class="inline-flex items-center gap-2 px-6 py-3.5 rounded-xl font-semibold text-white border border-white/30 hover:bg-white/10 transition-colors"
             >
               Learn More
-              <ArrowDownIcon class="w-4 h-4 text-slate-500" />
+              <ArrowDownIcon class="w-4 h-4 text-red-200" />
             </a>
           </div>
         </div>
@@ -91,13 +100,14 @@
         <!-- Right: Feature cards -->
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div v-for="feat in features" :key="feat.label"
-            class="p-5 rounded-2xl bg-white border border-slate-200/80 shadow-xs hover:shadow-md hover:border-brand-300 transition-all group"
+            class="p-5 rounded-2xl border border-white/15 shadow-lg"
+            style="background: rgba(255, 255, 255, 0.08); backdrop-filter: blur(14px)"
           >
-            <div class="w-10 h-10 rounded-xl flex items-center justify-center mb-3.5 bg-brand-50 text-brand-600 group-hover:bg-brand-600 group-hover:text-white transition-colors">
+            <div class="w-10 h-10 rounded-xl flex items-center justify-center mb-3.5 bg-red-950/80 border border-red-700/50 text-white">
               <component :is="feat.icon" class="w-5 h-5" />
             </div>
-            <p class="text-sm font-bold text-slate-900">{{ feat.label }}</p>
-            <p class="text-xs text-slate-500 mt-1 leading-relaxed">{{ feat.desc }}</p>
+            <p class="text-sm font-bold text-white">{{ feat.label }}</p>
+            <p class="text-xs text-red-100/70 mt-1 leading-relaxed">{{ feat.desc }}</p>
           </div>
         </div>
       </div>
@@ -189,7 +199,7 @@
     </section>
 
     <!-- ─── Footer ─────────────────────────────────────────────────────────── -->
-    <footer class="bg-slate-900 text-slate-400 py-10">
+    <footer class="bg-slate-950 text-slate-400 py-10 border-t border-red-950/80">
       <div class="max-w-6xl mx-auto px-6 flex flex-col sm:flex-row items-center justify-between gap-4">
         <div class="flex items-center gap-3">
           <img src="/logo.png" alt="SECURE 4Ps Logo" class="w-9 h-9 object-contain shrink-0" />
