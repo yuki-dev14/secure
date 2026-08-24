@@ -319,18 +319,51 @@ class BeneficiaryController extends Controller
         return back()->with('success', $msg);
     }
 
-    public function downloadCard(int $id): \Symfony\Component\HttpFoundation\BinaryFileResponse|\Illuminate\Http\Response|\Illuminate\Http\RedirectResponse
+    public function downloadCard(int $id): \Illuminate\Http\Response|\Illuminate\Http\RedirectResponse
     {
-        $beneficiary = Beneficiary::with('card')->findOrFail($id);
+        $beneficiary = Beneficiary::with(['card', 'cards'])->findOrFail($id);
+        $card        = $beneficiary->cards()->where('is_active', true)->latest()->first() ?? $beneficiary->card;
 
-        if (!$beneficiary->card_path || !Storage::disk('public')->exists($beneficiary->card_path)) {
-            return back()->with('error', 'Card PDF not found. Please re-issue the card.');
+        if (!$card) {
+            $card = $this->cardService->issueCard($beneficiary, auth()->id());
         }
 
-        $fullPath = Storage::disk('public')->path($beneficiary->card_path);
+        $defaultPassword = $card->default_password_plain ?? '4PS-000001-082026';
+        $payload         = $card->qr_code_data ?? \App\Models\BeneficiaryCard::generateQrPayload($beneficiary->unique_id);
+
+        $qrImageBase64 = '';
+        try {
+            $svgData       = \SimpleSoftwareIO\QrCode\Facades\QrCode::format('svg')
+                ->size(400)
+                ->margin(1)
+                ->errorCorrection('M')
+                ->generate($payload);
+            $qrImageBase64 = 'data:image/svg+xml;base64,' . base64_encode($svgData);
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::error("QR PDF generation error: " . $e->getMessage());
+        }
+
+        $photoBase64 = '';
+        if ($beneficiary->photo_path && Storage::disk('public')->exists($beneficiary->photo_path)) {
+            $photoRaw    = Storage::disk('public')->get($beneficiary->photo_path);
+            $ext         = pathinfo($beneficiary->photo_path, PATHINFO_EXTENSION);
+            $photoBase64 = "data:image/{$ext};base64," . base64_encode($photoRaw);
+        }
+
+        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('pdf.beneficiary-card', [
+            'beneficiary'     => $beneficiary,
+            'card'            => $card,
+            'defaultPassword' => $defaultPassword,
+            'qrImageBase64'   => $qrImageBase64,
+            'photoBase64'     => $photoBase64,
+        ])->setPaper([0, 0, 241.89, 153.07], 'landscape');
+
         AuditLogService::log('card_downloaded', $beneficiary, [], [], 'Card PDF downloaded');
 
-        return response()->download($fullPath, "SECURE-4PS-Card-{$beneficiary->unique_id}.pdf");
+        return response($pdf->output(), 200, [
+            'Content-Type'        => 'application/pdf',
+            'Content-Disposition' => 'inline; filename="SECURE-4PS-Card-' . $beneficiary->unique_id . '.pdf"',
+        ]);
     }
 
     public function cardPreview(int $id): Response

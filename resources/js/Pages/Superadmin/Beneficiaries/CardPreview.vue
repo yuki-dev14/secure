@@ -17,10 +17,9 @@
         </Link>
         <div class="flex gap-2">
           <a
-            v-if="beneficiary.card_path"
             :href="route('superadmin.beneficiaries.card.download', beneficiary.id)"
+            target="_blank"
             class="btn btn-secondary btn-sm gap-1.5"
-            download
           >
             <ArrowDownTrayIcon class="w-4 h-4" />
             Download PDF
