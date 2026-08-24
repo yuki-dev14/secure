@@ -89,7 +89,7 @@ class GrantSummaryController extends Controller
 
         $barangays = Beneficiary::active()->distinct()->pluck('barangay')->sort()->values();
 
-        $events = DistributionEvent::orderBy('scheduled_date', 'desc')->get();
+        $events = DistributionEvent::orderBy('distribution_date_start', 'desc')->get();
 
         return Inertia::render('AdminSwa/GrantSummary/Index', [
             'grants'        => $grants,
@@ -116,14 +116,20 @@ class GrantSummaryController extends Controller
         if ($request->filled('event_id')) {
             $event = DistributionEvent::findOrFail($request->event_id);
         } else {
-            $period = $request->get('period', $this->getCurrentPeriod()['value']);
-            $event  = DistributionEvent::firstOrCreate(
+            $period    = $request->get('period', $this->getCurrentPeriod()['value']);
+            $periodObj = $this->getPeriodDetails($period);
+            $event     = DistributionEvent::firstOrCreate(
                 ['period' => $period],
                 [
-                    'title'          => "4Ps Cash Grant Disbursement — {$period}",
-                    'scheduled_date' => now()->toDateString(),
-                    'venue'          => 'City Gymnasium / Barangay Halls',
-                    'status'         => 'ongoing',
+                    'title'                   => "4Ps Cash Grant Disbursement — {$period}",
+                    'period_start'            => $periodObj['start'],
+                    'period_end'              => $periodObj['end'],
+                    'months_covered'          => 2,
+                    'distribution_date_start' => now()->toDateString(),
+                    'distribution_date_end'   => now()->addDays(2)->toDateString(),
+                    'venue'                   => 'City Gymnasium / Barangay Halls',
+                    'status'                  => 'ongoing',
+                    'created_by'              => auth()->id() ?? 1,
                 ]
             );
         }
@@ -138,6 +144,14 @@ class GrantSummaryController extends Controller
     }
 
     // ── Helpers ──────────────────────────────────────────────────────────────
+
+    private function getPeriodDetails(string $periodValue): array
+    {
+        foreach ($this->getAvailablePeriods() as $p) {
+            if ($p['value'] === $periodValue) return $p;
+        }
+        return ['start' => now()->startOfMonth()->toDateString(), 'end' => now()->endOfMonth()->toDateString()];
+    }
 
     private function getCurrentPeriod(): array
     {

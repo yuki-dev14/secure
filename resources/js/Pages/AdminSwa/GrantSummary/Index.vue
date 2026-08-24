@@ -214,7 +214,7 @@
               <select v-model="computeEventId" class="input w-full">
                 <option value="">Auto-create / Use active event for {{ selectedPeriod }}</option>
                 <option v-for="e in events" :key="e.id" :value="e.id">
-                  {{ e.title }} ({{ e.period }}) — {{ e.scheduled_date }}
+                  {{ e.title }} ({{ e.period }}) — {{ e.distribution_date_start }}
                 </option>
               </select>
               <p class="text-xs text-slate-400 mt-1">
