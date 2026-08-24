@@ -282,7 +282,7 @@ const printCard = () => window.print()
 
 /* ── FRONT face styles ─────────────────────────────────────────────────────── */
 .card-face--front {
-  background: linear-gradient(135deg, #003087 0%, #0051a8 60%, #1a69c8 100%);
+  background: linear-gradient(135deg, #330000 0%, #660000 50%, #990000 100%);
   color: white;
   display: flex;
   flex-direction: column;
@@ -294,27 +294,28 @@ const printCard = () => window.print()
   align-items: center;
   padding: 7px 10px 5px;
   border-bottom: 1.5px solid rgba(255,255,255,0.3);
-  background: rgba(0,0,0,0.15);
+  background: rgba(0,0,0,0.2);
   gap: 6px;
 }
 
 .cf-logo {
   width: 26px; height: 26px;
   border-radius: 50%;
-  background: #fcd116;
+  background: #ffffff;
   display: flex; align-items: center; justify-content: center;
-  font-weight: bold; font-size: 7px;
-  color: #003087; flex-shrink: 0;
+  font-weight: 800; font-size: 7.5px;
+  color: #800000; flex-shrink: 0;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.3);
 }
 
 .cf-headtext { flex: 1; }
-.cf-agency   { font-size: 6px; opacity: 0.85; letter-spacing: 0.3px; }
+.cf-agency   { font-size: 6px; opacity: 0.9; letter-spacing: 0.3px; }
 .cf-program  { font-size: 8px; font-weight: bold; letter-spacing: 0.4px; }
 
 .cf-badge {
   font-size: 6px;
-  background: #fcd116;
-  color: #003087;
+  background: #ffffff;
+  color: #800000;
   padding: 2px 5px;
   border-radius: 3px;
   font-weight: bold;
@@ -328,15 +329,15 @@ const printCard = () => window.print()
 
 .cf-photo {
   width: 58px; height: 64px;
-  border: 2px solid rgba(255,255,255,0.5);
+  border: 2px solid rgba(255,255,255,0.6);
   border-radius: 4px;
   overflow: hidden;
-  background: rgba(0,0,0,0.2);
+  background: rgba(0,0,0,0.3);
   display: flex; align-items: center; justify-content: center;
   flex-shrink: 0;
 }
 .cf-photo img { width: 100%; height: 100%; object-fit: cover; }
-.cf-photo-placeholder { font-size: 7px; opacity: 0.6; text-align: center; color: white; }
+.cf-photo-placeholder { font-size: 7px; opacity: 0.7; text-align: center; color: white; }
 
 .cf-info { flex: 1; display: flex; flex-direction: column; justify-content: space-between; }
 
@@ -353,26 +354,26 @@ const printCard = () => window.print()
 
 .cf-footer {
   padding: 5px 10px;
-  background: rgba(0,0,0,0.2);
+  background: rgba(0,0,0,0.3);
   display: flex;
   align-items: center;
   justify-content: space-between;
 }
-.cf-uidlabel { font-size: 6px; opacity: 0.7; margin-bottom: 1px; }
+.cf-uidlabel { font-size: 6px; opacity: 0.75; margin-bottom: 1px; }
 .cf-uid      { font-size: 9px; font-weight: bold; letter-spacing: 1px; font-family: 'Courier New', monospace; }
 .cf-city     { text-align: right; }
 .cf-cityname { font-size: 7px; font-weight: bold; }
-.cf-city div:last-child { font-size: 6px; opacity: 0.8; }
+.cf-city div:last-child { font-size: 6px; opacity: 0.85; }
 
 /* ── BACK face styles ──────────────────────────────────────────────────────── */
 .card-face--back {
-  background: #f8f9fa;
+  background: #ffffff;
   display: flex; flex-direction: column;
   font-family: Arial, sans-serif;
 }
 
 .cb-header {
-  background: #003087;
+  background: #4d0000;
   color: white;
   padding: 5px 10px;
   font-size: 6.5px;
@@ -382,7 +383,8 @@ const printCard = () => window.print()
 
 .cb-body {
   display: flex; flex: 1;
-  padding: 7px 10px; gap: 12px;
+  padding: 8px 10px; gap: 10px;
+  align-items: center;
 }
 
 .cb-qr-section {
@@ -392,15 +394,16 @@ const printCard = () => window.print()
 }
 
 .cb-qr-box {
-  width: 72px; height: 72px;
-  border: 2px solid #003087;
-  border-radius: 4px;
+  width: 95px; height: 95px;
+  border: 2px solid #800000;
+  border-radius: 6px;
   overflow: hidden; background: white;
   display: flex; align-items: center; justify-content: center;
+  padding: 2px;
 }
-.cb-qr-box img { width: 100%; height: 100%; }
-.cb-qr-placeholder { font-size: 6px; color: #003087; text-align: center; padding: 4px; }
-.cb-qr-label { font-size: 6px; color: #003087; font-weight: bold; }
+.cb-qr-box img { width: 100%; height: 100%; object-fit: contain; }
+.cb-qr-placeholder { font-size: 7px; color: #800000; text-align: center; padding: 4px; font-weight: bold; }
+.cb-qr-label { font-size: 7px; color: #800000; font-weight: 800; letter-spacing: 0.5px; }
 
 .cb-creds { flex: 1; display: flex; flex-direction: column; gap: 4px; }
 .cb-cred-row {}
@@ -410,21 +413,22 @@ const printCard = () => window.print()
   margin-bottom: 1px;
 }
 .cb-cred-value {
-  font-size: 8.5px; font-weight: bold; color: #003087;
+  font-size: 8.5px; font-weight: bold; color: #800000;
   font-family: 'Courier New', monospace;
-  background: #e8edf8;
-  padding: 2px 5px; border-radius: 2px;
+  background: #fff1f2;
+  border: 1px solid #fecdd3;
+  padding: 2px 5px; border-radius: 3px;
   letter-spacing: 0.8px;
 }
 .cb-cred-small { font-size: 7px; }
-.cb-cred-red   { color: #ce1126; }
+.cb-cred-red   { color: #990000; font-weight: 800; }
 .cb-notice {
-  font-size: 5.5px; color: #888;
+  font-size: 5.5px; color: #666;
   line-height: 1.4; margin-top: auto;
 }
 
 .cb-footer {
-  background: #ce1126;
+  background: #800000;
   color: white;
   padding: 3px 10px;
   font-size: 5.5px;

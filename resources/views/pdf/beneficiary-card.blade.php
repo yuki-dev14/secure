@@ -17,7 +17,7 @@
         width: 3.375in;
         height: 2.125in;
         position: relative;
-        background: linear-gradient(135deg, #003087 0%, #0051a8 60%, #1a69c8 100%);
+        background: linear-gradient(135deg, #330000 0%, #660000 50%, #990000 100%);
         color: white;
         display: flex;
         flex-direction: column;
@@ -29,20 +29,20 @@
         align-items: center;
         padding: 6pt 8pt 4pt;
         border-bottom: 1.5pt solid rgba(255,255,255,0.3);
-        background: rgba(0,0,0,0.15);
+        background: rgba(0,0,0,0.2);
     }
 
     .card-front .card-header .logo-circle {
         width: 22pt;
         height: 22pt;
         border-radius: 50%;
-        background: #fcd116;
+        background: #ffffff;
         display: flex;
         align-items: center;
         justify-content: center;
         font-weight: bold;
         font-size: 7pt;
-        color: #003087;
+        color: #800000;
         flex-shrink: 0;
     }
 
@@ -65,8 +65,8 @@
     .card-front .card-header .card-type {
         margin-left: auto;
         font-size: 5pt;
-        background: #fcd116;
-        color: #003087;
+        background: #ffffff;
+        color: #800000;
         padding: 2pt 4pt;
         border-radius: 2pt;
         font-weight: bold;
@@ -160,13 +160,13 @@
         width: 3.375in;
         height: 2.125in;
         position: relative;
-        background: #f8f9fa;
+        background: #ffffff;
         display: flex;
         flex-direction: column;
     }
 
     .card-back .back-header {
-        background: #003087;
+        background: #4d0000;
         color: white;
         padding: 5pt 8pt;
         font-size: 6pt;
@@ -189,15 +189,16 @@
     }
 
     .card-back .qr-box {
-        width: 65pt;
-        height: 65pt;
-        border: 1.5pt solid #003087;
+        width: 78pt;
+        height: 78pt;
+        border: 1.5pt solid #800000;
         border-radius: 3pt;
         overflow: hidden;
         background: white;
         display: flex;
         align-items: center;
         justify-content: center;
+        padding: 2pt;
     }
 
     .card-back .qr-box img {
@@ -206,8 +207,8 @@
     }
 
     .card-back .qr-label {
-        font-size: 5pt;
-        color: #003087;
+        font-size: 5.5pt;
+        color: #800000;
         font-weight: bold;
         text-align: center;
     }
@@ -229,9 +230,10 @@
     .card-back .cred-value {
         font-size: 7.5pt;
         font-weight: bold;
-        color: #003087;
+        color: #800000;
         font-family: 'Courier New', monospace;
-        background: #e8edf8;
+        background: #fff1f2;
+        border: 0.5pt solid #fecdd3;
         padding: 2pt 4pt;
         border-radius: 2pt;
         letter-spacing: 1pt;
@@ -245,7 +247,7 @@
     }
 
     .card-back .back-footer {
-        background: #ce1126;
+        background: #800000;
         color: white;
         padding: 3pt 8pt;
         font-size: 5pt;

@@ -25,9 +25,9 @@ class QrCodeService
 
         // Use SVG format — works with GD or no image driver (no imagick required)
         $svgData = QrCode::format('svg')
-            ->size(self::QR_SIZE)
-            ->margin(self::QR_MARGIN)
-            ->errorCorrection('H')
+            ->size(400)
+            ->margin(1)
+            ->errorCorrection('M')
             ->generate($payload);
 
         \Storage::disk('public')->put($path, $svgData);
