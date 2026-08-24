@@ -10,9 +10,9 @@
           <p class="text-sm text-slate-400 mt-0.5">{{ todayLong }} · Period: <span class="font-semibold text-amber-600">{{ currentPeriod.label }}</span></p>
         </div>
         <div class="flex items-center gap-2">
-          <Link :href="route('adminswa.non-compliance.create')" class="btn btn-primary gap-2">
-            <PlusIcon class="w-4 h-4" />
-            Flag Non-Compliance
+          <Link :href="route('adminswa.compliance-verification.index')" class="btn btn-primary gap-2">
+            <ClipboardDocumentCheckIcon class="w-4 h-4" />
+            Verify Compliance
           </Link>
         </div>
       </div>
