@@ -28,6 +28,7 @@ use Inertia\Inertia;
 // ─── Public Landing ───────────────────────────────────────────────────────────
 
 Route::get('/', fn () => Inertia::render('Welcome'))->name('home');
+Route::get('/logo.png', fn () => response()->file(public_path('logo.png')));
 
 // ─── Authentication ───────────────────────────────────────────────────────────
 
