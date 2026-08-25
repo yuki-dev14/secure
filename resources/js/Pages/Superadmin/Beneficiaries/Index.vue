@@ -42,10 +42,6 @@
         </div>
 
         <div class="flex items-center gap-2">
-          <a :href="route('superadmin.beneficiaries.export', filters)" class="btn btn-secondary">
-            <ArrowDownTrayIcon class="w-4 h-4 text-brand-600" />
-            Export List (CSV)
-          </a>
           <Link :href="route('superadmin.beneficiaries.import')" class="btn btn-primary">
             <ArrowUpTrayIcon class="w-4 h-4" />
             Bulk Import Beneficiaries
