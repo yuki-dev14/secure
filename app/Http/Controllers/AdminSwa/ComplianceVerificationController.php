@@ -162,10 +162,18 @@ class ComplianceVerificationController extends Controller
     public function importResults(Request $request): RedirectResponse
     {
         $request->validate([
-            'file'     => 'required|file|mimes:xlsx,xls,csv|max:5120',
+            'file'     => ['required', 'file', 'max:10240', function ($attribute, $value, $fail) {
+                $ext = strtolower($value->getClientOriginalExtension());
+                if (!in_array($ext, ['csv', 'xlsx', 'xls'])) {
+                    $fail('The uploaded file must be a valid Excel (.xlsx, .xls) or CSV (.csv) file.');
+                }
+            }],
             'period'   => 'required|string|max:20',
             'category' => 'required|in:education,health',
             'batch_id' => 'nullable|integer|exists:compliance_verification_batches,id',
+        ], [
+            'file.required' => 'Please select a CSV or Excel file to upload.',
+            'file.max'      => 'The file size must not exceed 10 MB.',
         ]);
 
         $periodData = $this->resolvePeriodDates($request->period);

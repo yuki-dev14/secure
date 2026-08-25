@@ -248,12 +248,20 @@ class NonComplianceController extends Controller
     public function import(Request $request): RedirectResponse
     {
         $request->validate([
-            'file'     => 'required|file|mimes:xlsx,xls,csv|max:5120',
+            'file'     => ['required', 'file', 'max:10240', function ($attribute, $value, $fail) {
+                $ext = strtolower($value->getClientOriginalExtension());
+                if (!in_array($ext, ['csv', 'xlsx', 'xls'])) {
+                    $fail('The uploaded file must be a valid Excel (.xlsx, .xls) or CSV (.csv) file.');
+                }
+            }],
             'period'   => 'required|string|max:20',
             'category' => 'required|in:education,health',
             'source'   => 'required|in:school_rep,midwife',
             'reporter_name'        => 'nullable|string|max:200',
             'reporter_institution' => 'nullable|string|max:200',
+        ], [
+            'file.required' => 'Please select a CSV or Excel file to upload.',
+            'file.max'      => 'The file size must not exceed 10 MB.',
         ]);
 
         $batchId    = 'IMPORT-' . now()->format('YmdHis') . '-' . strtoupper(substr(md5(uniqid()), 0, 6));
