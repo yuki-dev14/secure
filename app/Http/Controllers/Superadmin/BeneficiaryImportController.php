@@ -11,6 +11,7 @@ use Inertia\Response;
 use Maatwebsite\Excel\Facades\Excel;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
+use PhpOffice\PhpSpreadsheet\Cell\DataValidation;
 use PhpOffice\PhpSpreadsheet\Style\Alignment;
 use PhpOffice\PhpSpreadsheet\Style\Border;
 use PhpOffice\PhpSpreadsheet\Style\Fill;
@@ -202,6 +203,53 @@ class BeneficiaryImportController extends Controller
             'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['rgb' => 'EFF6FF']],
             'font' => ['italic' => true, 'color' => ['rgb' => '64748B']],
         ]);
+
+        // ── Data Validation (Dropdowns) ───────────────────────────────────────
+        $bgyList = implode(',', [
+            'Anilao', 'Antipolo del Norte', 'Bagong Pook', 'Balintawak', 'Banaybanay', 'Bolbok',
+            'Dagatan', 'Inosloban', 'Kayumanggi', 'Lipa City Poblacion', 'Lodlod', 'Marawoy',
+            'Mataas na Lupa', 'Pinagkawitan', 'Sabang', 'Sico', 'Tambo', 'Tibig'
+        ]);
+
+        $addDropdown = function ($sheet, $column, $formula, $title, $prompt) {
+            $validation = $sheet->getCell("{$column}2")->getDataValidation();
+            $validation->setType(DataValidation::TYPE_LIST);
+            $validation->setErrorStyle(DataValidation::STYLE_INFORMATION);
+            $validation->setAllowBlank(true);
+            $validation->setShowInputMessage(true);
+            $validation->setShowErrorMessage(true);
+            $validation->setShowDropDown(true);
+            $validation->setErrorTitle("Invalid {$title}");
+            $validation->setError("Please select a valid option from the dropdown list.");
+            $validation->setPromptTitle("Select {$title}");
+            $validation->setPrompt($prompt);
+            $validation->setFormula1('"' . $formula . '"');
+
+            for ($r = 2; $r <= 500; $r++) {
+                $sheet->getCell("{$column}{$r}")->setDataValidation(clone $validation);
+            }
+        };
+
+        // Barangay Dropdown (Column M)
+        $addDropdown($sheet, 'M', $bgyList, 'Barangay', 'Choose a valid Lipa City barangay.');
+
+        // Sex Dropdowns (Column G, T, AB, AJ)
+        foreach (['G', 'T', 'AB', 'AJ'] as $col) {
+            $addDropdown($sheet, $col, 'male,female', 'Sex', 'Choose male or female.');
+        }
+
+        // Civil Status Dropdown (Column H)
+        $addDropdown($sheet, 'H', 'single,married,widowed,separated,live-in', 'Civil Status', 'Choose a civil status option.');
+
+        // Member Relationship Dropdowns (Column U, AC, AK)
+        foreach (['U', 'AC', 'AK'] as $col) {
+            $addDropdown($sheet, $col, 'child,spouse,parent,sibling,grandchild,grandparent,in-law,other', 'Relationship', 'Choose family member relationship.');
+        }
+
+        // Member Education Level Dropdowns (Column V, AD, AL)
+        foreach (['V', 'AD', 'AL'] as $col) {
+            $addDropdown($sheet, $col, 'daycare,preschool,elementary,junior_high,senior_high,not_applicable', 'Education Level', 'Choose education level.');
+        }
 
         // ── Notes sheet ───────────────────────────────────────────────────────
         $notes = $spreadsheet->createSheet();
