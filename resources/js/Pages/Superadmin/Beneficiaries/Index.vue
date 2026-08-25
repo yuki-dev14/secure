@@ -150,7 +150,7 @@
                       class="btn btn-ghost btn-sm" title="View profile">
                       <EyeIcon class="w-4 h-4" />
                     </Link>
-                    <button v-if="b.card_path" @click="downloadCard(b.id)"
+                    <button v-if="b.card || b.card_path" @click="downloadCard(b.id)"
                       class="btn btn-ghost btn-sm text-brand-600" title="Download Card PDF">
                       <ArrowDownTrayIcon class="w-4 h-4" />
                     </button>
@@ -350,13 +350,13 @@ const downloadCard = (id) => {
 }
 
 const downloadSelected = () => {
-  const withCards = props.beneficiaries.data.filter(b => b.card_path && selected.has(b.id))
+  const withCards = props.beneficiaries.data.filter(b => (b.card || b.card_path) && selected.has(b.id))
   if (!withCards.length) {
-    alert('None of the selected beneficiaries have a generated card PDF yet. Issue cards first.')
+    alert('None of the selected beneficiaries have an issued card yet. Issue cards first.')
     return
   }
-  withCards.forEach(b => {
-    setTimeout(() => window.open(route('superadmin.beneficiaries.card.download', b.id), '_blank'), 200)
+  withCards.forEach((b, idx) => {
+    setTimeout(() => window.open(route('superadmin.beneficiaries.card.download', b.id), '_blank'), idx * 250)
   })
 }
 
