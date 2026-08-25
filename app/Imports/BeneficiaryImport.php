@@ -56,27 +56,40 @@ class BeneficiaryImport implements ToCollection, WithHeadingRow, SkipsOnError
         if (empty($filled)) return;
 
         // Required fields guard
-        $firstName = trim($row['first_name'] ?? '');
-        $lastName  = trim($row['last_name']  ?? '');
-        $birthdate = $this->parseDate($row['birthdate'] ?? null);
-        $sex       = strtolower(trim($row['sex'] ?? ''));
-        $barangay  = trim($row['barangay'] ?? '');
+        $firstName    = trim($row['first_name'] ?? '');
+        $lastName     = trim($row['last_name']  ?? '');
+        $birthdate    = $this->parseDate($row['birthdate'] ?? null);
+        $sex          = strtolower(trim($row['sex'] ?? ''));
+        $barangay     = trim($row['barangay'] ?? '');
+        $listahananId = trim($row['listahanan_id'] ?? '') ?: null;
 
-        if (!$firstName || !$lastName || !$birthdate || !in_array($sex, ['male', 'female']) || !$barangay) {
+        $missing = [];
+        if (!$firstName) $missing[] = 'first_name';
+        if (!$lastName)  $missing[] = 'last_name';
+        if (!$birthdate) $missing[] = 'birthdate (YYYY-MM-DD)';
+        if (!in_array($sex, ['male', 'female'])) $missing[] = 'sex (male/female)';
+        if (!$barangay)  $missing[] = 'barangay';
+
+        if (!empty($missing)) {
+            $nameStr = trim("{$firstName} {$lastName}") ?: 'N/A';
             $this->skipped[] = [
-                'row'    => $rowNum,
-                'reason' => "Missing required field(s): first_name, last_name, birthdate, sex, or barangay.",
+                'row'           => $rowNum,
+                'listahanan_id' => $listahananId ?? 'N/A',
+                'name'          => $nameStr,
+                'reason'        => 'Missing required field(s): ' . implode(', ', $missing) . '.',
             ];
             $this->skipCount++;
             return;
         }
 
         // Skip duplicate Listahanan ID if provided
-        $listahananId = trim($row['listahanan_id'] ?? '') ?: null;
         if ($listahananId && Beneficiary::where('listahanan_id', $listahananId)->exists()) {
+            $nameStr = trim("{$firstName} {$lastName}") ?: 'N/A';
             $this->skipped[] = [
-                'row'    => $rowNum,
-                'reason' => "Listahanan ID '{$listahananId}' already exists.",
+                'row'           => $rowNum,
+                'listahanan_id' => $listahananId,
+                'name'          => $nameStr,
+                'reason'        => "Duplicate record: Listahanan ID '{$listahananId}' already exists in the system database.",
             ];
             $this->skipCount++;
             return;

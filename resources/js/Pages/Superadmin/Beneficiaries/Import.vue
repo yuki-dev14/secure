@@ -118,43 +118,70 @@
         </div>
       </div>
 
-      <!-- Result panel — shown after a successful import -->
-      <div v-if="$page.props.flash?.success" class="card border-success-200">
-        <div class="card-header bg-success-50">
+      <!-- Result panel — shown whenever there are import success results OR skipped rows -->
+      <div v-if="$page.props.flash?.success || skippedRows.length > 0" class="card border-slate-200 shadow-sm">
+        <div class="card-header" :class="skippedRows.length > 0 ? 'bg-amber-50/80 border-b border-amber-200' : 'bg-success-50/80 border-b border-success-200'">
           <div class="flex items-center gap-2">
-            <CheckBadgeIcon class="w-5 h-5 text-success-600" />
-            <h3 class="font-semibold text-success-800">Import Results</h3>
+            <CheckBadgeIcon v-if="skippedRows.length === 0" class="w-5 h-5 text-success-600" />
+            <ExclamationTriangleIcon v-else class="w-5 h-5 text-amber-600" />
+            <h3 class="font-semibold text-slate-800">
+              Import Summary & Row Rejection Details
+            </h3>
           </div>
         </div>
         <div class="card-body space-y-4">
-          <p class="text-sm font-medium text-success-700">{{ $page.props.flash.success }}</p>
+          <p v-if="$page.props.flash?.success" class="text-sm font-medium text-slate-700">
+            {{ $page.props.flash.success }}
+          </p>
 
-          <!-- Skipped rows -->
+          <!-- Skipped rows table -->
           <div v-if="skippedRows.length > 0">
-            <p class="text-sm font-semibold text-warning-700 mb-2">
-              ⚠ {{ skippedRows.length }} row(s) were skipped:
-            </p>
-            <div class="overflow-x-auto rounded-xl border border-warning-200">
+            <div class="flex items-center justify-between mb-2">
+              <p class="text-sm font-bold text-amber-800 flex items-center gap-1.5">
+                <ExclamationTriangleIcon class="w-4 h-4 text-amber-600" />
+                {{ skippedRows.length }} Row(s) Skipped / Rejected
+              </p>
+              <span class="text-xs text-slate-500">Exact row numbers and rejection reasons below</span>
+            </div>
+
+            <div class="overflow-x-auto rounded-xl border border-amber-200 bg-white">
               <table class="w-full text-sm">
-                <thead class="bg-warning-50">
+                <thead class="bg-amber-50 text-amber-900 border-b border-amber-200">
                   <tr>
-                    <th class="px-4 py-2 text-left font-medium text-warning-700">Row #</th>
-                    <th class="px-4 py-2 text-left font-medium text-warning-700">Reason</th>
+                    <th class="px-4 py-2.5 text-left font-semibold">Excel Row #</th>
+                    <th class="px-4 py-2.5 text-left font-semibold">Listahanan ID</th>
+                    <th class="px-4 py-2.5 text-left font-semibold">Candidate Name</th>
+                    <th class="px-4 py-2.5 text-left font-semibold">Exact Rejection Reason / Missing Fields</th>
                   </tr>
                 </thead>
-                <tbody>
-                  <tr v-for="s in skippedRows" :key="s.row" class="border-t border-warning-100">
-                    <td class="px-4 py-2 font-mono text-slate-600">Row {{ s.row }}</td>
-                    <td class="px-4 py-2 text-slate-500">{{ s.reason }}</td>
+                <tbody class="divide-y divide-amber-100">
+                  <tr v-for="s in skippedRows" :key="s.row" class="hover:bg-amber-50/40 transition-colors">
+                    <td class="px-4 py-2.5 font-mono text-xs font-bold text-slate-700">
+                      Row {{ s.row }}
+                    </td>
+                    <td class="px-4 py-2.5 font-mono text-xs text-slate-600">
+                      {{ s.listahanan_id || 'N/A' }}
+                    </td>
+                    <td class="px-4 py-2.5 text-slate-800 font-medium">
+                      {{ s.name || 'N/A' }}
+                    </td>
+                    <td class="px-4 py-2.5 text-slate-600 text-xs">
+                      <span class="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-medium"
+                        :class="s.reason?.includes('Duplicate') ? 'bg-amber-100 text-amber-800 border border-amber-200' : 'bg-red-50 text-red-700 border border-red-200'">
+                        {{ s.reason }}
+                      </span>
+                    </td>
                   </tr>
                 </tbody>
               </table>
             </div>
           </div>
 
-          <a :href="route('superadmin.beneficiaries.index')" class="btn btn-primary btn-sm">
-            View Imported Beneficiaries →
-          </a>
+          <div class="pt-2 flex items-center gap-3">
+            <a :href="route('superadmin.beneficiaries.index')" class="btn btn-primary btn-sm">
+              View Beneficiaries List →
+            </a>
+          </div>
         </div>
       </div>
 
@@ -168,7 +195,7 @@ import { Head, useForm, usePage } from '@inertiajs/vue3'
 import {
   InformationCircleIcon, TableCellsIcon, ArrowDownTrayIcon,
   ArrowUpTrayIcon, DocumentArrowUpIcon, DocumentCheckIcon,
-  XMarkIcon, CheckBadgeIcon,
+  XMarkIcon, CheckBadgeIcon, ExclamationTriangleIcon,
 } from '@heroicons/vue/24/outline'
 import StaffLayout from '@/Layouts/StaffLayout.vue'
 
