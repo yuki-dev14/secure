@@ -22,6 +22,7 @@ use App\Http\Controllers\Admin4ps\DashboardController as FourPsDashboardControll
 use App\Http\Controllers\Admin4ps\FdsAttendanceController;
 use App\Http\Controllers\BarangayAssistant\DashboardController as BarangayDashboardController;
 use App\Http\Controllers\Beneficiary\DashboardController as BeneficiaryDashboardController;
+use App\Http\Controllers\Staff\StaffChatController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
@@ -236,6 +237,18 @@ Route::middleware(['auth', 'role:barangay_assistant'])
         Route::get('/scanner',       [FdsAttendanceController::class, 'scanner'])->name('scanner');
         Route::post('/scan',         [FdsAttendanceController::class, 'scan'])->name('scan');
         Route::get('/today-count',   [FdsAttendanceController::class, 'todayCount'])->name('today-count');
+    });
+
+// ─── Staff Chat (Superadmin, Admins, Barangay Assistants) ─────────────────────
+
+Route::middleware(['auth', 'role:superadmin,admin,admin_swa,admin_4ps,barangay_assistant'])
+    ->prefix('staff/chat')
+    ->name('staff.chat.')
+    ->group(function () {
+        Route::get('/',                        [StaffChatController::class, 'index'])->name('index');
+        Route::get('/messages/{contactId}',    [StaffChatController::class, 'fetchMessages'])->name('messages');
+        Route::post('/send',                   [StaffChatController::class, 'send'])->name('send');
+        Route::get('/unread-count',            [StaffChatController::class, 'unreadCount'])->name('unread-count');
     });
 
 // ─── Beneficiary Portal ──────────────────────────────────────────────────────

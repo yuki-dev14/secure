@@ -79,6 +79,16 @@
           <!-- Flash messages -->
           <FlashMessage />
 
+          <!-- Staff Chat Topbar Button -->
+          <Link
+            :href="route('staff.chat.index')"
+            class="btn btn-ghost btn-sm gap-1.5 text-slate-600 hover:text-emerald-700 transition-colors"
+            title="Staff Chat"
+          >
+            <ChatBubbleLeftRightIcon class="w-4 h-4 text-emerald-600" />
+            <span class="hidden sm:inline">Staff Chat</span>
+          </Link>
+
           <!-- Logout -->
           <button
             type="button"
@@ -121,7 +131,7 @@ import {
   QrCodeIcon, DocumentChartBarIcon, ShieldCheckIcon,
   ChevronLeftIcon, ChevronRightIcon, ArrowRightOnRectangleIcon,
   BellIcon, CogIcon, CalendarDaysIcon, ExclamationTriangleIcon,
-  ArrowUpTrayIcon, CurrencyDollarIcon,
+  ArrowUpTrayIcon, CurrencyDollarIcon, ChatBubbleLeftRightIcon,
 } from '@heroicons/vue/24/outline'
 import FlashMessage from '@/Components/FlashMessage.vue'
 import LogoutModal from '@/Components/LogoutModal.vue'
@@ -212,6 +222,11 @@ const navItems = computed(() => {
       { route: 'barangay.scanner',   label: 'FDS Scanner',  icon: QrCodeIcon, routePrefix: '/barangay/scanner' },
     )
   }
+
+  // Staff Chat for all administrative staff
+  base.push(
+    { route: 'staff.chat.index', label: 'Staff Chat', icon: ChatBubbleLeftRightIcon, routePrefix: '/staff/chat' },
+  )
 
   return base
 })
