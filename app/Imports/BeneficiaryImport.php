@@ -125,9 +125,16 @@ class BeneficiaryImport implements ToCollection, WithHeadingRow, SkipsOnError
             ]);
 
             // Portal user
+            $baseUsername = strtolower(str_replace('-', '', $uniqueId));
+            $username     = $baseUsername;
+            $counter      = 1;
+            while (User::where('username', $username)->exists()) {
+                $username = $baseUsername . '_' . $counter++;
+            }
+
             $user = User::create([
                 'name'                 => $firstName . ' ' . $lastName,
-                'username'             => strtolower(str_replace('-', '', $uniqueId)),
+                'username'             => $username,
                 'email'                => null,
                 'password'             => Hash::make('temp'),
                 'role'                 => 'beneficiary',
