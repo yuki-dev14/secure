@@ -209,7 +209,7 @@ Route::middleware(['auth', 'role:admin_swa,superadmin'])
 
 // ─── Admin 4Ps (FDS Attendance Monitoring) ──────────────────────────────────
 
-Route::middleware(['auth', 'role:admin_4ps,superadmin'])
+Route::middleware(['auth', 'role:admin_4ps,superadmin,barangay_assistant'])
     ->prefix('admin4ps')
     ->name('admin4ps.')
     ->group(function () {
@@ -225,7 +225,7 @@ Route::middleware(['auth', 'role:admin_4ps,superadmin'])
 
 // ─── Barangay Assistant (FDS Scanner) ────────────────────────────────────────
 
-Route::middleware(['auth', 'role:barangay_assistant'])
+Route::middleware(['auth', 'role:barangay_assistant,admin_4ps,superadmin'])
     ->prefix('barangay')
     ->name('barangay.')
     ->group(function () {

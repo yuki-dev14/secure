@@ -265,7 +265,7 @@
 
 <script setup>
 import { ref, reactive, onMounted, onUnmounted, nextTick } from 'vue'
-import { Head } from '@inertiajs/vue3'
+import { Head, usePage } from '@inertiajs/vue3'
 import axios from 'axios'
 import { Html5Qrcode } from 'html5-qrcode'
 import {
@@ -360,12 +360,16 @@ const submitScan = async () => {
   scanState.value = 'idle'
   lastResult.value = null
 
-  // Determine route based on page context
-  const scanRoute = route('admin4ps.fds.scan', {}, false)
-    ? route('admin4ps.fds.scan')
-    : route('fds.scan', {}, false)
-      ? route('fds.scan')
-      : route('barangay.scan')
+  // Determine route based on user role
+  const userRole = usePage().props.auth?.user?.role
+  let scanRoute = '/barangay/scan'
+  if (userRole === 'barangay_assistant') {
+    scanRoute = route('barangay.scan')
+  } else if (userRole === 'admin_4ps' || userRole === 'superadmin') {
+    scanRoute = route('admin4ps.fds.scan')
+  } else {
+    scanRoute = route('barangay.scan')
+  }
 
   try {
     const res = await axios.post(scanRoute, {
