@@ -116,11 +116,7 @@ Route::middleware(['auth', 'role:superadmin'])
         Route::get('beneficiaries/{id}/card/preview',   [SuperAdminBeneficiaryController::class, 'cardPreview'])->name('beneficiaries.card.preview');
         Route::post('beneficiaries/{id}/activate',      [SuperAdminBeneficiaryController::class, 'activate'])->name('beneficiaries.activate');
 
-        // Proxy Management
-        Route::post('beneficiaries/{beneficiary}/proxies',                 [ProxyController::class, 'store'])->name('beneficiaries.proxies.store');
-        Route::put('beneficiaries/{beneficiary}/proxies/{proxy}',          [ProxyController::class, 'update'])->name('beneficiaries.proxies.update');
-        Route::delete('beneficiaries/{beneficiary}/proxies/{proxy}',       [ProxyController::class, 'destroy'])->name('beneficiaries.proxies.destroy');
-        Route::patch('beneficiaries/{beneficiary}/proxies/{proxy}/toggle', [ProxyController::class, 'toggleApproval'])->name('beneficiaries.proxies.toggle');
+
 
         // Audit Trail (Superadmin exclusive)
         Route::get('/audit-logs',               [AuditLogController::class, 'index'])->name('audit-logs.index');

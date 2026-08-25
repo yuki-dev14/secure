@@ -38,7 +38,7 @@
           </div>
         </div>
       </div>
-      <div class="px-6 py-4 bg-slate-50 grid grid-cols-2 sm:grid-cols-3 gap-4 text-sm">
+      <div class="px-6 py-4 bg-slate-50 grid grid-cols-2 gap-4 text-sm">
         <div>
           <p class="text-xs text-slate-400 mb-0.5">Barangay</p>
           <p class="font-medium text-slate-700">Brgy. {{ beneficiary.barangay }}</p>
@@ -46,10 +46,6 @@
         <div>
           <p class="text-xs text-slate-400 mb-0.5">Family Members</p>
           <p class="font-medium text-slate-700">{{ beneficiary.family_members?.length ?? 0 }} members</p>
-        </div>
-        <div>
-          <p class="text-xs text-slate-400 mb-0.5">Proxies</p>
-          <p class="font-medium text-slate-700">{{ beneficiary.proxies?.length ?? 0 }} registered</p>
         </div>
       </div>
     </div>

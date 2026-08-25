@@ -17,7 +17,6 @@
         <div class="ml-auto flex flex-wrap gap-2">
           <span class="badge badge-info">{{ schoolAgeCount }} school-age</span>
           <span class="badge badge-warning">{{ underFiveCount }} under-5</span>
-          <span class="badge badge-neutral">{{ proxiesCount }} {{ proxiesCount === 1 ? 'proxy' : 'proxies' }}</span>
         </div>
       </div>
 
@@ -122,54 +121,6 @@
           </div>
         </div>
       </div>
-
-      <!-- Authorized Proxies -->
-      <div class="bg-white/90 backdrop-blur-sm rounded-2xl shadow-lg overflow-hidden border border-white/50">
-        <div class="px-5 py-4 border-b border-slate-100 flex items-center justify-between">
-          <div class="flex items-center gap-2">
-            <UserGroupIcon class="w-5 h-5 text-slate-500" />
-            <div>
-              <h2 class="font-semibold text-slate-800">Authorized Proxies</h2>
-              <p class="text-xs text-slate-400">Can claim your grant on your behalf</p>
-            </div>
-          </div>
-          <span class="badge badge-neutral">Max 2</span>
-        </div>
-
-        <div v-if="!beneficiary.proxies?.length" class="px-5 py-10 text-center text-slate-400">
-          <UserGroupIcon class="w-10 h-10 opacity-20 mx-auto mb-2" />
-          <p>No proxies registered.</p>
-          <p class="text-xs mt-1 max-w-xs mx-auto">
-            If you cannot personally claim, register a proxy at your Barangay Social Welfare Center.
-            Valid proxies must present authorization letter + valid ID.
-          </p>
-        </div>
-
-        <div v-else class="divide-y divide-slate-50">
-          <div v-for="proxy in beneficiary.proxies" :key="proxy.id" class="px-5 py-4 flex items-center gap-4">
-            <div class="w-10 h-10 rounded-xl bg-slate-100 flex items-center justify-center shrink-0">
-              <UserIcon class="w-5 h-5 text-slate-400" />
-            </div>
-            <div class="flex-1">
-              <p class="font-semibold text-slate-800 text-sm">{{ proxy.full_name }}</p>
-              <p class="text-xs text-slate-500 capitalize">{{ proxy.relationship }} · {{ proxy.contact_number ?? 'No contact' }}</p>
-            </div>
-            <div class="flex flex-col items-end gap-1">
-              <span :class="['badge badge-sm', proxy.is_active ? 'badge-success' : 'badge-neutral']">
-                {{ proxy.is_active ? 'Active' : 'Inactive' }}
-              </span>
-              <span v-if="proxy.has_valid_id" class="badge badge-success badge-sm">ID ✓</span>
-              <span v-else class="badge badge-warning badge-sm">No ID on file</span>
-            </div>
-          </div>
-        </div>
-
-        <div class="px-5 py-3 bg-slate-50 border-t border-slate-100">
-          <p class="text-xs text-slate-400 text-center">
-            To add, change, or remove a proxy, visit your Barangay Social Welfare Center with a valid ID and authorization letter.
-          </p>
-        </div>
-      </div>
     </div>
   </BeneficiaryLayout>
 </template>
@@ -178,8 +129,7 @@
 import { computed } from 'vue'
 import { Head } from '@inertiajs/vue3'
 import {
-  UsersIcon, UserIcon, UserGroupIcon,
-  ShieldCheckIcon, AcademicCapIcon,
+  UsersIcon, UserIcon, ShieldCheckIcon, AcademicCapIcon,
 } from '@heroicons/vue/24/outline'
 import BeneficiaryLayout from '@/Layouts/BeneficiaryLayout.vue'
 
@@ -191,7 +141,6 @@ const props = defineProps({
 const totalMembers   = computed(() => (props.beneficiary?.family_members?.length ?? 0) + 1)
 const schoolAgeCount = computed(() => props.beneficiary?.family_members?.filter(m => m.is_school_age).length ?? 0)
 const underFiveCount = computed(() => props.beneficiary?.family_members?.filter(m => m.is_under_five).length ?? 0)
-const proxiesCount   = computed(() => props.beneficiary?.proxies?.length ?? 0)
 
 const educationLabel = (level) => ({
   daycare:     'Day Care',
