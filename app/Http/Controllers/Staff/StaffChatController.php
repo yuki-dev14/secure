@@ -22,9 +22,16 @@ class StaffChatController extends Controller
         $currentUser = auth()->user();
 
         // Get all staff members except current user
-        $contacts = User::staff()
+        $query = User::staff()
             ->where('id', '!=', $currentUser->id)
-            ->where('is_active', true)
+            ->where('is_active', true);
+
+        // Superadmin chat is scoped exclusively to Admin SWA and Admin 4Ps (excluding Barangay Assistants)
+        if ($currentUser->isSuperadmin()) {
+            $query->whereIn('role', ['admin_swa', 'admin_4ps', 'admin']);
+        }
+
+        $contacts = $query
             ->orderByRaw("
                 CASE role
                     WHEN 'superadmin' THEN 1
@@ -172,6 +179,13 @@ class StaffChatController extends Controller
         $currentUser = auth()->user();
         if (!$currentUser) {
             return response()->json(['error' => 'Unauthenticated'], 401);
+        }
+
+        if ($currentUser->isSuperadmin()) {
+            $recipient = User::find($request->recipient_id);
+            if ($recipient && $recipient->isBarangayAssistant()) {
+                return response()->json(['error' => 'Superadmin can only contact Admin SWA and Admin 4Ps.'], 403);
+            }
         }
 
         $msg = StaffMessage::create([
