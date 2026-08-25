@@ -111,15 +111,38 @@
             </p>
           </div>
 
-          <!-- Manual input -->
-          <div class="flex gap-2 max-w-md mx-auto">
-            <input v-model="manualId" type="text" class="input flex-1" ref="scanInput"
+          <!-- Camera Scanner Toggle Button -->
+          <div class="flex justify-center pt-1">
+            <button
+              type="button"
+              @click="toggleCamera"
+              :class="[
+                'btn btn-sm gap-2 font-medium transition-all rounded-xl shadow-xs',
+                isCameraActive ? 'bg-red-600 hover:bg-red-500 text-white' : 'bg-emerald-600 hover:bg-emerald-500 text-white'
+              ]"
+            >
+              <CameraIcon class="w-4 h-4" />
+              <span>{{ isCameraActive ? 'Close Camera Scanner' : 'Open Camera Scanner' }}</span>
+            </button>
+          </div>
+
+          <!-- Camera Viewfinder Container -->
+          <div v-show="isCameraActive" class="max-w-md mx-auto overflow-hidden rounded-2xl border border-slate-200 shadow-inner bg-slate-950 p-2 relative">
+            <div id="qr-reader" class="w-full text-white"></div>
+            <p v-if="cameraError" class="p-3 text-xs text-red-300 bg-red-950/80 rounded-xl font-medium mt-2">
+              {{ cameraError }}
+            </p>
+          </div>
+
+          <!-- Manual / USB Barcode Input -->
+          <div class="flex gap-2 max-w-md mx-auto pt-2">
+            <input v-model="manualId" type="text" class="input flex-1 text-sm" ref="scanInput"
                    placeholder="4PS-LPA-000001 or scan QR..."
                    @keydown.enter="submitScan"
                    :disabled="scanning" />
             <button @click="submitScan" :disabled="!manualId.trim() || scanning"
                     :class="[
-                      'btn gap-1.5 shrink-0',
+                      'btn gap-1.5 shrink-0 text-sm font-semibold',
                       scanMode === 'check_in' ? 'btn-primary' : 'bg-orange-600 hover:bg-orange-500 text-white'
                     ]">
               <MagnifyingGlassIcon class="w-4 h-4" />
@@ -154,7 +177,7 @@
                   <div class="mt-2 grid grid-cols-2 gap-x-6 gap-y-1 text-sm">
                     <div>
                       <span class="text-slate-500 font-medium">Name:</span>
-                      <span class="text-slate-700 ml-1">{{ lastResult.beneficiary?.full_name }}</span>
+                      <span class="text-slate-700 ml-1 font-semibold">{{ lastResult.beneficiary?.full_name }}</span>
                     </div>
                     <div>
                       <span class="text-slate-500 font-medium">ID:</span>
@@ -241,12 +264,13 @@
 </template>
 
 <script setup>
-import { ref, reactive, onMounted } from 'vue'
+import { ref, reactive, onMounted, onUnmounted, nextTick } from 'vue'
 import { Head } from '@inertiajs/vue3'
 import axios from 'axios'
+import { Html5Qrcode } from 'html5-qrcode'
 import {
   QrCodeIcon, MagnifyingGlassIcon, CheckCircleIcon,
-  ExclamationCircleIcon,
+  ExclamationCircleIcon, CameraIcon,
   ArrowRightStartOnRectangleIcon, ArrowLeftStartOnRectangleIcon,
 } from '@heroicons/vue/24/outline'
 import StaffLayout from '@/Layouts/StaffLayout.vue'
@@ -265,6 +289,10 @@ const lastResult = ref(null)
 const scanInput = ref(null)
 const recentScans = ref([])
 
+const isCameraActive = ref(false)
+const cameraError = ref('')
+let html5QrcodeScanner = null
+
 const stats = reactive({
   checked_in:  props.todayStats?.checked_in ?? 0,
   checked_out: props.todayStats?.checked_out ?? 0,
@@ -276,6 +304,55 @@ const sessionConfig = reactive({
   session_title: '',
   venue:         '',
 })
+
+async function toggleCamera() {
+  if (isCameraActive.value) {
+    await stopCamera()
+  } else {
+    await startCamera()
+  }
+}
+
+async function startCamera() {
+  isCameraActive.value = true
+  cameraError.value = ''
+  
+  await nextTick()
+
+  try {
+    if (!html5QrcodeScanner) {
+      html5QrcodeScanner = new Html5Qrcode("qr-reader")
+    }
+
+    const config = { fps: 10, qrbox: { width: 250, height: 250 } }
+    
+    await html5QrcodeScanner.start(
+      { facingMode: "environment" },
+      config,
+      (decodedText) => {
+        if (decodedText && !scanning.value) {
+          manualId.value = decodedText
+          submitScan()
+        }
+      },
+      () => {}
+    )
+  } catch (err) {
+    console.error('Camera access error:', err)
+    cameraError.value = 'Camera permission denied or camera device not found. Ensure camera permissions are enabled in your browser settings.'
+  }
+}
+
+async function stopCamera() {
+  if (html5QrcodeScanner && html5QrcodeScanner.isScanning) {
+    try {
+      await html5QrcodeScanner.stop()
+    } catch (err) {
+      console.error('Error stopping camera scanner:', err)
+    }
+  }
+  isCameraActive.value = false
+}
 
 const submitScan = async () => {
   if (!manualId.value.trim() || scanning.value) return
@@ -325,6 +402,10 @@ const submitScan = async () => {
 }
 
 onMounted(() => scanInput.value?.focus())
+
+onUnmounted(() => {
+  stopCamera()
+})
 </script>
 
 <style scoped>
