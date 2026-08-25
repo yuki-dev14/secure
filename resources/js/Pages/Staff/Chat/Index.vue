@@ -62,7 +62,7 @@
               </div>
 
               <p class="text-xs text-slate-500 truncate mt-1">
-                <span v-if="contact.last_message?.sender_id === $page.props.auth.user.id" class="text-slate-400">You: </span>
+                <span v-if="contact.last_message?.sender_id === $page.props.auth?.user?.id" class="text-slate-400">You: </span>
                 {{ contact.last_message?.text ?? 'No messages yet' }}
               </p>
             </div>

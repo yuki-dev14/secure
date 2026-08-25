@@ -25,8 +25,8 @@
         </div>
         <Transition name="fade">
           <div v-if="sidebarOpen" class="min-w-0 flex-1">
-            <p class="text-sm font-medium text-slate-800 truncate">{{ $page.props.auth.user?.name }}</p>
-            <p class="text-[11px] text-slate-400">{{ $page.props.auth.user?.role_display }}</p>
+            <p class="text-sm font-medium text-slate-800 truncate">{{ $page.props.auth?.user?.name ?? 'Staff User' }}</p>
+            <p class="text-[11px] text-slate-400">{{ $page.props.auth?.user?.role_display ?? '' }}</p>
           </div>
         </Transition>
       </div>
@@ -38,7 +38,7 @@
             :href="getRouteUrl(item.route)"
             :class="[
               'nav-item',
-              currentRoute.startsWith(item.routePrefix ?? item.route)
+              (currentRoute && item.routePrefix && currentRoute.startsWith(item.routePrefix))
                 ? 'nav-item-active' : 'nav-item-inactive'
             ]"
           >
