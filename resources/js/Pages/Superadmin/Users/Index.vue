@@ -155,17 +155,17 @@
                   </span>
                 </td>
                 <td class="px-5 py-3 text-center">
-                  <span :class="['badge badge-sm', ben.is_active ? 'badge-success' : 'badge-danger']">
-                    {{ ben.is_active ? 'Active' : 'Inactive' }}
+                  <span :class="['badge badge-sm', ben.status === 'active' ? 'badge-success' : 'badge-danger']">
+                    {{ ben.status === 'active' ? 'Active' : 'Inactive' }}
                   </span>
                 </td>
                 <td class="px-5 py-3 text-center">
                   <button
                     @click="toggleBeneficiary(ben)"
                     :disabled="toggling === `b-${ben.id}`"
-                    :class="['btn btn-xs', ben.is_active ? 'btn-danger' : 'btn-success']"
+                    :class="['btn btn-xs', ben.status === 'active' ? 'btn-danger' : 'btn-success']"
                   >
-                    {{ toggling === `b-${ben.id}` ? '…' : ben.is_active ? 'Deactivate' : 'Activate' }}
+                    {{ toggling === `b-${ben.id}` ? '…' : ben.status === 'active' ? 'Deactivate' : 'Activate' }}
                   </button>
                 </td>
               </tr>

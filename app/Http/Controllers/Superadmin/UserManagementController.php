@@ -91,11 +91,17 @@ class UserManagementController extends Controller
 
     public function toggleBeneficiaryActive(Beneficiary $beneficiary): RedirectResponse
     {
-        $beneficiary->update(['is_active' => !$beneficiary->is_active]);
-        $status = $beneficiary->is_active ? 'activated' : 'deactivated';
-        AuditLogService::log("beneficiary_{$status}", $beneficiary, [], [],
-            "Superadmin {$status} beneficiary {$beneficiary->full_name}");
+        $newStatus = $beneficiary->status === 'active' ? 'inactive' : 'active';
+        $beneficiary->update(['status' => $newStatus]);
 
-        return back()->with('success', "Beneficiary account {$status}.");
+        if ($beneficiary->user) {
+            $beneficiary->user->update(['is_active' => $newStatus === 'active']);
+        }
+
+        $action = $newStatus === 'active' ? 'activated' : 'deactivated';
+        AuditLogService::log("beneficiary_{$action}", $beneficiary, [], [],
+            "Superadmin {$action} beneficiary {$beneficiary->full_name}");
+
+        return back()->with('success', "Beneficiary account {$action}.");
     }
 }
