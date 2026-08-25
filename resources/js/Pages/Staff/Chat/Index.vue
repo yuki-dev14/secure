@@ -295,7 +295,13 @@ async function fetchLatestMessages() {
   if (!activeContactId.value) return
 
   try {
-    const res = await fetch(route('staff.chat.messages', activeContactId.value))
+    const res = await fetch(`/staff/chat/messages/${activeContactId.value}`, {
+      headers: {
+        'Accept': 'application/json',
+        'X-Requested-With': 'XMLHttpRequest',
+      },
+      credentials: 'same-origin',
+    })
     if (res.ok) {
       const data = await res.json()
       if (data.success) {
@@ -315,13 +321,16 @@ async function sendMessage() {
   sending.value = true
 
   try {
-    const res = await fetch(route('staff.chat.send'), {
+    const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content ?? ''
+    const res = await fetch('/staff/chat/send', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content ?? '',
+        'X-CSRF-TOKEN': csrfToken,
         'Accept': 'application/json',
+        'X-Requested-With': 'XMLHttpRequest',
       },
+      credentials: 'same-origin',
       body: JSON.stringify({
         recipient_id: activeContactId.value,
         message: textToSend,
@@ -334,9 +343,14 @@ async function sendMessage() {
         localMessages.value.push(data.message)
         scrollToBottom()
       }
+    } else {
+      const errData = await res.json().catch(() => ({}))
+      console.error('Failed to send staff message:', res.status, errData)
+      newMessage.value = textToSend
     }
   } catch (err) {
     console.error('Error sending staff message:', err)
+    newMessage.value = textToSend
   } finally {
     sending.value = false
   }

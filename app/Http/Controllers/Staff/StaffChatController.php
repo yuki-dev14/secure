@@ -123,6 +123,9 @@ class StaffChatController extends Controller
     public function fetchMessages(Request $request, int $contactId): JsonResponse
     {
         $currentUser = auth()->user();
+        if (!$currentUser) {
+            return response()->json(['error' => 'Unauthenticated'], 401);
+        }
 
         // Mark incoming messages as read
         StaffMessage::where('sender_id', $contactId)
@@ -167,6 +170,9 @@ class StaffChatController extends Controller
         ]);
 
         $currentUser = auth()->user();
+        if (!$currentUser) {
+            return response()->json(['error' => 'Unauthenticated'], 401);
+        }
 
         $msg = StaffMessage::create([
             'sender_id'    => $currentUser->id,
