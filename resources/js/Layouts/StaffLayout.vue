@@ -35,7 +35,7 @@
       <nav class="flex-1 px-2 py-4 space-y-1 overflow-y-auto no-scrollbar">
         <template v-for="item in navItems" :key="item.route">
           <Link
-            :href="route(item.route)"
+            :href="getRouteUrl(item.route)"
             :class="[
               'nav-item',
               currentRoute.startsWith(item.routePrefix ?? item.route)
@@ -156,7 +156,17 @@ const handleLogout = () => {
   })
 }
 const currentRoute = computed(() => page.url)
-const role = computed(() => page.props.auth?.user?.role)
+const role = computed(() => page.props.auth?.user?.role ?? '')
+
+function getRouteUrl(routeName) {
+  if (!routeName) return '#'
+  try {
+    return route(routeName)
+  } catch (e) {
+    console.warn(`Route [${routeName}] failed to resolve`, e)
+    return '#'
+  }
+}
 
 // Map role to the route prefix used in web.php
 const roleRoutePrefix = computed(() => ({
@@ -164,11 +174,12 @@ const roleRoutePrefix = computed(() => ({
   admin: 'admin',
   admin_4ps: 'admin4ps',
   admin_swa: 'adminswa',
-  barangay_assistant: 'fds',
-}[role.value] ?? role.value))
+  barangay_assistant: 'barangay',
+}[role.value] ?? ''))
 
 const navItems = computed(() => {
   const base = []
+  if (!role.value || !roleRoutePrefix.value) return base
 
   // Dashboard — each role has its own (barangay_assistant handled in its own block)
   if (role.value !== 'barangay_assistant') {
