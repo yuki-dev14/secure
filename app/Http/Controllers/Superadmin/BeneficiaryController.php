@@ -319,6 +319,96 @@ class BeneficiaryController extends Controller
         return back()->with('success', $msg);
     }
 
+    /**
+     * Batch download PDF cards for multiple beneficiaries.
+     * Packages all PDFs into a single ZIP archive or single PDF.
+     */
+    public function batchDownloadCards(Request $request): \Symfony\Component\HttpFoundation\Response
+    {
+        $request->validate([
+            'ids'   => 'required|array|min:1|max:200',
+            'ids.*' => 'integer|exists:beneficiaries,id',
+        ]);
+
+        $beneficiaries = Beneficiary::with(['card', 'cards'])
+            ->whereIn('id', $request->ids)
+            ->get();
+
+        if ($beneficiaries->isEmpty()) {
+            return back()->with('error', 'No valid beneficiaries found to download cards for.');
+        }
+
+        $generatePdfOutput = function (Beneficiary $beneficiary) {
+            $card = $beneficiary->cards()->where('is_active', true)->latest()->first() ?? $beneficiary->card;
+            if (!$card) {
+                $card = $this->cardService->issueCard($beneficiary, auth()->id());
+            }
+
+            $defaultPassword = $card->default_password_plain ?? '4PS-000001-082026';
+            $payload         = $card->qr_code_data ?? \App\Models\BeneficiaryCard::generateQrPayload($beneficiary->unique_id);
+
+            $qrImageBase64 = '';
+            try {
+                $svgData       = \SimpleSoftwareIO\QrCode\Facades\QrCode::format('svg')
+                    ->size(400)
+                    ->margin(1)
+                    ->errorCorrection('M')
+                    ->generate($payload);
+                $qrImageBase64 = 'data:image/svg+xml;base64,' . base64_encode($svgData);
+            } catch (\Throwable $e) {}
+
+            $photoBase64 = '';
+            if (extension_loaded('gd') && $beneficiary->photo_path && Storage::disk('public')->exists($beneficiary->photo_path)) {
+                $photoRaw    = Storage::disk('public')->get($beneficiary->photo_path);
+                $ext         = pathinfo($beneficiary->photo_path, PATHINFO_EXTENSION);
+                $photoBase64 = "data:image/{$ext};base64," . base64_encode($photoRaw);
+            }
+
+            $logoBase64 = '';
+            if (file_exists(public_path('logo.svg'))) {
+                $logoRaw    = file_get_contents(public_path('logo.svg'));
+                $logoBase64 = 'data:image/svg+xml;base64,' . base64_encode($logoRaw);
+            }
+
+            $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('pdf.beneficiary-card', [
+                'beneficiary'     => $beneficiary,
+                'card'            => $card,
+                'defaultPassword' => $defaultPassword,
+                'qrImageBase64'   => $qrImageBase64,
+                'photoBase64'     => $photoBase64,
+                'logoBase64'      => $logoBase64,
+            ])->setPaper([0, 0, 241.89, 153.07]);
+
+            return $pdf->output();
+        };
+
+        if ($beneficiaries->count() === 1) {
+            $b = $beneficiaries->first();
+            $pdfContent = $generatePdfOutput($b);
+            AuditLogService::log('card_downloaded', $b, [], [], 'Card PDF downloaded via batch selection');
+            return response($pdfContent, 200, [
+                'Content-Type'        => 'application/pdf',
+                'Content-Disposition' => 'attachment; filename="SECURE-4PS-Card-' . $b->unique_id . '.pdf"',
+            ]);
+        }
+
+        $zipFileName = 'SECURE_4Ps_Cards_' . count($beneficiaries) . '_Beneficiaries_' . now()->format('Ymd_His') . '.zip';
+        $zipPath     = sys_get_temp_dir() . '/' . $zipFileName;
+
+        $zip = new \ZipArchive();
+        if ($zip->open($zipPath, \ZipArchive::CREATE | \ZipArchive::OVERWRITE) === true) {
+            foreach ($beneficiaries as $b) {
+                $pdfContent = $generatePdfOutput($b);
+                $filename   = 'SECURE-4PS-Card-' . $b->unique_id . '-' . str_replace(' ', '_', $b->last_name) . '.pdf';
+                $zip->addFromString($filename, $pdfContent);
+                AuditLogService::log('card_downloaded', $b, [], [], 'Card PDF bundled into batch ZIP download');
+            }
+            $zip->close();
+        }
+
+        return response()->download($zipPath, $zipFileName)->deleteFileAfterSend(true);
+    }
+
     public function downloadCard(int $id): \Illuminate\Http\Response|\Illuminate\Http\RedirectResponse
     {
         $beneficiary = Beneficiary::with(['card', 'cards'])->findOrFail($id);

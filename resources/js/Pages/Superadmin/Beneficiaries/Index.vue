@@ -350,14 +350,33 @@ const downloadCard = (id) => {
 }
 
 const downloadSelected = () => {
-  const withCards = props.beneficiaries.data.filter(b => (b.card || b.card_path) && selected.has(b.id))
-  if (!withCards.length) {
-    alert('None of the selected beneficiaries have an issued card yet. Issue cards first.')
-    return
+  const ids = [...selected]
+  if (!ids.length) return
+
+  const form = document.createElement('form')
+  form.method = 'POST'
+  form.action = route('superadmin.beneficiaries.cards.batch-download')
+
+  const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content')
+  if (csrfToken) {
+    const inputCsrf = document.createElement('input')
+    inputCsrf.type = 'hidden'
+    inputCsrf.name = '_token'
+    inputCsrf.value = csrfToken
+    form.appendChild(inputCsrf)
   }
-  withCards.forEach((b, idx) => {
-    setTimeout(() => window.open(route('superadmin.beneficiaries.card.download', b.id), '_blank'), idx * 250)
+
+  ids.forEach(id => {
+    const input = document.createElement('input')
+    input.type = 'hidden'
+    input.name = 'ids[]'
+    input.value = id
+    form.appendChild(input)
   })
+
+  document.body.appendChild(form)
+  form.submit()
+  document.body.removeChild(form)
 }
 
 // ── Misc helpers ─────────────────────────────────────────────────────────────

@@ -106,6 +106,7 @@ Route::middleware(['auth', 'role:superadmin'])
 
         // Static batch routes — also before resource() for the same reason
         Route::post('beneficiaries/batch-cards',        [SuperAdminBeneficiaryController::class, 'batchIssueCards'])->name('beneficiaries.cards.batch');
+        Route::post('beneficiaries/batch-download-pdf', [SuperAdminBeneficiaryController::class, 'batchDownloadCards'])->name('beneficiaries.cards.batch-download');
 
         // Beneficiary CRUD resource
         Route::resource('beneficiaries',        SuperAdminBeneficiaryController::class);
