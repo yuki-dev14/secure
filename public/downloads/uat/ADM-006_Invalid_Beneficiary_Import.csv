@@ -1,0 +1,4 @@
+listahanan_id,first_name,last_name,middle_name,suffix,birthdate,sex,civil_status,contact_number,house_no,street,purok,barangay,enrollment_date,remarks
+UAT-INVALID-001,Juana,,Mendoza,,1990-09-25,female,married,09182345672,45,CM Recto Ave,Purok 2,Marawoy,2022-03-10,Missing Last Name (Invalid Row 1)
+UAT-INVALID-002,Corazon,Aquino,Rizal,,,,widowed,09193456783,78,M.K. Lina St.,Purok 3,Tambo,2021-08-01,Missing Birthdate (Invalid Row 2)
+UAT-INVALID-003,Elena,Reyes,Gonzales,,1992-03-14,female,married,09204567894,12,President Laurel Highway,Purok 4,,2023-02-20,Missing Barangay (Invalid Row 3)
