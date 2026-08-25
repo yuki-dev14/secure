@@ -259,9 +259,6 @@ Route::middleware(['auth', 'role:beneficiary'])
     ->group(function () {
         Route::get('/dashboard',                [BeneficiaryDashboardController::class, 'index'])->name('dashboard');
         Route::get('/profile',                  [BeneficiaryDashboardController::class, 'profile'])->name('profile');
-        Route::get('/documents',                [BeneficiaryDashboardController::class, 'documents'])->name('documents');
-        Route::post('/documents',               [BeneficiaryDashboardController::class, 'uploadDocument'])->name('documents.upload');
-        Route::delete('/documents/{doc}',       [BeneficiaryDashboardController::class, 'deleteDocument'])->name('documents.delete');
         Route::get('/grants',                   [BeneficiaryDashboardController::class, 'grants'])->name('grants');
         Route::get('/family',                   [BeneficiaryDashboardController::class, 'family'])->name('family');
         Route::get('/notifications',            [BeneficiaryDashboardController::class, 'notifications'])->name('notifications');
