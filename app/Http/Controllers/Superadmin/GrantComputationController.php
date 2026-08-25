@@ -138,13 +138,17 @@ class GrantComputationController extends Controller
         $event = DistributionEvent::firstOrCreate(
             ['period' => $period],
             [
-                'title'          => "Grant Distribution {$period}",
-                'description'    => "Auto-created for grant computation — period {$period}",
-                'start_date'     => $periodData['start'],
-                'end_date'       => $periodData['end'],
-                'status'         => 'upcoming',
-                'months_covered' => 2,
-                'created_by'     => auth()->id(),
+                'title'                   => "Grant Distribution {$period}",
+                'notes'                   => "Auto-created for grant computation — period {$period}",
+                'period_start'            => $periodData['start'],
+                'period_end'              => $periodData['end'],
+                'distribution_date_start' => $periodData['start'],
+                'distribution_date_end'   => $periodData['end'],
+                'venue'                   => 'Lipa City SWDO Office',
+                'venue_address'           => 'Marawoy, Lipa City, Batangas',
+                'status'                  => 'upcoming',
+                'months_covered'          => 2,
+                'created_by'              => auth()->id() ?? 1,
             ]
         );
 
