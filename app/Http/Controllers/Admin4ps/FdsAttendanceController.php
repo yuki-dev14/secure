@@ -133,10 +133,11 @@ class FdsAttendanceController extends Controller
         // ── Barangay assistant validation ─────────────────────────────────────
         $user = auth()->user();
         if ($user->role === 'barangay_assistant' && $user->assigned_barangay) {
-            if (strtolower($beneficiary->barangay) !== strtolower($user->assigned_barangay)) {
+            if (strtolower(trim($beneficiary->barangay)) !== strtolower(trim($user->assigned_barangay))) {
                 return response()->json([
-                    'success' => false,
-                    'message' => "This beneficiary is from {$beneficiary->barangay}. You are assigned to {$user->assigned_barangay}.",
+                    'success'     => false,
+                    'message'     => "❌ Access Denied: Beneficiary belongs to Brgy. {$beneficiary->barangay}. Only beneficiaries from Brgy. {$user->assigned_barangay} can attend this FDS session.",
+                    'beneficiary' => $this->formatBeneficiary($beneficiary),
                 ], 422);
             }
         }

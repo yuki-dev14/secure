@@ -202,7 +202,6 @@ const navItems = computed(() => {
   if (role.value === 'admin_4ps') {
     base.push(
       { route: 'admin4ps.fds.index',   label: 'FDS Attendance',  icon: ClipboardDocumentCheckIcon, routePrefix: '/admin4ps/fds-attendance' },
-      { route: 'admin4ps.fds.scanner', label: 'FDS Scanner',     icon: QrCodeIcon,                 routePrefix: '/admin4ps/fds-attendance/scanner' },
     )
   }
 
