@@ -142,10 +142,10 @@ class BeneficiaryImportController extends Controller
 
         // ── Sample data row ───────────────────────────────────────────────────
         $sample = [
-            'A'  => 'NHTS-PR-0001',
-            'B'  => 'Maria',
-            'C'  => 'Santos',
-            'D'  => 'dela Cruz',
+            'A'  => 'UAT-2026-000101',
+            'B'  => 'Corazon',
+            'C'  => 'Vargas',
+            'D'  => 'Reyes',
             'E'  => '',
             'F'  => '1990-06-15',
             'G'  => 'female',
