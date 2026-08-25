@@ -257,13 +257,18 @@ class AuthController extends Controller
 
     private function redirectByRole(string $role): RedirectResponse
     {
-        return redirect()->intended(match ($role) {
+        $targetRoute = match ($role) {
             'superadmin'          => route('superadmin.dashboard'),
             'admin'               => route('admin.dashboard'),
             'admin_4ps'           => route('admin4ps.dashboard'),
             'admin_swa'           => route('adminswa.dashboard'),
-            'barangay_assistant'  => route('fds.scanner'),
+            'barangay_assistant'  => route('barangay.scanner'),
             default               => route('staff.login'),
-        });
+        };
+
+        // Clear any stale intended URL to prevent cross-role 403 authorization failures
+        session()->forget('url.intended');
+
+        return redirect()->to($targetRoute);
     }
 }
