@@ -13,7 +13,8 @@ class CheckMaintenanceMode
 {
     public function handle(Request $request, Closure $next): Response
     {
-        $isMaintenance = SystemSetting::get('maintenance_mode') === '1';
+        $settingValue  = SystemSetting::get('maintenance_mode');
+        $isMaintenance = (bool) $settingValue;
 
         if ($isMaintenance) {
             $user = Auth::user();
@@ -23,12 +24,12 @@ class CheckMaintenanceMode
                 return $next($request);
             }
 
-            // Allow staff login route so superadmin can sign in
-            if ($request->routeIs('staff.login', 'login')) {
+            // Allow login & logout routes so superadmin can sign in
+            if ($request->routeIs('staff.login', 'login', 'logout')) {
                 return $next($request);
             }
 
-            // Show Maintenance Mode page to all other users
+            // Show Maintenance Mode page to all non-superadmin users
             return Inertia::render('Errors/Maintenance', [
                 'message' => 'SECURE 4Ps is currently undergoing scheduled system maintenance.',
             ])->toResponse($request)->setStatusCode(503);
