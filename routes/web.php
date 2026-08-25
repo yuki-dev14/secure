@@ -105,6 +105,7 @@ Route::middleware(['auth', 'role:superadmin'])
         Route::get('beneficiaries/import/template',     [BeneficiaryImportController::class, 'template'])->name('beneficiaries.import.template');
 
         // Static batch routes — also before resource() for the same reason
+        Route::get('beneficiaries/export',              [SuperAdminBeneficiaryController::class, 'export'])->name('beneficiaries.export');
         Route::post('beneficiaries/batch-cards',        [SuperAdminBeneficiaryController::class, 'batchIssueCards'])->name('beneficiaries.cards.batch');
         Route::post('beneficiaries/batch-download-pdf', [SuperAdminBeneficiaryController::class, 'batchDownloadCards'])->name('beneficiaries.cards.batch-download');
 
