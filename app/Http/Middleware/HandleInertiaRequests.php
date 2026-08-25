@@ -48,6 +48,7 @@ class HandleInertiaRequests extends Middleware
                 'warning' => fn () => $request->session()->get('warning'),
                 'error'   => fn () => $request->session()->get('error'),
                 'info'    => fn () => $request->session()->get('info'),
+                'skipped' => fn () => $request->session()->get('skipped'),
             ],
             'app' => [
                 'name'    => config('app.name', 'SECURE 4Ps'),
