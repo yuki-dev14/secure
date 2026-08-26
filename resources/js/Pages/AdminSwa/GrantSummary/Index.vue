@@ -299,11 +299,12 @@ const runCompute = async () => {
   computeResult.value = null
 
   try {
+    const token = document.querySelector('meta[name="csrf-token"]')?.content
     const res = await fetch(route('adminswa.grant-summary.compute'), {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content,
+        'X-CSRF-TOKEN': token,
         'Accept': 'application/json',
       },
       body: JSON.stringify({
@@ -311,7 +312,21 @@ const runCompute = async () => {
         period: selectedPeriod.value,
       }),
     })
-    computeResult.value = await res.json()
+
+    if (res.status === 419) {
+      computeResult.value = { success: false, message: 'Session expired due to inactivity. Reloading page to refresh security token...' }
+      setTimeout(() => window.location.reload(), 1200)
+      return
+    }
+
+    const data = await res.json()
+    if (data.message && (data.message.toLowerCase().includes('csrf') || data.message.toLowerCase().includes('expired'))) {
+      computeResult.value = { success: false, message: 'Session expired due to inactivity. Reloading page to refresh security token...' }
+      setTimeout(() => window.location.reload(), 1200)
+      return
+    }
+
+    computeResult.value = data
     if (computeResult.value.success) {
       // Refresh the page data
       router.reload({ only: ['grants', 'summary', 'ncImpact'] })
