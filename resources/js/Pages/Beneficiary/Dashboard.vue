@@ -16,7 +16,7 @@
 
     <!-- Profile Card -->
     <div class="mb-6 bg-white/90 backdrop-blur-sm rounded-2xl shadow-lg overflow-hidden border border-white/50">
-      <div style="background: linear-gradient(135deg, #003087 0%, #0051a8 100%);" class="px-6 py-5 flex items-center gap-4">
+      <div style="background: linear-gradient(135deg, #700000 0%, #4a0000 100%);" class="px-6 py-5 flex items-center gap-4">
         <div class="w-16 h-16 rounded-xl overflow-hidden bg-white/20 flex-shrink-0 border-2 border-white/40">
           <img v-if="beneficiary.photo_path"
             :src="`/storage/${beneficiary.photo_path}`"
