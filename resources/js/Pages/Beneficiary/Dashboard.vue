@@ -127,110 +127,118 @@
       <Transition name="modal">
         <div v-if="showCardModal" class="fixed inset-0 z-50 flex items-center justify-center p-4">
           <div class="absolute inset-0 bg-slate-950/70 backdrop-blur-sm" @click="showCardModal = false"></div>
-          <div class="relative bg-slate-900 rounded-3xl shadow-2xl w-full max-w-lg p-6 space-y-5 border border-white/20">
+          <div class="relative bg-white rounded-3xl shadow-2xl w-full max-w-lg p-6 space-y-5 border border-slate-200">
             
             <!-- Modal Header -->
-            <div class="flex items-center justify-between border-b border-white/10 pb-3">
+            <div class="flex items-center justify-between border-b border-slate-100 pb-3">
               <div class="flex items-center gap-2">
-                <IdentificationIcon class="w-5 h-5 text-amber-400" />
-                <h3 class="font-bold text-white text-base">Digital 4Ps Identification Card</h3>
+                <IdentificationIcon class="w-5 h-5 text-brand-600" />
+                <h3 class="font-bold text-slate-800 text-base">Digital 4Ps Identification Card</h3>
               </div>
-              <button @click="showCardModal = false" class="p-1 rounded-lg text-white/60 hover:text-white hover:bg-white/10">
+              <button @click="showCardModal = false" class="p-1 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100">
                 <XMarkIcon class="w-5 h-5" />
               </button>
             </div>
 
-            <!-- 3D Card Scene -->
-            <div class="py-2">
-              <div class="card-scene-modal mx-auto" @click="cardFlipped = !cardFlipped">
-                <div :class="['card-3d-modal', { 'is-flipped': cardFlipped }]">
+            <!-- 3D Card Scene (Identical to Superadmin CardPreview.vue) -->
+            <div class="py-2 flex flex-col items-center">
+              <div class="card-scene mx-auto" @click="cardFlipped = !cardFlipped">
+                <div :class="['card-3d', { 'is-flipped': cardFlipped }]">
 
-                  <!-- FRONT FACE -->
-                  <div class="card-face-modal card-face--front-modal shadow-2xl rounded-2xl overflow-hidden border border-amber-300/40">
-                    <div class="bg-gradient-to-r from-red-950 via-rose-900 to-red-950 px-4 py-2.5 flex items-center justify-between border-b border-amber-400/30">
-                      <div class="flex items-center gap-2">
-                        <img src="/logo.png" alt="DSWD Logo" class="w-7 h-7 object-contain p-0.5 bg-white/10 rounded-full" />
-                        <div>
-                          <p class="text-[9px] font-black text-amber-200 uppercase tracking-widest leading-none">Republic of the Philippines</p>
-                          <p class="text-[11px] font-extrabold text-white leading-tight">Pantawid Pamilyang Pilipino Program</p>
-                        </div>
+                  <!-- ═══════════ FRONT ═══════════ -->
+                  <div class="card-face card-face--front" id="card-print-front">
+                    <!-- Header band -->
+                    <div class="cf-header">
+                      <div class="cf-logo">
+                        <img src="/logo.png" alt="Logo" class="w-full h-full object-contain p-0.5 rounded-full" />
                       </div>
-                      <span class="text-[9px] font-black px-2 py-0.5 rounded bg-amber-400 text-slate-950 uppercase tracking-wider">
-                        4Ps ID
-                      </span>
+                      <div class="cf-headtext">
+                        <div class="cf-agency">Republic of the Philippines — DSWD</div>
+                        <div class="cf-program">Pantawid Pamilyang Pilipino Program (4Ps)</div>
+                      </div>
+                      <div class="cf-badge">BENEFICIARY ID</div>
                     </div>
 
-                    <div class="p-4 flex gap-3 bg-gradient-to-br from-slate-900 via-rose-950 to-slate-900 relative">
-                      <div class="absolute top-3 right-4 w-9 h-7 rounded bg-gradient-to-tr from-amber-500 via-amber-200 to-amber-600 border border-amber-300/60 shadow-md flex items-center justify-center opacity-90">
-                        <div class="w-5 h-4 border border-amber-900/40 rounded-sm"></div>
-                      </div>
-
-                      <div class="w-20 h-24 rounded-xl overflow-hidden ring-2 ring-amber-400/50 bg-slate-950 shrink-0 shadow-lg">
+                    <!-- Body -->
+                    <div class="cf-body">
+                      <!-- Photo -->
+                      <div class="cf-photo">
                         <img v-if="beneficiary.photo_path && !imageError"
-                             :src="`/storage/${beneficiary.photo_path}`" alt=""
-                             @error="imageError = true"
-                             class="w-full h-full object-cover" />
-                        <div v-else class="w-full h-full flex items-center justify-center bg-slate-900">
-                          <UserIcon class="w-9 h-9 text-slate-400" />
+                          :src="`/storage/${beneficiary.photo_path}`" alt="Photo"
+                          @error="imageError = true" />
+                        <div v-else class="cf-photo-placeholder">
+                          <UserIcon class="w-8 h-8 text-white/70" />
                         </div>
                       </div>
 
-                      <div class="flex-1 min-w-0 space-y-1.5 pt-0.5">
-                        <div>
-                          <p class="text-[10px] text-amber-300/80 font-bold uppercase tracking-wider">Household Head</p>
-                          <p class="text-sm font-black text-white truncate leading-tight uppercase">
-                            {{ beneficiary.last_name }}, {{ beneficiary.first_name }}
-                          </p>
+                      <!-- Info -->
+                      <div class="cf-info">
+                        <div class="cf-name">
+                          {{ upperLast }}, {{ beneficiary.first_name }}
+                          <span v-if="beneficiary.middle_name" class="cf-middle">{{ beneficiary.middle_name }}</span>
                         </div>
-                        <div>
-                          <p class="text-[9px] text-slate-400 uppercase font-semibold">Unique ID</p>
-                          <p class="text-xs font-mono font-bold text-amber-300 tracking-wider">
-                            {{ beneficiary.unique_id }}
-                          </p>
+                        <div class="cf-field">
+                          <div class="cf-label">Birthdate</div>
+                          <div class="cf-value">{{ formatDateLong(beneficiary.birthdate) }}</div>
                         </div>
-                        <div>
-                          <p class="text-[9px] text-slate-400 uppercase font-semibold">Barangay / City</p>
-                          <p class="text-xs font-medium text-white/90 truncate">
-                            Brgy. {{ beneficiary.barangay }}, Lipa City
-                          </p>
+                        <div class="cf-field">
+                          <div class="cf-label">Address</div>
+                          <div class="cf-value cf-small">
+                            Brgy. {{ beneficiary.barangay }}, {{ beneficiary.city ?? 'Lipa City' }}, {{ beneficiary.province ?? 'Batangas' }}
+                          </div>
                         </div>
                       </div>
                     </div>
 
-                    <div class="bg-slate-950 px-4 py-1.5 border-t border-white/10 flex items-center justify-between text-[9px] text-white/60">
-                      <span>DSWD Field Office IV-A</span>
-                      <span class="font-mono text-amber-300">CARD NO: {{ card?.card_number ?? '4PS-LPA-ACTIVE' }}</span>
+                    <!-- Footer -->
+                    <div class="cf-footer">
+                      <div>
+                        <div class="cf-uidlabel">UNIQUE ID</div>
+                        <div class="cf-uid">{{ beneficiary.unique_id }}</div>
+                      </div>
+                      <div class="cf-city">
+                        <div class="cf-cityname">LIPA CITY</div>
+                        <div>Batangas</div>
+                      </div>
                     </div>
                   </div>
 
-                  <!-- BACK FACE -->
-                  <div class="card-face-modal card-face--back-modal shadow-2xl rounded-2xl overflow-hidden border border-amber-300/40 bg-gradient-to-br from-slate-950 via-rose-950 to-slate-950 p-4 flex flex-col justify-between">
-                    <div class="flex items-center justify-between border-b border-white/10 pb-2">
-                      <div>
-                        <p class="text-[10px] font-black text-amber-300 uppercase tracking-wider">OFFICIAL 4Ps QR CARD</p>
-                        <p class="text-[9px] text-slate-400">Scan for FDS Attendance & Distribution</p>
-                      </div>
-                      <span class="text-[9px] font-mono text-emerald-400 bg-emerald-950 px-2 py-0.5 rounded border border-emerald-500/30">
-                        VERIFIED
-                      </span>
+                  <!-- ═══════════ BACK ═══════════ -->
+                  <div class="card-face card-face--back" id="card-print-back">
+                    <div class="cb-header">
+                      SECURE 4Ps — System for Eligibility Checking, Unified Records, and Evaluation
                     </div>
 
-                    <div class="flex items-center gap-4 py-2">
-                      <div class="w-24 h-24 bg-white p-1.5 rounded-xl shrink-0 shadow-lg border-2 border-amber-400/50 flex items-center justify-center">
-                        <img v-if="qr_base64" :src="qr_base64" alt="QR Code" class="w-full h-full object-contain" />
-                        <QrCodeIcon v-else class="w-16 h-16 text-slate-400" />
+                    <div class="cb-body">
+                      <!-- QR code -->
+                      <div class="cb-qr-section">
+                        <div class="cb-qr-box">
+                          <img v-if="qr_base64" :src="qr_base64" alt="QR Code" />
+                          <div v-else class="cb-qr-placeholder">QR CODE</div>
+                        </div>
+                        <div class="cb-qr-label">SCAN TO VERIFY</div>
                       </div>
-                      <div class="space-y-1 text-xs text-left">
-                        <p class="text-white font-bold text-xs">{{ beneficiary.full_name }}</p>
-                        <p class="text-amber-300 font-mono text-[11px]">{{ beneficiary.unique_id }}</p>
-                        <p class="text-slate-400 text-[10px] leading-tight">
-                          Present this QR code during Barangay FDS sessions and Grant distributions.
-                        </p>
+
+                      <!-- Credentials -->
+                      <div class="cb-creds">
+                        <div class="cb-cred-row">
+                          <div class="cb-cred-label">Card Number</div>
+                          <div class="cb-cred-value cb-cred-small">{{ card?.card_number ?? '—' }}</div>
+                        </div>
+                        <div class="cb-cred-row">
+                          <div class="cb-cred-label">Unique ID</div>
+                          <div class="cb-cred-value">{{ beneficiary.unique_id }}</div>
+                        </div>
+                        <div class="cb-notice">
+                          This card is government property. If found, please return to the nearest
+                          DSWD office in Lipa City, Batangas. Unauthorized use is punishable by law.
+                          Portal: secure4ps.dswd.gov.ph
+                        </div>
                       </div>
                     </div>
 
-                    <div class="text-[8px] text-slate-400/80 text-center border-t border-white/10 pt-1.5 leading-tight">
-                      Government Property &bull; Non-Transferable &bull; DSWD Lipa City Batangas Hotline (043) 756-1234
+                    <div class="cb-footer">
+                      Issued by: DSWD Lipa City SWDO &bull; Card No: {{ card?.card_number ?? '—' }} &bull; Issued: {{ formatDateShort(card?.issued_at) }}
                     </div>
                   </div>
 
@@ -238,13 +246,13 @@
               </div>
             </div>
 
-            <!-- Modal Footer -->
-            <div class="flex items-center justify-between pt-2 border-t border-white/10">
+            <!-- Modal Footer Actions -->
+            <div class="flex items-center justify-between pt-3 border-t border-slate-100">
               <button @click="cardFlipped = !cardFlipped" class="btn btn-secondary btn-sm gap-2 text-xs">
                 <ArrowsRightLeftIcon class="w-4 h-4" />
                 {{ cardFlipped ? 'See Front' : 'See Back / QR Code' }}
               </button>
-              <button @click="showCardModal = false" class="btn btn-primary btn-sm text-xs">
+              <button @click="showCardModal = false" class="btn btn-primary btn-sm text-xs px-5">
                 Close
               </button>
             </div>
@@ -263,7 +271,7 @@ import { Head } from '@inertiajs/vue3'
 import {
   UserIcon, BellAlertIcon, HeartIcon,
   AcademicCapIcon, ShoppingBagIcon, IdentificationIcon,
-  XMarkIcon, QrCodeIcon, ArrowsRightLeftIcon,
+  XMarkIcon, ArrowsRightLeftIcon,
 } from '@heroicons/vue/24/outline'
 import BeneficiaryLayout from '@/Layouts/BeneficiaryLayout.vue'
 
@@ -280,6 +288,10 @@ const props = defineProps({
 const imageError    = ref(false)
 const showCardModal = ref(false)
 const cardFlipped   = ref(false)
+
+const upperLast = computed(() =>
+  (props.beneficiary?.last_name ?? '').toUpperCase()
+)
 
 const getNotifData = (n) => {
   if (!n?.data) return {}
@@ -301,38 +313,201 @@ const fmt = (val) => {
   return isNaN(n) ? '0.00' : n.toLocaleString('en-PH', { minimumFractionDigits: 2 })
 }
 
-const formatDate = (d) =>
-  d ? new Date(d).toLocaleString('en-PH', { dateStyle: 'medium', timeStyle: 'short' }) : '—'
+const formatDateLong = (d) =>
+  d ? new Date(d).toLocaleDateString('en-PH', { year: 'numeric', month: 'long', day: 'numeric' }) : '—'
+
+const formatDateShort = (d) =>
+  d ? new Date(d).toLocaleDateString('en-PH', { month: '2-digit', day: '2-digit', year: 'numeric' }) : '—'
 </script>
 
 <style>
-.card-scene-modal {
-  width: 324px;
-  height: 204px;
-  perspective: 1000px;
+/* ── 3D Flip scene (Exact copy from Superadmin CardPreview.vue) ───────────── */
+.card-scene {
+  width: 324px;        /* 3.375in @ 96dpi */
+  height: 204px;       /* 2.125in @ 96dpi */
+  perspective: 900px;
   cursor: pointer;
+  flex-shrink: 0;
 }
 
-.card-3d-modal {
+.card-3d {
   width: 100%;
   height: 100%;
   position: relative;
   transform-style: preserve-3d;
-  transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: transform 0.65s cubic-bezier(0.4, 0, 0.2, 1);
+  border-radius: 12px;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.25);
 }
 
-.card-3d-modal.is-flipped {
+.card-3d.is-flipped {
   transform: rotateY(180deg);
 }
 
-.card-face-modal {
+.card-face {
   position: absolute;
   inset: 0;
+  border-radius: 12px;
   backface-visibility: hidden;
   -webkit-backface-visibility: hidden;
+  overflow: hidden;
 }
 
-.card-face--back-modal {
+.card-face--back {
   transform: rotateY(180deg);
+}
+
+/* FRONT face styles */
+.card-face--front {
+  background: linear-gradient(135deg, #330000 0%, #660000 50%, #990000 100%);
+  color: white;
+  display: flex;
+  flex-direction: column;
+  font-family: Arial, sans-serif;
+}
+
+.cf-header {
+  display: flex;
+  align-items: center;
+  padding: 7px 10px 5px;
+  border-bottom: 1.5px solid rgba(255,255,255,0.3);
+  background: rgba(0,0,0,0.2);
+  gap: 6px;
+}
+
+.cf-logo {
+  width: 26px; height: 26px;
+  border-radius: 50%;
+  background: #ffffff;
+  display: flex; align-items: center; justify-content: center;
+  font-weight: 800; font-size: 7.5px;
+  color: #800000; flex-shrink: 0;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+}
+
+.cf-headtext { flex: 1; }
+.cf-agency   { font-size: 6px; opacity: 0.9; letter-spacing: 0.3px; }
+.cf-program  { font-size: 8px; font-weight: bold; letter-spacing: 0.4px; }
+
+.cf-badge {
+  font-size: 6px;
+  background: #ffffff;
+  color: #800000;
+  padding: 2px 5px;
+  border-radius: 3px;
+  font-weight: bold;
+  white-space: nowrap;
+}
+
+.cf-body {
+  display: flex; flex: 1;
+  padding: 7px 10px; gap: 10px;
+}
+
+.cf-photo {
+  width: 58px; height: 64px;
+  border: 2px solid rgba(255,255,255,0.6);
+  border-radius: 4px;
+  overflow: hidden;
+  background: rgba(0,0,0,0.3);
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+.cf-photo img { width: 100%; height: 100%; object-fit: cover; }
+.cf-photo-placeholder { font-size: 7px; opacity: 0.7; text-align: center; color: white; }
+
+.cf-info { flex: 1; display: flex; flex-direction: column; justify-content: space-between; }
+
+.cf-name {
+  font-size: 11px; font-weight: bold;
+  text-transform: uppercase; line-height: 1.2;
+}
+.cf-middle { font-size: 8px; opacity: 0.85; display: block; font-weight: normal; text-transform: none; }
+
+.cf-field { margin-top: 4px; }
+.cf-label { font-size: 6px; opacity: 0.7; text-transform: uppercase; letter-spacing: 0.4px; margin-bottom: 1px; }
+.cf-value { font-size: 8px; font-weight: 500; }
+.cf-small { font-size: 7px; line-height: 1.3; }
+
+.cf-footer {
+  padding: 5px 10px;
+  background: rgba(0,0,0,0.3);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.cf-uidlabel { font-size: 6px; opacity: 0.75; margin-bottom: 1px; }
+.cf-uid      { font-size: 9px; font-weight: bold; letter-spacing: 1px; font-family: 'Courier New', monospace; }
+.cf-city     { text-align: right; }
+.cf-cityname { font-size: 7px; font-weight: bold; }
+.cf-city div:last-child { font-size: 6px; opacity: 0.85; }
+
+/* BACK face styles */
+.card-face--back {
+  background: #ffffff;
+  display: flex; flex-direction: column;
+  font-family: Arial, sans-serif;
+  color: #333;
+}
+
+.cb-header {
+  background: #4d0000;
+  color: white;
+  padding: 5px 10px;
+  font-size: 6.5px;
+  text-align: center;
+  letter-spacing: 0.4px;
+}
+
+.cb-body {
+  display: flex; flex: 1;
+  padding: 8px 10px; gap: 10px;
+  align-items: center;
+}
+
+.cb-qr-section {
+  display: flex; flex-direction: column;
+  align-items: center; gap: 3px;
+  flex-shrink: 0;
+}
+
+.cb-qr-box {
+  width: 95px; height: 95px;
+  border: 2px solid #800000;
+  border-radius: 6px;
+  overflow: hidden; background: white;
+  display: flex; align-items: center; justify-content: center;
+  padding: 2px;
+}
+.cb-qr-box img { width: 100%; height: 100%; object-fit: contain; }
+.cb-qr-placeholder { font-size: 7px; color: #800000; text-align: center; padding: 4px; font-weight: bold; }
+.cb-qr-label { font-size: 7px; color: #800000; font-weight: 800; letter-spacing: 0.5px; }
+
+.cb-creds { flex: 1; display: flex; flex-direction: column; gap: 4px; }
+.cb-cred-label {
+  font-size: 6px; color: #666;
+  text-transform: uppercase; letter-spacing: 0.4px;
+  margin-bottom: 1px;
+}
+.cb-cred-value {
+  font-size: 8.5px; font-weight: bold; color: #800000;
+  font-family: 'Courier New', monospace;
+  background: #fff1f2;
+  border: 1px solid #fecdd3;
+  padding: 2px 5px; border-radius: 3px;
+  letter-spacing: 0.8px;
+}
+.cb-cred-small { font-size: 7px; }
+.cb-notice {
+  font-size: 5.5px; color: #666;
+  line-height: 1.4; margin-top: auto;
+}
+
+.cb-footer {
+  background: #800000;
+  color: white;
+  padding: 3px 10px;
+  font-size: 5.5px;
+  text-align: center;
 }
 </style>
