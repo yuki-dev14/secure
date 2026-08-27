@@ -232,6 +232,22 @@ class CashGrantCalculatorService
                 } else {
                     $results['ineligible']++;
                 }
+
+                // Notify beneficiary of updated cash grant
+                try {
+                    if ($beneficiary->user) {
+                        $beneficiary->user->notify(new \App\Notifications\GrantUpdatedNotification(
+                            $event->period,
+                            (float) $calc->total_grant_amount,
+                            (float) $calc->health_grant_amount,
+                            (float) $calc->education_grant_total,
+                            (float) $calc->rice_subsidy_amount,
+                            $calc->computation_notes ?? $calc->ineligibility_reason
+                        ));
+                    }
+                } catch (\Throwable $e) {
+                    Log::warning("Grant notification failed for beneficiary #{$beneficiary->id}: " . $e->getMessage());
+                }
             } catch (\Throwable $e) {
                 $results['errors']++;
                 Log::error("Bimonthly grant calc failed for beneficiary #{$beneficiary->id}: " . $e->getMessage());

@@ -192,6 +192,14 @@ class FdsAttendanceController extends Controller
         AuditLogService::log('fds_check_in', $attendance, [], $attendance->toArray(),
             "FDS check-in recorded for {$beneficiary->unique_id}");
 
+        try {
+            if ($beneficiary->user) {
+                $beneficiary->user->notify(new \App\Notifications\FdsAttendanceNotification($attendance, 'check_in'));
+            }
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::warning("FDS check-in notification failed: " . $e->getMessage());
+        }
+
         return response()->json([
             'success'     => true,
             'scan_type'   => 'check_in',
@@ -238,6 +246,14 @@ class FdsAttendanceController extends Controller
             'checked_out_device' => request()->header('User-Agent'),
             'is_complete'        => true,
         ]);
+
+        try {
+            if ($beneficiary->user) {
+                $beneficiary->user->notify(new \App\Notifications\FdsAttendanceNotification($attendance, 'check_out'));
+            }
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::warning("FDS check-out notification failed: " . $e->getMessage());
+        }
 
         AuditLogService::log('fds_check_out', $attendance, [], $attendance->toArray(),
             "FDS check-out recorded for {$beneficiary->unique_id}");

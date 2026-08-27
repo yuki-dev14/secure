@@ -70,15 +70,6 @@ class BeneficiaryCardService
             Log::warning("Card PDF generation failed for beneficiary {$beneficiary->unique_id}: " . $e->getMessage());
         }
 
-        // Notify beneficiary via in-app + email (queued)
-        try {
-            if ($beneficiary->user) {
-                $beneficiary->user->notify(new CardIssuedNotification($card));
-            }
-        } catch (\Throwable $e) {
-            Log::warning("Card notification failed for {$beneficiary->unique_id}: " . $e->getMessage());
-        }
-
         return $card;
     }
 
