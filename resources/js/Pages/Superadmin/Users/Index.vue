@@ -212,7 +212,6 @@ const toggling  = ref(null)
 const tabs = [
   { key: 'all',                 label: 'All Users' },
   { key: 'superadmin',         label: 'Superadmins' },
-  { key: 'admin',              label: 'Admins' },
   { key: 'admin_4ps',          label: 'Admin 4Ps' },
   { key: 'admin_swa',          label: 'Admin SWA' },
   { key: 'barangay_assistant', label: 'Barangay Asst.' },

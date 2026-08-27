@@ -51,7 +51,6 @@ class UserManagementController extends Controller
             'all'                => User::whereNotIn('role', ['beneficiary'])->count()
                                    + Beneficiary::count(),
             'superadmin'         => User::where('role', 'superadmin')->count(),
-            'admin'              => User::where('role', 'admin')->count(),
             'admin_4ps'          => User::where('role', 'admin_4ps')->count(),
             'admin_swa'          => User::where('role', 'admin_swa')->count(),
             'barangay_assistant' => User::where('role', 'barangay_assistant')->count(),
