@@ -11,10 +11,11 @@
             style="background-image: repeating-linear-gradient(45deg, transparent, transparent 10px, rgba(255,255,255,.05) 10px, rgba(255,255,255,.05) 20px);">
           </div>
           <!-- Photo overlaps banner with camera upload overlay -->
-          <div class="relative z-10 w-24 h-24 rounded-2xl overflow-hidden ring-4 ring-white shadow-xl shrink-0 bg-slate-100 translate-y-12 group cursor-pointer"
+          <div class="relative z-10 w-24 h-24 rounded-2xl overflow-hidden ring-4 ring-white shadow-xl shrink-0 bg-slate-200 translate-y-12 group cursor-pointer"
                @click="triggerFileInput" title="Click to upload profile photo">
-            <img v-if="photoPreview || beneficiary.photo_path"
-              :src="photoPreview || `/storage/${beneficiary.photo_path}`" :alt="beneficiary.full_name"
+            <img v-if="(photoPreview || beneficiary.photo_path) && !imageError"
+              :src="photoPreview || `/storage/${beneficiary.photo_path}`" alt=""
+              @error="imageError = true"
               class="w-full h-full object-cover" />
             <div v-else class="w-full h-full flex items-center justify-center bg-slate-200">
               <UserIcon class="w-10 h-10 text-slate-400" />
@@ -163,6 +164,7 @@ defineProps({
 const fileInput = ref(null)
 const photoPreview = ref(null)
 const uploading = ref(false)
+const imageError = ref(false)
 
 const triggerFileInput = () => {
   fileInput.value?.click()

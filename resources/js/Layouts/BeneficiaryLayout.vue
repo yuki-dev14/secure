@@ -30,8 +30,12 @@
 
         <!-- User info -->
         <div class="flex items-center gap-2">
-          <div class="w-8 h-8 bg-white/20 rounded-full flex items-center justify-center">
-            <span class="text-white text-xs font-bold">{{ initials }}</span>
+          <div class="w-8 h-8 bg-white/20 rounded-full overflow-hidden flex items-center justify-center shrink-0">
+            <img v-if="$page.props.auth.user?.beneficiary?.photo_path && !navImageError"
+                 :src="`/storage/${$page.props.auth.user.beneficiary.photo_path}`" alt=""
+                 @error="navImageError = true"
+                 class="w-full h-full object-cover" />
+            <UserIcon v-else class="w-5 h-5 text-white/70" />
           </div>
           <div class="hidden sm:block">
             <p class="text-white text-sm font-medium">{{ $page.props.auth.user?.beneficiary?.full_name }}</p>
@@ -104,6 +108,7 @@ defineProps({ unreadCount: { type: Number, default: 0 } })
 
 const page            = usePage()
 const showLogoutModal = ref(false)
+const navImageError   = ref(false)
 const loggingOut      = ref(false)
 
 const handleLogout = () => {

@@ -17,14 +17,14 @@
     <!-- Profile Card -->
     <div class="mb-6 bg-white/90 backdrop-blur-sm rounded-2xl shadow-lg overflow-hidden border border-white/50">
       <div style="background: linear-gradient(135deg, #700000 0%, #4a0000 100%);" class="px-6 py-5 flex items-center gap-4">
-        <div class="w-16 h-16 rounded-xl overflow-hidden bg-white/20 flex-shrink-0 border-2 border-white/40">
-          <img v-if="beneficiary.photo_path"
-            :src="`/storage/${beneficiary.photo_path}`"
-            :alt="beneficiary.full_name"
+        <div class="w-16 h-16 rounded-xl overflow-hidden bg-white/20 shrink-0 border-2 border-white/40">
+          <img v-if="beneficiary.photo_path && !imageError"
+            :src="`/storage/${beneficiary.photo_path}`" alt=""
+            @error="imageError = true"
             class="w-full h-full object-cover"
           />
-          <div v-else class="w-full h-full flex items-center justify-center">
-            <UserIcon class="w-8 h-8 text-white/60" />
+          <div v-else class="w-full h-full flex items-center justify-center bg-white/20">
+            <UserIcon class="w-8 h-8 text-white/70" />
           </div>
         </div>
         <div class="flex-1 min-w-0">
@@ -141,8 +141,10 @@
 </template>
 
 <script setup>
-import { computed } from 'vue'
+import { ref, computed } from 'vue'
 import { Head } from '@inertiajs/vue3'
+
+const imageError = ref(false)
 import {
   UserIcon, BellAlertIcon, HeartIcon,
   AcademicCapIcon, ShoppingBagIcon, ReceiptRefundIcon,
