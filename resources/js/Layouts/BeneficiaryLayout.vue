@@ -1,107 +1,86 @@
 <template>
-  <div class="min-h-screen relative font-sans text-slate-800 antialiased selection:bg-rose-500 selection:text-white"
-       style="background: radial-gradient(circle at 50% 0%, #4a0000 0%, #2b0000 40%, #150000 100%);">
-    
-    <!-- Dynamic Ambient Lighting Grid -->
-    <div class="fixed inset-0 overflow-hidden pointer-events-none z-0">
-      <div class="absolute -top-40 left-1/2 -translate-x-1/2 w-[700px] h-[500px] bg-rose-600/15 rounded-full blur-[140px]"></div>
-      <div class="absolute top-1/3 -right-40 w-96 h-96 bg-amber-500/10 rounded-full blur-[120px]"></div>
-      <div class="absolute bottom-10 -left-40 w-96 h-96 bg-rose-800/20 rounded-full blur-[120px]"></div>
+  <div class="min-h-screen" style="background: linear-gradient(135deg, #330000 0%, #4d0000 50%, #800000 100%);">
+    <!-- Animated background pattern -->
+    <div class="fixed inset-0 overflow-hidden pointer-events-none">
+      <div class="absolute -top-40 -right-40 w-96 h-96 bg-white/5 rounded-full blur-3xl"></div>
+      <div class="absolute -bottom-40 -left-40 w-96 h-96 bg-red-300/10 rounded-full blur-3xl"></div>
     </div>
 
-    <!-- Header Bar -->
-    <header class="relative z-20 sticky top-0 backdrop-blur-xl bg-black/40 border-b border-white/10 shadow-2xl">
-      <div class="max-w-6xl mx-auto px-4 sm:px-6 py-3 flex items-center justify-between">
-        
-        <!-- Brand Logo & Title -->
-        <Link :href="route('beneficiary.dashboard')" class="flex items-center gap-3 group">
-          <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-rose-900 to-red-600 p-0.5 shadow-lg shadow-rose-950/50 group-hover:scale-105 transition-transform duration-200">
-            <div class="w-full h-full bg-slate-950 rounded-[10px] flex items-center justify-center p-1.5">
-              <img src="/logo.png" alt="SECURE 4Ps" class="w-full h-full object-contain" />
-            </div>
-          </div>
-          <div>
-            <div class="flex items-center gap-2">
-              <span class="text-white font-black tracking-wide text-base">SECURE 4Ps</span>
-              <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-500/20 text-rose-300 border border-rose-500/30 uppercase tracking-widest">
-                Beneficiary Portal
-              </span>
-            </div>
-            <p class="text-white/60 text-xs font-medium">DSWD Lipa City, Batangas</p>
-          </div>
+    <!-- Header -->
+    <header class="relative z-10 px-6 py-4 flex items-center justify-between border-b border-white/10">
+      <div class="flex items-center gap-3">
+        <img src="/logo.png" alt="SECURE 4Ps Logo" class="w-10 h-10 object-contain shrink-0" />
+        <div>
+          <p class="text-white font-bold text-sm">SECURE 4Ps</p>
+          <p class="text-white/60 text-xs">Beneficiary Portal</p>
+        </div>
+      </div>
+
+      <div class="flex items-center gap-4">
+        <!-- Unread notifications badge -->
+        <Link :href="route('beneficiary.notifications')" class="relative text-white/70 hover:text-white transition-colors">
+          <BellIcon class="w-6 h-6" />
+          <span
+            v-if="$page.props.auth.user && unreadCount > 0"
+            class="absolute -top-1 -right-1 w-4 h-4 bg-red-500 rounded-full text-[9px] text-white flex items-center justify-center font-bold"
+          >
+            {{ unreadCount > 9 ? '9+' : unreadCount }}
+          </span>
         </Link>
 
-        <!-- Right User Actions -->
-        <div class="flex items-center gap-3">
-          
-          <!-- Notifications Bell -->
-          <Link :href="route('beneficiary.notifications')"
-                class="relative p-2.5 rounded-xl bg-white/5 hover:bg-white/15 text-white/80 hover:text-white transition-all border border-white/10 group">
-            <BellIcon class="w-5 h-5 group-hover:scale-110 transition-transform" />
-            <span v-if="$page.props.auth.user && unreadCount > 0"
-                  class="absolute -top-1 -right-1 min-w-[20px] h-5 px-1 bg-gradient-to-r from-rose-500 to-red-600 rounded-full text-[10px] text-white flex items-center justify-center font-black shadow-md border-2 border-slate-950 animate-pulse">
-              {{ unreadCount > 9 ? '9+' : unreadCount }}
-            </span>
-          </Link>
-
-          <!-- Profile Badge -->
-          <div class="flex items-center gap-2.5 pl-2 border-l border-white/10">
-            <div class="w-9 h-9 rounded-xl ring-2 ring-rose-500/40 overflow-hidden bg-rose-950 flex items-center justify-center shrink-0 shadow-inner">
-              <img v-if="$page.props.auth.user?.beneficiary?.photo_path && !navImageError"
-                   :src="`/storage/${$page.props.auth.user.beneficiary.photo_path}`" alt=""
-                   @error="navImageError = true"
-                   class="w-full h-full object-cover" />
-              <UserIcon v-else class="w-5 h-5 text-rose-300/80" />
-            </div>
-            <div class="hidden md:block text-left">
-              <p class="text-white text-xs font-bold leading-snug tracking-tight">
-                {{ $page.props.auth.user?.beneficiary?.full_name }}
-              </p>
-              <p class="text-rose-300/70 text-[11px] font-mono tracking-wider">
-                {{ $page.props.auth.user?.beneficiary?.unique_id }}
-              </p>
-            </div>
+        <!-- User info -->
+        <div class="flex items-center gap-2">
+          <div class="w-8 h-8 bg-white/20 rounded-full overflow-hidden flex items-center justify-center shrink-0">
+            <img v-if="$page.props.auth.user?.beneficiary?.photo_path && !navImageError"
+                 :src="`/storage/${$page.props.auth.user.beneficiary.photo_path}`" alt=""
+                 @error="navImageError = true"
+                 class="w-full h-full object-cover" />
+            <UserIcon v-else class="w-5 h-5 text-white/70" />
           </div>
-
-          <!-- Logout Button -->
-          <button type="button"
-                  @click="showLogoutModal = true"
-                  class="px-3.5 py-2 bg-rose-950/60 hover:bg-rose-600 text-rose-100 hover:text-white text-xs font-semibold rounded-xl transition-all border border-rose-700/50 shadow-lg flex items-center gap-1.5">
-            Logout
-          </button>
-
+          <div class="hidden sm:block">
+            <p class="text-white text-sm font-medium">{{ $page.props.auth.user?.beneficiary?.full_name }}</p>
+            <p class="text-white/60 text-xs">{{ $page.props.auth.user?.beneficiary?.unique_id }}</p>
+          </div>
         </div>
+
+        <!-- Logout -->
+        <button
+          type="button"
+          @click="showLogoutModal = true"
+          class="px-3 py-1.5 bg-white/10 hover:bg-red-500/80 text-white text-xs rounded-lg transition-colors border border-white/20 flex items-center gap-1.5"
+        >
+          Logout
+        </button>
       </div>
     </header>
 
-    <!-- Navigation Bar -->
-    <nav class="relative z-10 sticky top-[65px] backdrop-blur-lg bg-black/20 border-b border-white/10 py-2">
-      <div class="max-w-6xl mx-auto px-4 sm:px-6">
-        <div class="flex items-center gap-1.5 overflow-x-auto no-scrollbar py-0.5">
-          <Link v-for="item in navItems"
-                :key="item.route"
-                :href="route(item.route)"
-                :class="[
-                  'flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all whitespace-nowrap border',
-                  isActive(item.routePrefix)
-                    ? 'bg-gradient-to-r from-rose-600 to-red-700 text-white border-rose-500/50 shadow-lg shadow-rose-950/60 scale-[1.02]'
-                    : 'text-white/70 hover:text-white hover:bg-white/10 border-transparent'
-                ]">
-            <component :is="item.icon" class="w-4 h-4 shrink-0" />
-            {{ item.label }}
-          </Link>
-        </div>
-      </div>
+    <!-- Navigation tabs -->
+    <nav class="relative z-10 px-6 py-2 flex items-center gap-1 overflow-x-auto no-scrollbar border-b border-white/10">
+      <Link
+        v-for="item in navItems"
+        :key="item.route"
+        :href="route(item.route)"
+        :class="[
+          'flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all whitespace-nowrap',
+          isActive(item.routePrefix)
+            ? 'bg-white text-brand-700 shadow-sm'
+            : 'text-white/70 hover:text-white hover:bg-white/10'
+        ]"
+      >
+        <component :is="item.icon" class="w-4 h-4" />
+        {{ item.label }}
+      </Link>
     </nav>
 
-    <!-- Main Content Container -->
-    <main class="relative z-10 max-w-6xl mx-auto px-4 sm:px-6 py-8">
-      <FlashMessage class="mb-6" />
+    <!-- Main content -->
+    <main class="relative z-10 max-w-5xl mx-auto px-4 sm:px-6 py-6">
+      <!-- Flash messages -->
+      <FlashMessage class="mb-4" />
       <slot />
     </main>
 
     <!-- Footer -->
-    <footer class="relative z-10 text-center py-6 text-white/40 text-xs border-t border-white/5 mt-12">
+    <footer class="relative z-10 text-center py-4 text-white/40 text-xs pb-8">
       SECURE 4Ps — DSWD Lipa City, Batangas | Data Privacy Act of 2012 Compliant
     </footer>
 
