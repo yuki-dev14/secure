@@ -102,10 +102,10 @@ class StaffChatController extends Controller
                         'sender_name'   => $m->sender?->name,
                         'sender_role'   => $m->sender?->role_display,
                         'message'       => $m->message,
-                        'created_at'    => $m->created_at->format('g:i A'),
-                        'full_time'     => $m->created_at->format('M d, Y g:i A'),
+                        'created_at'    => $m->created_at->setTimezone('Asia/Manila')->format('g:i A'),
+                        'full_time'     => $m->created_at->setTimezone('Asia/Manila')->format('M d, Y g:i A'),
                         'is_me'         => $m->sender_id === $currentUser->id,
-                        'read_at'       => $m->read_at?->format('g:i A'),
+                        'read_at'       => $m->read_at?->setTimezone('Asia/Manila')->format('g:i A'),
                     ]);
 
                 $activeContact = [
@@ -154,10 +154,10 @@ class StaffChatController extends Controller
                 'sender_name'  => $m->sender?->name,
                 'sender_role'  => $m->sender?->role_display,
                 'message'      => $m->message,
-                'created_at'   => $m->created_at->format('g:i A'),
-                'full_time'    => $m->created_at->format('M d, Y g:i A'),
+                'created_at'   => $m->created_at->setTimezone('Asia/Manila')->format('g:i A'),
+                'full_time'    => $m->created_at->setTimezone('Asia/Manila')->format('M d, Y g:i A'),
                 'is_me'        => $m->sender_id === $currentUser->id,
-                'read_at'      => $m->read_at?->format('g:i A'),
+                'read_at'      => $m->read_at?->setTimezone('Asia/Manila')->format('g:i A'),
             ]);
 
         $totalUnread = StaffMessage::unreadForUser($currentUser->id)->count();
@@ -213,8 +213,8 @@ class StaffChatController extends Controller
                 'sender_name'  => $currentUser->name,
                 'sender_role'  => $currentUser->role_display,
                 'message'      => $msg->message,
-                'created_at'   => $msg->created_at->format('g:i A'),
-                'full_time'    => $msg->created_at->format('M d, Y g:i A'),
+                'created_at'   => $msg->created_at->setTimezone('Asia/Manila')->format('g:i A'),
+                'full_time'    => $msg->created_at->setTimezone('Asia/Manila')->format('M d, Y g:i A'),
                 'is_me'        => true,
                 'read_at'      => null,
             ],
