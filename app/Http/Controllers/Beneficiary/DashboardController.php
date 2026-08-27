@@ -46,8 +46,24 @@ class DashboardController extends Controller
         $notifications = auth()->user()->notifications()->latest()->limit(10)->get();
         $unreadCount   = auth()->user()->unreadNotifications()->count();
 
+        $card = $beneficiary->card ?? $beneficiary->cards()->where('is_active', true)->first();
+        $qrBase64 = '';
+        if ($card) {
+            $payload = $card->qr_code_data ?? \App\Models\BeneficiaryCard::generateQrPayload($beneficiary->unique_id);
+            try {
+                $svgData = \SimpleSoftwareIO\QrCode\Facades\QrCode::format('svg')
+                    ->size(300)
+                    ->margin(1)
+                    ->errorCorrection('M')
+                    ->generate($payload);
+                $qrBase64 = 'data:image/svg+xml;base64,' . base64_encode($svgData);
+            } catch (\Throwable $e) {}
+        }
+
         return Inertia::render('Beneficiary/Dashboard', [
             'beneficiary'   => $beneficiary,
+            'card'          => $card,
+            'qr_base64'     => $qrBase64,
             'breakdown'     => $breakdown,
             'claim_history' => $claimHistory,
             'notifications' => $notifications,
