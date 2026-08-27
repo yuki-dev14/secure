@@ -80,9 +80,10 @@
               <tr v-for="b in beneficiaries.data" :key="b.id">
                 <td>
                   <div class="flex items-center gap-3">
-                    <div class="w-9 h-9 rounded-lg overflow-hidden bg-slate-100 flex-shrink-0">
-                      <img v-if="b.photo_path" :src="`/storage/${b.photo_path}`" class="w-full h-full object-cover" :alt="b.last_name" />
-                      <div v-else class="w-full h-full flex items-center justify-center">
+                    <div class="w-9 h-9 rounded-lg overflow-hidden bg-slate-100 shrink-0">
+                      <img v-if="b.photo_path && !b.image_error" :src="`/storage/${b.photo_path}`"
+                        @error="b.image_error = true" alt="" class="w-full h-full object-cover" />
+                      <div v-else class="w-full h-full flex items-center justify-center bg-slate-100">
                         <UserIcon class="w-4 h-4 text-slate-400" />
                       </div>
                     </div>
