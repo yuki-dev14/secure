@@ -27,12 +27,13 @@
           <h2 class="text-sm font-semibold text-white">Household Representative (You)</h2>
         </div>
         <div class="p-5 flex items-start gap-4">
-          <div class="w-14 h-14 rounded-xl overflow-hidden bg-slate-100 border border-slate-200 shrink-0">
-            <img v-if="beneficiary.photo_path"
+          <div class="w-14 h-14 rounded-xl overflow-hidden bg-slate-200 border border-slate-200 shrink-0">
+            <img v-if="beneficiary.photo_path && !imageError"
               :src="`/storage/${beneficiary.photo_path}`"
-              class="w-full h-full object-cover" :alt="beneficiary.full_name" />
-            <div v-else class="w-full h-full flex items-center justify-center">
-              <UserIcon class="w-7 h-7 text-slate-300" />
+              @error="imageError = true" alt=""
+              class="w-full h-full object-cover" />
+            <div v-else class="w-full h-full flex items-center justify-center bg-slate-200">
+              <UserIcon class="w-7 h-7 text-slate-400" />
             </div>
           </div>
           <div class="flex-1 grid grid-cols-2 sm:grid-cols-3 gap-x-6 gap-y-2 text-sm">
@@ -126,7 +127,7 @@
 </template>
 
 <script setup>
-import { computed } from 'vue'
+import { ref, computed } from 'vue'
 import { Head } from '@inertiajs/vue3'
 import {
   UsersIcon, UserIcon, ShieldCheckIcon, AcademicCapIcon,
@@ -137,6 +138,8 @@ const props = defineProps({
   beneficiary:  Object,
   unread_count: Number,
 })
+
+const imageError     = ref(false)
 
 const totalMembers   = computed(() => (props.beneficiary?.family_members?.length ?? 0) + 1)
 const schoolAgeCount = computed(() => props.beneficiary?.family_members?.filter(m => m.is_school_age).length ?? 0)

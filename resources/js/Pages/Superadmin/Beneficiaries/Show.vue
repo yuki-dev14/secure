@@ -67,11 +67,12 @@
                 <!-- Photo -->
                 <div class="flex-shrink-0">
                   <div class="w-24 h-28 rounded-xl overflow-hidden bg-slate-100 border border-slate-200">
-                    <img v-if="beneficiary.photo_path"
+                    <img v-if="beneficiary.photo_path && !imageError"
                       :src="`/storage/${beneficiary.photo_path}`"
-                      class="w-full h-full object-cover" :alt="beneficiary.full_name" />
-                    <div v-else class="w-full h-full flex items-center justify-center">
-                      <UserIcon class="w-10 h-10 text-slate-300" />
+                      @error="imageError = true" alt=""
+                      class="w-full h-full object-cover" />
+                    <div v-else class="w-full h-full flex items-center justify-center bg-slate-200">
+                      <UserIcon class="w-10 h-10 text-slate-400" />
                     </div>
                   </div>
                 </div>
@@ -274,6 +275,7 @@ const props = defineProps({ beneficiary: Object })
 const editing     = ref(false)
 const issuingCard = ref(false)
 const activating  = ref(false)
+const imageError  = ref(false)
 
 const editForm = useForm({
   first_name:     props.beneficiary.first_name,
