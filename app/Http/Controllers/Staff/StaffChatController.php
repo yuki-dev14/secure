@@ -29,6 +29,9 @@ class StaffChatController extends Controller
         // Superadmin chat is scoped exclusively to Admin SWA and Admin 4Ps (excluding Barangay Assistants)
         if ($currentUser->isSuperadmin()) {
             $query->whereIn('role', ['admin_swa', 'admin_4ps', 'admin']);
+        } elseif ($currentUser->isBarangayAssistant()) {
+            // Barangay Assistants cannot view or message Superadmin
+            $query->where('role', '!=', 'superadmin');
         }
 
         $contacts = $query
@@ -185,6 +188,11 @@ class StaffChatController extends Controller
             $recipient = User::find($request->recipient_id);
             if ($recipient && $recipient->isBarangayAssistant()) {
                 return response()->json(['error' => 'Superadmin can only contact Admin SWA and Admin 4Ps.'], 403);
+            }
+        } elseif ($currentUser->isBarangayAssistant()) {
+            $recipient = User::find($request->recipient_id);
+            if ($recipient && $recipient->isSuperadmin()) {
+                return response()->json(['error' => 'Barangay Assistants cannot contact Superadmin.'], 403);
             }
         }
 
