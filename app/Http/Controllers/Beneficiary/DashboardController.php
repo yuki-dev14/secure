@@ -170,4 +170,28 @@ class DashboardController extends Controller
             'unread_count'  => $unreadCount,
         ]);
     }
+
+    /**
+     * Upload or update beneficiary profile picture.
+     */
+    public function updatePhoto(Request $request): RedirectResponse
+    {
+        $request->validate([
+            'photo' => 'required|image|mimes:jpeg,png,jpg,webp|max:5120',
+        ]);
+
+        $beneficiary = Beneficiary::where('user_id', auth()->id())->firstOrFail();
+
+        // Delete old photo if exists in storage
+        if ($beneficiary->photo_path && Storage::disk('public')->exists($beneficiary->photo_path)) {
+            Storage::disk('public')->delete($beneficiary->photo_path);
+        }
+
+        $path = $request->file('photo')->store('beneficiaries/photos', 'public');
+        $beneficiary->update(['photo_path' => $path]);
+
+        AuditLogService::log('beneficiary_photo_updated', $beneficiary, [], [], "Beneficiary updated profile photo");
+
+        return back()->with('success', 'Profile photo updated successfully!');
+    }
 }

@@ -10,15 +10,23 @@
           <div class="absolute inset-0 opacity-20"
             style="background-image: repeating-linear-gradient(45deg, transparent, transparent 10px, rgba(255,255,255,.05) 10px, rgba(255,255,255,.05) 20px);">
           </div>
-          <!-- Photo overlaps banner -->
-          <div class="relative z-10 w-24 h-24 rounded-2xl overflow-hidden ring-4 ring-white shadow-xl shrink-0 bg-slate-100 translate-y-12">
-            <img v-if="beneficiary.photo_path"
-              :src="`/storage/${beneficiary.photo_path}`" :alt="beneficiary.full_name"
+          <!-- Photo overlaps banner with camera upload overlay -->
+          <div class="relative z-10 w-24 h-24 rounded-2xl overflow-hidden ring-4 ring-white shadow-xl shrink-0 bg-slate-100 translate-y-12 group cursor-pointer"
+               @click="triggerFileInput" title="Click to upload profile photo">
+            <img v-if="photoPreview || beneficiary.photo_path"
+              :src="photoPreview || `/storage/${beneficiary.photo_path}`" :alt="beneficiary.full_name"
               class="w-full h-full object-cover" />
-            <div v-else class="w-full h-full flex items-center justify-center">
-              <UserIcon class="w-10 h-10 text-slate-300" />
+            <div v-else class="w-full h-full flex items-center justify-center bg-slate-200">
+              <UserIcon class="w-10 h-10 text-slate-400" />
+            </div>
+
+            <!-- Upload hover overlay -->
+            <div class="absolute inset-0 bg-black/60 text-white flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-200">
+              <CameraIcon class="w-6 h-6 mb-0.5" />
+              <span class="text-[10px] font-bold uppercase tracking-wider">{{ uploading ? 'Uploading...' : 'Change Photo' }}</span>
             </div>
           </div>
+          <input type="file" ref="fileInput" accept="image/*" class="hidden" @change="onPhotoSelected" />
         </div>
 
         <!-- Name, ID, badges — padded to clear the overlapping photo -->
@@ -138,11 +146,12 @@
 </template>
 
 <script setup>
-import { Head } from '@inertiajs/vue3'
+import { ref } from 'vue'
+import { Head, router } from '@inertiajs/vue3'
 import {
   UserIcon, IdentificationIcon, MapPinIcon,
   ClipboardDocumentListIcon, CreditCardIcon,
-  ExclamationTriangleIcon, CheckCircleIcon,
+  ExclamationTriangleIcon, CheckCircleIcon, CameraIcon,
 } from '@heroicons/vue/24/outline'
 import BeneficiaryLayout from '@/Layouts/BeneficiaryLayout.vue'
 
@@ -150,6 +159,33 @@ defineProps({
   beneficiary:  Object,
   unread_count: Number,
 })
+
+const fileInput = ref(null)
+const photoPreview = ref(null)
+const uploading = ref(false)
+
+const triggerFileInput = () => {
+  fileInput.value?.click()
+}
+
+const onPhotoSelected = (e) => {
+  const file = e.target.files?.[0]
+  if (!file) return
+
+  photoPreview.value = URL.createObjectURL(file)
+
+  const formData = new FormData()
+  formData.append('photo', file)
+
+  uploading.value = true
+  router.post(route('beneficiary.profile.photo'), formData, {
+    forceFormData: true,
+    preserveScroll: true,
+    onFinish: () => {
+      uploading.value = false
+    },
+  })
+}
 
 const formatDate = (d) =>
   d ? new Date(d).toLocaleDateString('en-PH', { year: 'numeric', month: 'long', day: 'numeric' }) : '—'

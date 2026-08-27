@@ -256,6 +256,7 @@ Route::middleware(['auth', 'role:beneficiary'])
     ->group(function () {
         Route::get('/dashboard',                [BeneficiaryDashboardController::class, 'index'])->name('dashboard');
         Route::get('/profile',                  [BeneficiaryDashboardController::class, 'profile'])->name('profile');
+        Route::post('/profile/photo',            [BeneficiaryDashboardController::class, 'updatePhoto'])->name('profile.photo');
         Route::get('/grants',                   [BeneficiaryDashboardController::class, 'grants'])->name('grants');
         Route::get('/family',                   [BeneficiaryDashboardController::class, 'family'])->name('family');
         Route::get('/notifications',            [BeneficiaryDashboardController::class, 'notifications'])->name('notifications');
