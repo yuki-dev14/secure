@@ -187,6 +187,16 @@ const isDirty = computed(() =>
   Object.keys(original).some(k => form[k] !== original[k])
 )
 
+const syncSettings = () => {
+  Object.values(props.settings ?? {}).forEach(group => {
+    Object.values(group).forEach(s => { original[s.key] = s.value ?? '' })
+  })
+}
+
+watch(() => props.settings, () => {
+  syncSettings()
+}, { deep: true })
+
 const resetForm = () => {
   Object.keys(original).forEach(k => { form[k] = original[k] })
 }
@@ -195,6 +205,10 @@ const saveSettings = () => {
   form.transform(data => ({ settings: data }))
       .put(route('superadmin.settings.update'), {
         preserveScroll: true,
+        onSuccess: () => {
+          syncSettings()
+          form.defaults({ ...original })
+        }
       })
 }
 
