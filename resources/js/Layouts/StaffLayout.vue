@@ -82,11 +82,17 @@
           <!-- Staff Chat Topbar Button -->
           <Link
             :href="route('staff.chat.index')"
-            class="btn btn-ghost btn-sm gap-1.5 text-slate-600 hover:text-emerald-700 transition-colors"
+            class="relative btn btn-ghost btn-sm gap-1.5 text-slate-600 hover:text-emerald-700 transition-colors"
             title="Staff Chat"
           >
             <ChatBubbleLeftRightIcon class="w-4 h-4 text-emerald-600" />
             <span class="hidden sm:inline">Staff Chat</span>
+            <span
+              v-if="unreadChatCount > 0"
+              class="min-w-[18px] h-4.5 px-1 bg-red-600 text-white rounded-full text-[10px] font-black flex items-center justify-center shadow animate-pulse"
+            >
+              {{ unreadChatCount > 9 ? '9+' : unreadChatCount }}
+            </span>
           </Link>
 
           <!-- Logout -->
@@ -124,7 +130,7 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { Link, usePage, router } from '@inertiajs/vue3'
 import {
   HomeIcon, UsersIcon, UserGroupIcon, ClipboardDocumentCheckIcon,
@@ -145,6 +151,34 @@ const page            = usePage()
 const sidebarOpen     = ref(true)
 const showLogoutModal = ref(false)
 const loggingOut      = ref(false)
+const unreadChatCount = ref(0)
+let unreadPollTimer   = null
+
+async function fetchUnreadChatCount() {
+  if (!page.props.auth?.user) return
+  try {
+    const res = await fetch('/staff/chat/unread-count', {
+      headers: {
+        'Accept': 'application/json',
+        'X-Requested-With': 'XMLHttpRequest',
+      },
+      credentials: 'same-origin',
+    })
+    if (res.ok) {
+      const data = await res.json()
+      unreadChatCount.value = data.unread_count ?? 0
+    }
+  } catch (e) {}
+}
+
+onMounted(() => {
+  fetchUnreadChatCount()
+  unreadPollTimer = setInterval(fetchUnreadChatCount, 8000)
+})
+
+onUnmounted(() => {
+  if (unreadPollTimer) clearInterval(unreadPollTimer)
+})
 
 const handleLogout = () => {
   loggingOut.value = true
