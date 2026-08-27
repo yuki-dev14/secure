@@ -47,63 +47,95 @@
 
             <!-- Scanning view -->
             <template v-if="!qrScanning && !qrLoginError">
-              <div class="text-center text-sm text-slate-500 mb-4">
-                Point your camera at the QR code on your 4Ps ID card
-                <span class="block text-xs text-brand-600 font-medium mt-0.5">
+              <div class="text-center space-y-1 mb-3">
+                <div class="inline-flex items-center gap-2 px-3 py-1 bg-emerald-50 text-emerald-700 rounded-full text-xs font-semibold border border-emerald-200 shadow-sm">
+                  <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                  {{ scanning ? 'Camera Active — Align QR Code' : 'Initializing Camera…' }}
+                </div>
+                <p class="text-xs text-slate-500 mt-1">
+                  Point your camera at the QR code on your 4Ps ID card
+                </p>
+                <p class="text-[11px] text-brand-600 font-medium">
                   First time? Scan to sign in and set your password
-                </span>
+                </p>
               </div>
-              <div class="relative bg-slate-900 rounded-2xl overflow-hidden aspect-square max-w-xs mx-auto">
+
+              <!-- Sleek Scanner Viewport -->
+              <div class="relative bg-slate-950 rounded-2xl overflow-hidden shadow-xl border-2 border-brand-700/40 max-w-xs mx-auto aspect-square group">
                 <div id="qr-reader" class="w-full h-full"></div>
-                <!-- Scanning frame overlay -->
-                <div class="absolute inset-0 pointer-events-none">
-                  <div class="absolute inset-6 border-2 border-white/30 rounded-xl"></div>
-                  <div class="absolute top-6 left-6 w-6 h-6 border-t-2 border-l-2 border-brand-400 rounded-tl-lg"></div>
-                  <div class="absolute top-6 right-6 w-6 h-6 border-t-2 border-r-2 border-brand-400 rounded-tr-lg"></div>
-                  <div class="absolute bottom-6 left-6 w-6 h-6 border-b-2 border-l-2 border-brand-400 rounded-bl-lg"></div>
-                  <div class="absolute bottom-6 right-6 w-6 h-6 border-b-2 border-r-2 border-brand-400 rounded-br-lg"></div>
-                  <div v-if="scanning" class="absolute inset-x-6 h-0.5 bg-brand-400 shadow-[0_0_8px_#6366f1] animate-bounce top-1/2"></div>
+
+                <!-- Custom High-Tech Overlay -->
+                <div class="absolute inset-0 pointer-events-none flex items-center justify-center">
+                  <!-- Target box frame -->
+                  <div class="relative w-56 h-56 rounded-xl border border-white/20">
+                    <!-- Corner Accent Brackets -->
+                    <div class="absolute -top-1 -left-1 w-6 h-6 border-t-4 border-l-4 border-brand-500 rounded-tl-lg shadow-[0_0_10px_#ef4444]"></div>
+                    <div class="absolute -top-1 -right-1 w-6 h-6 border-t-4 border-r-4 border-brand-500 rounded-tr-lg shadow-[0_0_10px_#ef4444]"></div>
+                    <div class="absolute -bottom-1 -left-1 w-6 h-6 border-b-4 border-l-4 border-brand-500 rounded-bl-lg shadow-[0_0_10px_#ef4444]"></div>
+                    <div class="absolute -bottom-1 -right-1 w-6 h-6 border-b-4 border-r-4 border-brand-500 rounded-br-lg shadow-[0_0_10px_#ef4444]"></div>
+
+                    <!-- Glowing Scanning Laser Line -->
+                    <div v-if="scanning" class="scanner-laser"></div>
+                  </div>
                 </div>
               </div>
-              <p v-if="qrError" class="text-center text-sm text-danger-600">{{ qrError }}</p>
+
+              <p v-if="qrError" class="text-center text-sm text-danger-600 font-medium bg-red-50 p-2.5 rounded-xl border border-red-200">
+                {{ qrError }}
+              </p>
+
+              <!-- Upload QR Image option -->
+              <div class="pt-2 text-center">
+                <input type="file" ref="fileInput" accept="image/*" class="hidden" @change="handleFileUpload" />
+                <button type="button" @click="triggerFileInput"
+                  class="inline-flex items-center gap-2 px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-semibold transition-colors border border-slate-200">
+                  <ArrowUpTrayIcon class="w-4 h-4 text-brand-600" />
+                  Upload QR Image from device
+                </button>
+                <div id="qr-reader-file-temp" class="hidden"></div>
+              </div>
             </template>
 
             <!-- Logging in (auto-submit in progress) -->
             <template v-else-if="qrScanning">
-              <div class="flex flex-col items-center justify-center py-10 gap-4">
-                <div class="w-14 h-14 rounded-full bg-brand-50 flex items-center justify-center">
-                  <svg class="w-7 h-7 text-brand-600 animate-spin" fill="none" viewBox="0 0 24 24">
+              <div class="flex flex-col items-center justify-center py-12 gap-4">
+                <div class="w-16 h-16 rounded-full bg-brand-50 flex items-center justify-center shadow-inner">
+                  <svg class="w-8 h-8 text-brand-600 animate-spin" fill="none" viewBox="0 0 24 24">
                     <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
                     <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/>
                   </svg>
                 </div>
                 <div class="text-center">
-                  <p class="text-sm font-semibold text-slate-700">QR Code Detected</p>
-                  <p class="text-xs text-slate-400 mt-1">Signing you in…</p>
+                  <p class="text-base font-bold text-slate-800">QR Code Verified!</p>
+                  <p class="text-xs text-slate-500 mt-1">Authenticating your beneficiary account…</p>
                 </div>
               </div>
             </template>
 
-            <!-- Login error (invalid QR, inactive account, etc.) -->
+            <!-- Login error -->
             <template v-else-if="qrLoginError">
-              <div class="flex flex-col items-center gap-4 py-6">
-                <div class="w-12 h-12 rounded-full bg-red-50 flex items-center justify-center">
-                  <ExclamationCircleIcon class="w-6 h-6 text-danger-600" />
+              <div class="flex flex-col items-center gap-4 py-8">
+                <div class="w-14 h-14 rounded-full bg-red-100 flex items-center justify-center shadow-inner">
+                  <ExclamationCircleIcon class="w-8 h-8 text-danger-600" />
                 </div>
-                <div class="text-center">
-                  <p class="text-sm font-semibold text-slate-700">Login Failed</p>
-                  <p class="text-xs text-slate-500 mt-1">{{ qrLoginError }}</p>
+                <div class="text-center max-w-xs">
+                  <p class="text-base font-bold text-slate-800">Scan Unsuccessful</p>
+                  <p class="text-xs text-slate-600 mt-1">{{ qrLoginError }}</p>
                 </div>
-                <button @click="resetQrScan" class="btn btn-outline text-sm px-5 py-2">
-                  Try Again
+                <button @click="resetQrScan" class="btn btn-primary text-sm px-6 py-2.5 rounded-xl shadow-md">
+                  Try Scanning Again
                 </button>
               </div>
             </template>
 
-            <p class="text-center text-xs text-slate-400">
-              No QR card?
-              <button @click="activeTab = 'id'" class="text-brand-600 hover:underline font-medium">Enter your Unique ID and password instead</button>
-            </p>
+            <div class="pt-3 border-t border-slate-100 text-center">
+              <p class="text-xs text-slate-500">
+                Having trouble scanning?
+                <button @click="activeTab = 'id'" class="text-brand-600 hover:underline font-semibold">
+                  Sign in with Unique ID & Password
+                </button>
+              </p>
+            </div>
           </div>
 
           <!-- Manual ID + Password Tab -->
@@ -192,7 +224,7 @@ import { ref, watch, onMounted, onUnmounted } from 'vue'
 import { useForm, router, Link } from '@inertiajs/vue3'
 import {
   QrCodeIcon, IdentificationIcon,
-  LockClosedIcon, EyeIcon, EyeSlashIcon, ExclamationCircleIcon, ArrowLeftIcon,
+  LockClosedIcon, EyeIcon, EyeSlashIcon, ExclamationCircleIcon, ArrowLeftIcon, ArrowUpTrayIcon,
 } from '@heroicons/vue/24/outline'
 
 const props = defineProps({
@@ -206,6 +238,7 @@ const qrScanning    = ref(false)
 const qrError       = ref('')
 const qrLoginError  = ref('')
 const qrVerifiedBanner = ref(false)
+const fileInput     = ref(null)
 let html5QrCode     = null
 
 const tabs = [
@@ -219,6 +252,24 @@ const form = useForm({
   password:   '',
   remember:   false,
 })
+
+const triggerFileInput = () => {
+  fileInput.value?.click()
+}
+
+const handleFileUpload = async (e) => {
+  const file = e.target.files?.[0]
+  if (!file) return
+  qrError.value = ''
+  try {
+    const { Html5Qrcode } = await import('html5-qrcode')
+    const html5QrCodeFile = new Html5Qrcode('qr-reader-file-temp')
+    const decoded = await html5QrCodeFile.scanFile(file, true)
+    handleQrDecoded(decoded)
+  } catch (err) {
+    qrError.value = 'Could not read a valid QR code from this file. Please ensure image is clear or use camera scanner.'
+  }
+}
 
 // FRESH PAGE LOAD: onMounted fires when page loads with ?qr_id= in URL (e.g. after browser refresh)
 onMounted(() => {
@@ -282,8 +333,6 @@ const handleQrDecoded = async (payload) => {
     { payload },
     {
       onSuccess: () => {
-        // Inertia handles redirect automatically.
-        // This no-op ensures any custom redirect logic fires.
         qrScanning.value = false
       },
       onError: (errors) => {
@@ -305,12 +354,12 @@ const initQrScanner = async () => {
 
     await html5QrCode.start(
       { facingMode: 'environment' },
-      { fps: 10, qrbox: { width: 200, height: 200 } },
+      { fps: 15, qrbox: { width: 220, height: 220 } },
       (decoded) => handleQrDecoded(decoded),
       () => {} // ignore per-frame errors
     )
   } catch (err) {
-    qrError.value  = 'Camera not available. Please use Unique ID instead.'
+    qrError.value  = 'Camera permission not granted or device camera unavailable.'
     scanning.value = false
   }
 }
@@ -331,3 +380,50 @@ watch(activeTab, async (tab) => {
   }
 })
 </script>
+
+<style>
+#qr-reader {
+  border: none !important;
+  background: transparent !important;
+}
+#qr-reader video {
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: cover !important;
+  border-radius: 1rem !important;
+}
+#qr-reader img {
+  display: none !important;
+}
+#qr-reader__scan_region {
+  background: transparent !important;
+}
+#qr-reader__dashboard {
+  display: none !important;
+}
+
+.scanner-laser {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, transparent, #ef4444 30%, #f59e0b 50%, #ef4444 70%, transparent);
+  box-shadow: 0 0 12px #ef4444, 0 0 4px #ef4444;
+  animation: laser-sweep 2.2s ease-in-out infinite;
+}
+
+@keyframes laser-sweep {
+  0% {
+    top: 5%;
+    opacity: 0.3;
+  }
+  50% {
+    top: 92%;
+    opacity: 1;
+  }
+  100% {
+    top: 5%;
+    opacity: 0.3;
+  }
+}
+</style>
