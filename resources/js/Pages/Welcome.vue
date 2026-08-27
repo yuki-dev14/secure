@@ -282,7 +282,7 @@ const steps = [
   {
     icon: BanknotesIcon,
     title: 'Grant Released',
-    desc: 'Compliant beneficiaries receive their cash grant. The transaction is logged.',
+    desc: 'Compliant beneficiaries receive their computed bimonthly cash grant during distribution events.',
   },
 ]
 </script>
