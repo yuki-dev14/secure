@@ -7,20 +7,16 @@
       <div class="bg-white/90 backdrop-blur-sm rounded-2xl overflow-hidden shadow-lg border border-white/50">
         <div class="px-6 pt-6 pb-5 flex flex-col sm:flex-row sm:items-center gap-4">
           <div class="flex-1">
-            <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">Total Grants Received</p>
+            <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">Total Computed Grants</p>
             <p class="text-4xl font-bold text-brand-700">
-              ₱{{ totalReceived.toLocaleString('en-PH', { minimumFractionDigits: 2 }) }}
+              ₱{{ totalComputed.toLocaleString('en-PH', { minimumFractionDigits: 2 }) }}
             </p>
-            <p class="text-sm text-slate-400 mt-1">across {{ distributions.length }} claiming event(s)</p>
+            <p class="text-sm text-slate-400 mt-1">across {{ calculations.length }} period(s)</p>
           </div>
-          <div class="grid grid-cols-3 gap-3 sm:gap-4">
-            <div class="text-center">
-              <p class="text-2xl font-bold text-success-600">{{ distributions.length }}</p>
-              <p class="text-xs text-slate-400 mt-0.5">Claimed</p>
-            </div>
+          <div class="grid grid-cols-2 gap-3 sm:gap-4">
             <div class="text-center">
               <p class="text-2xl font-bold text-brand-600">{{ calculations.length }}</p>
-              <p class="text-xs text-slate-400 mt-0.5">Computed</p>
+              <p class="text-xs text-slate-400 mt-0.5">Periods</p>
             </div>
             <div class="text-center">
               <p class="text-2xl font-bold" :class="beneficiary.is_compliant ? 'text-success-600' : 'text-danger-600'">
@@ -113,68 +109,6 @@
         </div>
       </div>
 
-      <!-- Claiming History -->
-      <div class="bg-white/90 backdrop-blur-sm rounded-2xl shadow-lg overflow-hidden border border-white/50">
-        <div class="px-5 py-4 border-b border-slate-100 flex items-center justify-between">
-          <div class="flex items-center gap-2">
-            <BanknotesIcon class="w-5 h-5 text-success-600" />
-            <h2 class="font-semibold text-slate-800">Claiming History</h2>
-          </div>
-          <span class="badge badge-success">{{ distributions.length }} claim(s)</span>
-        </div>
-
-        <div v-if="distributions.length === 0" class="px-5 py-12 text-center text-slate-400">
-          <BanknotesIcon class="w-10 h-10 opacity-20 mx-auto mb-2" />
-          <p>No cash grants claimed yet.</p>
-          <p class="text-xs mt-1">You will be notified when a distribution event is scheduled.</p>
-        </div>
-
-        <!-- Table view for desktop, card for mobile -->
-        <div v-else class="overflow-x-auto">
-          <table class="w-full text-sm">
-            <thead class="bg-slate-50">
-              <tr>
-                <th class="text-left px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide">Period</th>
-                <th class="text-left px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide">Claimed By</th>
-                <th class="text-left px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide">Date Claimed</th>
-                <th class="text-right px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide">Amount</th>
-              </tr>
-            </thead>
-            <tbody class="divide-y divide-slate-50">
-              <tr v-for="dist in distributions" :key="dist.id" class="hover:bg-slate-50/50">
-                <td class="px-5 py-3 font-medium text-slate-700">
-                  {{ dist.distribution_event?.period ?? '—' }}
-                </td>
-                <td class="px-5 py-3">
-                  <span v-if="dist.claimed_by_type === 'proxy'" class="flex items-center gap-1.5 text-slate-600">
-                    <UserGroupIcon class="w-4 h-4 text-slate-400" />
-                    Via Proxy
-                  </span>
-                  <span v-else class="flex items-center gap-1.5 text-success-600 font-medium">
-                    <CheckCircleIcon class="w-4 h-4" />
-                    Self
-                  </span>
-                </td>
-                <td class="px-5 py-3 text-slate-500">
-                  {{ formatDateTime(dist.claimed_at) }}
-                </td>
-                <td class="px-5 py-3 text-right font-bold text-success-600">
-                  ₱{{ Number(dist.amount_released).toLocaleString('en-PH', { minimumFractionDigits: 2 }) }}
-                </td>
-              </tr>
-            </tbody>
-            <tfoot class="border-t-2 border-slate-200 bg-slate-50">
-              <tr>
-                <td colspan="3" class="px-5 py-3 font-semibold text-slate-700 text-sm">Total Received</td>
-                <td class="px-5 py-3 text-right font-bold text-brand-700 text-base">
-                  ₱{{ totalReceived.toLocaleString('en-PH', { minimumFractionDigits: 2 }) }}
-                </td>
-              </tr>
-            </tfoot>
-          </table>
-        </div>
-      </div>
-
       <!-- Legal footnote -->
       <div class="bg-white/20 backdrop-blur-sm rounded-xl px-5 py-3 text-center">
         <p class="text-white/50 text-xs">
@@ -191,8 +125,7 @@ import { computed } from 'vue'
 import { Head } from '@inertiajs/vue3'
 import {
   HeartIcon, AcademicCapIcon, ShoppingBagIcon,
-  BanknotesIcon, CalculatorIcon,
-  CheckCircleIcon, UserGroupIcon,
+  CalculatorIcon,
 } from '@heroicons/vue/24/outline'
 import BeneficiaryLayout from '@/Layouts/BeneficiaryLayout.vue'
 
@@ -203,13 +136,8 @@ const props = defineProps({
   unread_count:  Number,
 })
 
-// Lazily load distributions from within calculations (or empty)
-const distributions = computed(() =>
-  props.beneficiary?.distributions ?? []
-)
-
-const totalReceived = computed(() =>
-  distributions.value.reduce((sum, d) => sum + Number(d.amount_released ?? 0), 0)
+const totalComputed = computed(() =>
+  (props.calculations ?? []).reduce((sum, c) => sum + Number(c.total_grant_amount ?? 0), 0)
 )
 
 // Estimate education based on family_members
@@ -222,7 +150,4 @@ const educationEstimate = computed(() => {
     return sum + (rates[m.education_level] ?? 0)
   }, 0)
 })
-
-const formatDateTime = (d) =>
-  d ? new Date(d).toLocaleString('en-PH', { dateStyle: 'medium', timeStyle: 'short' }) : '—'
 </script>

@@ -110,32 +110,7 @@
       </div>
     </div>
 
-    <!-- Claim History -->
-    <div class="bg-white/90 backdrop-blur-sm rounded-2xl shadow-lg overflow-hidden border border-white/50">
-      <div class="px-6 py-4 border-b border-slate-100">
-        <h3 class="font-semibold text-slate-800">Claim History</h3>
-        <p class="text-xs text-slate-400">Your recent cash grant transactions</p>
-      </div>
-      <div v-if="claim_history?.length" class="divide-y divide-slate-100">
-        <div v-for="claim in claim_history" :key="claim.id"
-          class="px-6 py-4 flex items-center justify-between">
-          <div>
-            <p class="text-sm font-medium text-slate-700">{{ claim.distribution_event?.period ?? '—' }}</p>
-            <p class="text-xs text-slate-400">{{ formatDate(claim.claimed_at) }}</p>
-            <span class="badge badge-neutral badge-sm mt-1">
-              {{ claim.claimed_by_type === 'proxy' ? '👤 Via Proxy' : '✓ Self' }}
-            </span>
-          </div>
-          <p class="font-bold text-success-600">
-            ₱{{ Number(claim.amount_released).toLocaleString('en-PH', { minimumFractionDigits: 2 }) }}
-          </p>
-        </div>
-      </div>
-      <div v-else class="px-6 py-12 text-center text-slate-400">
-        <ReceiptRefundIcon class="w-10 h-10 mx-auto mb-2 opacity-40" />
-        <p class="text-sm">No claim history yet</p>
-      </div>
-    </div>
+
 
   </BeneficiaryLayout>
 </template>
