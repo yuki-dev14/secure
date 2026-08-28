@@ -316,7 +316,7 @@ class PrototypeSeeder extends Seeder
                 'password'          => Hash::make('Beneficiary@1234!'),
                 'role'              => 'beneficiary',
                 'is_active'         => true,
-                'must_change_password' => false,
+                'must_change_password' => true,
             ]);
 
             // ── Create Beneficiary ──────────────────────────────────────────────
