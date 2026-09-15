@@ -16,6 +16,7 @@ $app = Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware): void {
         // Inertia SSR / share middleware & anti-cache back-button protection
         $middleware->web(append: [
+            \App\Http\Middleware\SecurityHeaders::class,
             \App\Http\Middleware\CheckMaintenanceMode::class,
             \App\Http\Middleware\PreventBackHistory::class,
             \App\Http\Middleware\HandleInertiaRequests::class,
@@ -51,7 +52,7 @@ $app = Application::configure(basePath: dirname(__DIR__))
     })->create();
 
 // Direct Laravel storage to writable /tmp on Vercel
-if (getenv('VERCEL') || isset($_SERVER['VERCEL']) || is_dir('/tmp')) {
+if (getenv('VERCEL') || isset($_SERVER['VERCEL'])) {
     $app->useStoragePath('/tmp/storage');
 }
 

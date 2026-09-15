@@ -22,3 +22,11 @@
 Homestead.json
 Homestead.yaml
 Thumbs.db
+
+**/caddy
+frankenphp
+frankenphp-worker.php
+
+/k6-v0.52.0-windows-amd64
+raw_k6_*
+/storage/framework/lsp-*.php

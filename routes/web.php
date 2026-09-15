@@ -54,12 +54,12 @@ Route::get('/uat_beneficiaries_sample.csv', function () {
 // Staff Login (Superadmin, Admin, Verifier, Field Officer)
 Route::middleware('guest')->group(function () {
     Route::get('/login',                [AuthController::class, 'showStaffLogin'])->name('staff.login');
-    Route::post('/login',               [AuthController::class, 'staffLogin'])->name('staff.login.post');
+    Route::post('/login',               [AuthController::class, 'staffLogin'])->name('staff.login.post')->middleware('throttle:10,1');
 
     // Beneficiary Portal Login
     Route::get('/portal',               [AuthController::class, 'showBeneficiaryLogin'])->name('beneficiary.login');
-    Route::post('/portal/login',        [AuthController::class, 'beneficiaryLogin'])->name('beneficiary.login.post');
-    Route::post('/portal/qr-login',     [AuthController::class, 'beneficiaryQrLogin'])->name('beneficiary.qr-login.post');
+    Route::post('/portal/login',        [AuthController::class, 'beneficiaryLogin'])->name('beneficiary.login.post')->middleware('throttle:10,1');
+    Route::post('/portal/qr-login',     [AuthController::class, 'beneficiaryQrLogin'])->name('beneficiary.qr-login.post')->middleware('throttle:10,1');
 });
 
 Route::post('/logout',                  [AuthController::class, 'logout'])->name('logout')->middleware('auth');
