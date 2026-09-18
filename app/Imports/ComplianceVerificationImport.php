@@ -129,17 +129,11 @@ class ComplianceVerificationImport implements ToArray, WithHeadingRow
                 'period_start'         => $this->periodStart,
                 'period_end'           => $this->periodEnd,
                 'grant_affected'       => $grantAffected,
-                'status'               => 'confirmed',  // Auto-confirmed — verifier is authoritative
-                'processed_by'         => auth()->id(),
-                'processed_at'         => now(),
-                'processing_notes'     => 'Auto-confirmed via compliance verification import',
+                'status'               => 'pending',  // Created as pending for Admin SWA review
+                'processed_by'         => null,
+                'processed_at'         => null,
+                'processing_notes'     => null,
                 'import_batch_id'      => $this->importBatchId,
-            ]);
-
-            // Update beneficiary compliance status
-            $beneficiary->update([
-                'is_compliant'          => false,
-                'last_compliance_check' => now(),
             ]);
 
             $this->imported++;

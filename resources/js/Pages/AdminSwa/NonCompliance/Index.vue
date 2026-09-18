@@ -131,17 +131,30 @@
                   </span>
                 </td>
                 <td class="px-4 py-3 text-center">
-                  <div v-if="record.status === 'pending'" class="flex items-center justify-center gap-1">
-                    <button @click="openConfirmModal(record)" title="Confirm"
-                            class="p-1.5 rounded-lg bg-red-50 text-red-600 hover:bg-red-100 transition-colors">
-                      <CheckIcon class="w-4 h-4" />
+                  <div v-if="record.status === 'pending'" class="flex items-center justify-center gap-1.5">
+                    <button @click="openConfirmModal(record)" title="Confirm Non-Compliance"
+                            class="px-2.5 py-1 rounded-lg bg-red-50 text-red-600 hover:bg-red-100 transition-colors text-xs font-semibold inline-flex items-center gap-1">
+                      <CheckIcon class="w-3.5 h-3.5" /> Confirm
                     </button>
-                    <button @click="openDismissModal(record)" title="Dismiss"
-                            class="p-1.5 rounded-lg bg-slate-50 text-slate-500 hover:bg-slate-100 transition-colors">
-                      <XMarkIcon class="w-4 h-4" />
+                    <button @click="openDismissModal(record)" title="Dismiss Flag"
+                            class="px-2.5 py-1 rounded-lg bg-slate-100 text-slate-600 hover:bg-slate-200 transition-colors text-xs font-semibold inline-flex items-center gap-1">
+                      <XMarkIcon class="w-3.5 h-3.5" /> Dismiss
                     </button>
                   </div>
-                  <span v-else class="text-xs text-slate-400">{{ record.processor?.name ?? '—' }}</span>
+                  <div v-else-if="record.status === 'confirmed'" class="flex items-center justify-center gap-2">
+                    <span class="text-xs text-slate-400">{{ record.processor?.name ?? '—' }}</span>
+                    <button @click="openDismissModal(record)" title="Dismiss / Revert"
+                            class="px-2 py-0.5 rounded text-xs bg-slate-100 text-slate-600 hover:bg-amber-100 hover:text-amber-800 transition-colors font-medium">
+                      Dismiss
+                    </button>
+                  </div>
+                  <div v-else class="flex items-center justify-center gap-2">
+                    <span class="text-xs text-slate-400">{{ record.processor?.name ?? '—' }}</span>
+                    <button @click="openConfirmModal(record)" title="Re-confirm"
+                            class="px-2 py-0.5 rounded text-xs bg-red-50 text-red-600 hover:bg-red-100 transition-colors font-medium">
+                      Confirm
+                    </button>
+                  </div>
                 </td>
               </tr>
             </tbody>

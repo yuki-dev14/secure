@@ -176,7 +176,7 @@ class NonComplianceController extends Controller
     public function dismiss(Request $request, NonComplianceRecord $record): RedirectResponse
     {
         $request->validate([
-            'processing_notes' => 'required|string|max:500',
+            'processing_notes' => 'nullable|string|max:500',
         ]);
 
         $old = $record->toArray();
@@ -185,8 +185,11 @@ class NonComplianceController extends Controller
             'status'           => 'dismissed',
             'processed_by'     => auth()->id(),
             'processed_at'     => now(),
-            'processing_notes' => $request->processing_notes,
+            'processing_notes' => $request->processing_notes ?: 'Dismissed by Admin SWA',
         ]);
+
+        // Recompute beneficiary compliance status after dismissal so flag is removed if no other confirmed NC exists
+        $this->recomputeBeneficiaryCompliance($record->beneficiary_id, $record->period);
 
         AuditLogService::log('non_compliance_dismissed', $record, $old, $record->fresh()->toArray(),
             "Non-compliance dismissed for beneficiary #{$record->beneficiary_id}");
@@ -206,9 +209,7 @@ class NonComplianceController extends Controller
             'processing_notes' => 'nullable|string|max:500',
         ]);
 
-        $records = NonComplianceRecord::whereIn('id', $validated['record_ids'])
-            ->where('status', 'pending')
-            ->get();
+        $records = NonComplianceRecord::whereIn('id', $validated['record_ids'])->get();
 
         $processed = 0;
         foreach ($records as $record) {
@@ -220,9 +221,8 @@ class NonComplianceController extends Controller
             ]);
             $processed++;
 
-            if ($validated['action'] === 'confirm') {
-                $this->recomputeBeneficiaryCompliance($record->beneficiary_id, $record->period);
-            }
+            // Always recompute compliance whether confirmed or dismissed
+            $this->recomputeBeneficiaryCompliance($record->beneficiary_id, $record->period);
         }
 
         return back()->with('success', "{$processed} records {$validated['action']}ed successfully.");
