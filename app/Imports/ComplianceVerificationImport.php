@@ -25,6 +25,8 @@ class ComplianceVerificationImport implements ToArray, WithHeadingRow
 
     public function array(array $rows): void
     {
+        $processedKeys = [];
+
         foreach ($rows as $row) {
             $uniqueId = trim($row['beneficiary_unique_id'] ?? '');
             $status   = strtoupper(trim($row['compliance_status'] ?? 'COMPLIANT'));
@@ -104,39 +106,59 @@ class ComplianceVerificationImport implements ToArray, WithHeadingRow
             // Determine grant_affected based on category and education level
             $grantAffected = $this->resolveGrantAffected($row);
 
+            // Deduplicate within the current import payload
+            $recordKey = "{$beneficiary->id}_{$familyMemberId}_{$this->category}_{$this->period}";
+            if (isset($processedKeys[$recordKey])) {
+                $this->skipped++;
+                continue;
+            }
+
             // Check for duplicates (same beneficiary + member + category + period)
-            $exists = NonComplianceRecord::where('beneficiary_id', $beneficiary->id)
+            $exists = NonComplianceRecord::withTrashed()
+                ->where('beneficiary_id', $beneficiary->id)
                 ->where('family_member_id', $familyMemberId)
                 ->where('category', $this->category)
                 ->where('period', $this->period)
                 ->exists();
 
             if ($exists) {
+                $processedKeys[$recordKey] = true;
                 $this->skipped++;
                 continue;
             }
 
-            NonComplianceRecord::create([
-                'beneficiary_id'       => $beneficiary->id,
-                'family_member_id'     => $familyMemberId,
-                'category'             => $this->category,
-                'source'               => $this->source,
-                'reporter_name'        => null,
-                'reporter_institution' => null,
-                'reason'               => $reason,
-                'details'              => trim($row['details'] ?? '') ?: null,
-                'period'               => $this->period,
-                'period_start'         => $this->periodStart,
-                'period_end'           => $this->periodEnd,
-                'grant_affected'       => $grantAffected,
-                'status'               => 'pending',  // Created as pending for Admin SWA review
-                'processed_by'         => null,
-                'processed_at'         => null,
-                'processing_notes'     => null,
-                'import_batch_id'      => $this->importBatchId,
-            ]);
+            try {
+                NonComplianceRecord::create([
+                    'beneficiary_id'       => $beneficiary->id,
+                    'family_member_id'     => $familyMemberId,
+                    'category'             => $this->category,
+                    'source'               => $this->source,
+                    'reporter_name'        => null,
+                    'reporter_institution' => null,
+                    'reason'               => $reason,
+                    'details'              => trim($row['details'] ?? '') ?: null,
+                    'period'               => $this->period,
+                    'period_start'         => $this->periodStart,
+                    'period_end'           => $this->periodEnd,
+                    'grant_affected'       => $grantAffected,
+                    'status'               => 'pending',  // Created as pending for Admin SWA review
+                    'processed_by'         => null,
+                    'processed_at'         => null,
+                    'processing_notes'     => null,
+                    'import_batch_id'      => $this->importBatchId,
+                ]);
 
-            $this->imported++;
+                $processedKeys[$recordKey] = true;
+                $this->imported++;
+            } catch (\Illuminate\Database\UniqueConstraintViolationException|\Illuminate\Database\QueryException $e) {
+                // If a race condition or concurrent request already inserted this record, safely skip without 500 error
+                if (str_contains($e->getMessage(), '23505') || str_contains($e->getMessage(), 'unique') || str_contains($e->getMessage(), 'Duplicate entry')) {
+                    $processedKeys[$recordKey] = true;
+                    $this->skipped++;
+                } else {
+                    throw $e;
+                }
+            }
         }
     }
 

@@ -476,6 +476,7 @@ const canImport = computed(() =>
 )
 
 const submitImport = () => {
+  if (importForm.processing || !canImport.value) return
   importForm.post(route('adminswa.compliance-verification.import'), {
     forceFormData: true,
   })
