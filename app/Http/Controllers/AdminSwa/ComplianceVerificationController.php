@@ -170,10 +170,11 @@ class ComplianceVerificationController extends Controller
             }],
             'period'   => 'required|string|max:20',
             'category' => 'required|in:education,health',
-            'batch_id' => 'nullable|integer|exists:compliance_verification_batches,id',
+            'batch_id' => 'required|integer|exists:compliance_verification_batches,id',
         ], [
-            'file.required' => 'Please select a CSV or Excel file to upload.',
-            'file.max'      => 'The file size must not exceed 10 MB.',
+            'file.required'     => 'Please select a CSV or Excel file to upload.',
+            'file.max'          => 'The file size must not exceed 10 MB.',
+            'batch_id.required' => 'Please select a sent batch to link this import to.',
         ]);
 
         $periodData = $this->resolvePeriodDates($request->period);
@@ -195,29 +196,13 @@ class ComplianceVerificationController extends Controller
         $skipped   = $import->getSkippedCount();
         $compliant = $import->getCompliantCount();
 
-        // Update the verification batch if linked
-        if ($request->batch_id) {
-            ComplianceVerificationBatch::where('id', $request->batch_id)->update([
-                'status'              => 'imported',
-                'imported_by'         => auth()->id(),
-                'imported_at'         => now(),
-                'non_compliant_count' => $imported,
-            ]);
-        } else {
-            // Create a standalone import batch record
-            ComplianceVerificationBatch::create([
-                'period'              => $request->period,
-                'category'            => $request->category,
-                'recipient_email'     => 'direct-import',
-                'beneficiary_count'   => $compliant + $imported + $skipped,
-                'non_compliant_count' => $imported,
-                'sent_by'             => auth()->id(),
-                'sent_at'             => now(),
-                'imported_by'         => auth()->id(),
-                'imported_at'         => now(),
-                'status'              => 'imported',
-            ]);
-        }
+        // Update the linked verification batch
+        ComplianceVerificationBatch::where('id', $request->batch_id)->update([
+            'status'              => 'imported',
+            'imported_by'         => auth()->id(),
+            'imported_at'         => now(),
+            'non_compliant_count' => $imported,
+        ]);
 
         $categoryDisplay = $request->category === 'education' ? 'Education' : 'Health';
 

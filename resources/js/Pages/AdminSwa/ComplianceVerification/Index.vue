@@ -196,13 +196,16 @@
             </div>
 
             <div>
-              <label class="label">Link to Sent Batch</label>
+              <label class="label">Link to Sent Batch <span class="text-red-500">*</span></label>
               <select v-model="importForm.batch_id" class="input w-full">
-                <option value="">None (standalone import)</option>
+                <option value="">Select sent batch to link...</option>
                 <option v-for="b in sentBatches" :key="b.id" :value="b.id">
-                  {{ b.category === 'education' ? '📚' : '💚' }} {{ b.period }} → {{ b.recipient_email }}
+                  {{ b.category === 'education' ? '📚 Education' : '💚 Health' }} — {{ b.period }} → {{ b.recipient_email }}
                 </option>
               </select>
+              <p v-if="sentBatches.length === 0" class="text-xs text-amber-600 mt-1">
+                ⚠️ No pending sent batches found. You must send a verification list to a School Rep or Midwife first before importing.
+              </p>
             </div>
           </div>
 
@@ -378,7 +381,7 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, watch } from 'vue'
 import { Head, Link, useForm, router } from '@inertiajs/vue3'
 import StaffLayout from '@/Layouts/StaffLayout.vue'
 import {
@@ -472,7 +475,7 @@ const onFileSelect = (e) => {
 }
 
 const canImport = computed(() =>
-  importForm.file && importForm.period && importForm.category
+  importForm.file && importForm.period && importForm.category && importForm.batch_id
 )
 
 const submitImport = () => {
@@ -483,9 +486,25 @@ const submitImport = () => {
 }
 
 // Sent batches available for linking (status = 'sent')
-const sentBatches = computed(() =>
-  (props.history?.data ?? []).filter(b => b.status === 'sent')
-)
+const sentBatches = computed(() => {
+  let list = (props.history?.data ?? []).filter(b => b.status === 'sent')
+  if (importForm.category) {
+    list = list.filter(b => b.category === importForm.category)
+  }
+  if (importForm.period) {
+    list = list.filter(b => b.period === importForm.period)
+  }
+  return list
+})
+
+watch(() => importForm.batch_id, (newBatchId) => {
+  if (!newBatchId) return
+  const found = (props.history?.data ?? []).find(b => b.id === Number(newBatchId))
+  if (found) {
+    if (found.period) importForm.period = found.period
+    if (found.category) importForm.category = found.category
+  }
+})
 
 // ─── Report ─────────────────────────────────────────────────────────────────
 
