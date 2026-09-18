@@ -122,11 +122,7 @@
               <h3 class="font-semibold text-slate-800 text-sm">Quick Actions</h3>
             </div>
             <div class="card-body space-y-3">
-              <Link :href="route('admin4ps.fds.scanner')" class="btn btn-primary w-full justify-start gap-3">
-                <QrCodeIcon class="w-5 h-5" />
-                Open FDS Scanner
-              </Link>
-              <Link :href="route('admin4ps.fds.index')" class="btn btn-secondary w-full justify-start gap-3">
+              <Link :href="route('admin4ps.fds.index')" class="btn btn-primary w-full justify-start gap-3">
                 <ClipboardDocumentCheckIcon class="w-5 h-5" />
                 View Attendance Records
               </Link>
@@ -152,7 +148,7 @@
 <script setup>
 import { Head, Link } from '@inertiajs/vue3'
 import {
-  UsersIcon, CalendarDaysIcon, QrCodeIcon,
+  UsersIcon, CalendarDaysIcon,
   CheckBadgeIcon, ExclamationTriangleIcon, ChartBarIcon,
   PaperAirplaneIcon, ClipboardDocumentCheckIcon,
 } from '@heroicons/vue/24/outline'
