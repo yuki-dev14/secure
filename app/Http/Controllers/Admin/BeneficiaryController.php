@@ -104,6 +104,10 @@ class BeneficiaryController extends Controller
 
     public function update(Request $request, int $id): RedirectResponse
     {
+        if ($request->user()?->role !== 'superadmin') {
+            abort(403, 'Unauthorized. Only Super Administrators are permitted to edit beneficiary records.');
+        }
+
         $beneficiary = Beneficiary::findOrFail($id);
 
         $validated = $request->validate([

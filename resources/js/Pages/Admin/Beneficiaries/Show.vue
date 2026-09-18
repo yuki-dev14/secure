@@ -56,7 +56,7 @@
           <div class="card">
             <div class="card-header">
               <h3 class="font-semibold text-slate-800">Beneficiary Profile</h3>
-              <button @click="editing = !editing" class="btn btn-ghost btn-sm">
+              <button v-if="$page.props.auth.user?.role === 'superadmin'" @click="editing = !editing" class="btn btn-ghost btn-sm">
                 <PencilIcon class="w-4 h-4" />
                 {{ editing ? 'Cancel' : 'Edit' }}
               </button>
@@ -89,7 +89,7 @@
               </div>
 
               <!-- Edit form -->
-              <div v-if="editing" class="mt-5 pt-5 border-t border-slate-100 space-y-4">
+              <div v-if="editing && $page.props.auth.user?.role === 'superadmin'" class="mt-5 pt-5 border-t border-slate-100 space-y-4">
                 <div class="grid grid-cols-2 sm:grid-cols-3 gap-3">
                   <div>
                     <label class="form-label">Status</label>
