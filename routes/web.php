@@ -68,7 +68,7 @@ Route::post('/logout',                  [AuthController::class, 'logout'])->name
 
 Route::middleware(['auth'])->group(function () {
     Route::get('/portal/change-password',  [AuthController::class, 'showChangePassword'])->name('beneficiary.password.change');
-    Route::post('/portal/change-password', [AuthController::class, 'updatePassword'])->name('beneficiary.password.update');
+    Route::post('/portal/change-password', [AuthController::class, 'updatePassword'])->name('beneficiary.password.update')->middleware('throttle:6,1');
 });
 
 // ─── Beneficiary Portal ───────────────────────────────────────────────────────

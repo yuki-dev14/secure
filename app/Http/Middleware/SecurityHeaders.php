@@ -21,6 +21,12 @@ class SecurityHeaders
         $response->headers->set('X-XSS-Protection', '1; mode=block');
         $response->headers->set('Referrer-Policy', 'strict-origin-when-cross-origin');
         $response->headers->set('Permissions-Policy', 'camera=(self), microphone=(), geolocation=()');
+        $response->headers->set('Cross-Origin-Opener-Policy', 'same-origin');
+
+        // Enforce HSTS on HTTPS or production environments
+        if ($request->isSecure() || app()->environment('production')) {
+            $response->headers->set('Strict-Transport-Security', 'max-age=31536000; includeSubDomains');
+        }
 
         return $response;
     }

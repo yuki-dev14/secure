@@ -17,6 +17,16 @@ class CheckRole
         $user = $request->user();
 
         if (!$user || !in_array($user->role, $roles)) {
+            \Illuminate\Support\Facades\Log::warning('Security Alert: Access control denied', [
+                'user_id'     => $user?->id,
+                'user_role'   => $user?->role,
+                'required'    => $roles,
+                'target_url'  => $request->fullUrl(),
+                'method'      => $request->method(),
+                'ip'          => $request->ip(),
+                'user_agent'  => $request->userAgent(),
+            ]);
+
             if ($request->expectsJson()) {
                 return response()->json(['message' => 'Unauthorized.'], 403);
             }

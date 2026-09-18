@@ -25,6 +25,13 @@ class AuditLogService
 
     public static function loginFailed(string $identifier): void
     {
+        \Illuminate\Support\Facades\Log::warning("Security Alert: Failed login attempt for identifier: {$identifier}", [
+            'identifier'  => $identifier,
+            'url'         => request()->fullUrl(),
+            'ip_address'  => request()->ip(),
+            'user_agent'  => request()->userAgent(),
+        ]);
+
         AuditLog::create([
             'user_id'     => null,
             'user_type'   => 'guest',
