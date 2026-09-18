@@ -12,7 +12,7 @@ use Maatwebsite\Excel\Facades\Excel;
 echo "=== DRY-RUN TEST OF MATAAS_NA_LUPA_5_BENEFICIARIES.xlsx ===\n";
 
 $superadmin = User::where('role', 'superadmin')->first();
-$filePath = __DIR__ . '/../MATAAS_NA_LUPA_5_BENEFICIARIES.xlsx';
+$filePath = __DIR__ . '/../datasets/MATAAS_NA_LUPA_5_BENEFICIARIES.xlsx';
 
 DB::beginTransaction();
 try {

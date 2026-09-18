@@ -12,7 +12,7 @@ use Maatwebsite\Excel\Facades\Excel;
 echo "=== DRY-RUN TEST OF FINAL_DEFENSE_20_BENEFICIARIES.xlsx ===\n";
 
 $superadmin = User::where('role', 'superadmin')->first();
-$filePath = __DIR__ . '/../FINAL_DEFENSE_20_BENEFICIARIES.xlsx';
+$filePath = __DIR__ . '/../datasets/FINAL_DEFENSE_20_BENEFICIARIES.xlsx';
 
 // Test inside a transaction with rollback so we verify without prematurely committing
 DB::beginTransaction();
