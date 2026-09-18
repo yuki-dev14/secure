@@ -39,11 +39,6 @@
               <ArrowDownTrayIcon class="w-4 h-4" />
               Download Excel Template
             </a>
-            <a href="/uat_beneficiaries_sample.csv" download="uat_beneficiaries_sample.csv"
-              class="btn btn-secondary inline-flex items-center gap-2">
-              <ArrowDownTrayIcon class="w-4 h-4 text-brand-600" />
-              Download UAT Sample Data (.csv)
-            </a>
           </div>
         </div>
       </div>
