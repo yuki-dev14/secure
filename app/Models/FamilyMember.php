@@ -44,6 +44,13 @@ class FamilyMember extends Model
         ];
     }
 
+    protected $appends = [
+        'full_name',
+        'age',
+        'education_grant_amount',
+        'attendance_compliant',
+    ];
+
     public function beneficiary(): BelongsTo { return $this->belongsTo(Beneficiary::class); }
     public function documents(): HasMany      { return $this->hasMany(BeneficiaryDocument::class); }
     public function complianceRecords(): HasMany { return $this->hasMany(ComplianceRecord::class); }
@@ -55,7 +62,10 @@ class FamilyMember extends Model
         ]));
     }
 
-    public function getAgeAttribute(): int  { return $this->birthdate->age; }
+    public function getAgeAttribute(): ?int
+    {
+        return $this->birthdate ? $this->birthdate->age : null;
+    }
 
     public function getEducationGrantAmountAttribute(): int
     {

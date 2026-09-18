@@ -148,7 +148,7 @@
                   <tr v-for="m in beneficiary.family_members" :key="m.id">
                     <td class="font-medium text-slate-700 text-sm">{{ m.first_name }} {{ m.last_name }}</td>
                     <td class="text-sm text-slate-500 capitalize">{{ m.relationship }}</td>
-                    <td class="text-sm text-slate-500">{{ m.age }} yrs</td>
+                    <td class="text-sm text-slate-500">{{ m.age != null ? `${m.age} yrs` : '—' }}</td>
                     <td class="text-sm text-slate-500 capitalize">{{ m.education_level || '—' }}</td>
                     <td class="flex gap-1">
                       <span v-if="m.is_school_age" class="badge badge-info badge-sm">School-age</span>
