@@ -72,7 +72,13 @@
             <thead class="bg-slate-50 text-slate-500 uppercase text-xs">
               <tr>
                 <th class="px-4 py-3 text-left">
-                  <input type="checkbox" :checked="allSelected" @change="toggleAll" class="rounded border-slate-300" />
+                  <input
+                    type="checkbox"
+                    :checked="allSelected"
+                    :disabled="records.data.length === 0"
+                    @change="toggleAll"
+                    class="rounded border-slate-300 disabled:opacity-40 disabled:cursor-not-allowed"
+                  />
                 </th>
                 <th class="px-4 py-3 text-left">Beneficiary</th>
                 <th class="px-4 py-3 text-left">Category</th>
