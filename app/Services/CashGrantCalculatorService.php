@@ -447,7 +447,8 @@ class CashGrantCalculatorService
      * Get children eligible for education grant:
      * - 3–18 years old (is_school_age = true)
      * - Enrolled in daycare/preschool/elementary/junior_high/senior_high
-     * - 85% attendance rate (for elementary and high school)
+     * - Presumed compliant by default unless attendance_rate < 85 is explicitly recorded,
+     *   or zeroed out via confirmed NonComplianceRecord for the period.
      */
     private function getEducationEligibleChildren(Beneficiary $beneficiary)
     {
@@ -455,11 +456,8 @@ class CashGrantCalculatorService
             ->where('is_school_age', true)
             ->whereIn('education_level', ['daycare', 'preschool', 'elementary', 'junior_high', 'senior_high'])
             ->where(function ($q) {
-                $q->whereIn('education_level', ['daycare', 'preschool'])  // No attendance threshold for daycare/preschool
-                  ->orWhere(function ($q2) {
-                      $q2->whereIn('education_level', ['elementary', 'junior_high', 'senior_high'])
-                         ->where('attendance_rate', '>=', 85.00);          // 85% rule
-                  });
+                $q->whereNull('attendance_rate')
+                  ->orWhere('attendance_rate', '>=', 85.00);
             })
             ->get();
     }
